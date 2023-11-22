@@ -12,6 +12,10 @@ Tile::Tile(int x, int y, int z, const std::vector<std::byte> &rawBlob):
 
 void Tile::glLoad()
 {
+    if (rawBlob.empty()) {
+        return;
+    }
+
     stbi_set_flip_vertically_on_load(false);
     const auto ptr = stbi_load_from_memory(reinterpret_cast<stbi_uc const *>(rawBlob.data()),
                                 static_cast<int>(rawBlob.size()), &width, &height,

@@ -8,7 +8,8 @@
 
 constexpr long SHUT_OFF_THE_PROGRESS_METER = 1;
 
-static size_t curlCallback(char *ptr, size_t size, size_t nmemb, void *userdata)
+namespace {
+size_t curlCallback(char *ptr, size_t size, size_t nmemb, void *userdata)
 {
     auto data = reinterpret_cast<std::vector<std::byte>*>(userdata);
     data->reserve(nmemb);
@@ -18,7 +19,7 @@ static size_t curlCallback(char *ptr, size_t size, size_t nmemb, void *userdata)
     return nmemb;
 }
 
-static std::optional<std::vector<std::byte>> requestData(const char* url)
+std::vector<std::byte> requestData(const char* url)
 {
     std::vector<std::byte> data;
 
@@ -30,13 +31,21 @@ static std::optional<std::vector<std::byte>> requestData(const char* url)
     curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 1);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, reinterpret_cast<void*>(&data));
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curlCallback);
-    const bool ok{curl_easy_perform(curl) == CURLE_OK};
+    const auto res = curl_easy_perform(curl);
     curl_easy_cleanup(curl);
 
-    return data;
+    if (res == CURLE_OK) {
+        return data;
+    } else {
+        return {};
+    }
+}
 }
 
 bool TileSoureUrl::request(int x, int y, int z)
 {
-    
+    requests.emplace_back(std::async(std::launch::async, 
+                                [x, y, z, this](){
+        return Tile{x ,y, z, requestData(this->makeUrl(x, y, z))};
+    }));
 }
