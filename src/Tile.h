@@ -21,10 +21,8 @@ private:
     GLsizei width = 0;
     GLsizei height = 0;
     std::vector<std::byte> rawBlob;
-    std::vector<std::byte> rgbaBlob;
 
     void glLoad();
-    void stbLoad();
 };
 
 #endif /* SRC_TILE */
