@@ -1,5 +1,5 @@
-#ifndef SRC_TILESOURCE
-#define SRC_TILESOURCE
+#ifndef SRC_TILE_TILE_SOURCE_H
+#define SRC_TILE_TILE_SOURCE_H
 
 #include "Tile.h"
 
@@ -19,4 +19,4 @@ public:
     virtual void takeReady(std::vector<std::shared_ptr<Tile>>& tiles) = 0;
 };
 
-#endif /* SRC_TILESOURCE */
+#endif

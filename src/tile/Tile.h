@@ -1,5 +1,5 @@
-#ifndef SRC_TILE
-#define SRC_TILE
+#ifndef SRC_TILE_TILE_H
+#define SRC_TILE_TILE_H
 
 #include <vector>
 #include <cstddef>
@@ -25,4 +25,4 @@ private:
     void glLoad();
 };
 
-#endif /* SRC_TILE */
+#endif

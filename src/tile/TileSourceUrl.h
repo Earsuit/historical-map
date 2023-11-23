@@ -1,5 +1,5 @@
-#ifndef SRC_TILESOURCEURL
-#define SRC_TILESOURCEURL
+#ifndef SRC_TILE_TILE_SOURCE_URL_H
+#define SRC_TILE_TILE_SOURCE_URL_H
 
 #include "TileSource.h"
 #include "Tile.h"
@@ -27,4 +27,4 @@ private:
     const char* makeUrl(int x, int y, int z);
 };
 
-#endif /* SRC_TILESOURCEURL */
+#endif
