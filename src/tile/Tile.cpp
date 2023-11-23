@@ -8,6 +8,7 @@ Tile::Tile(int x, int y, int z, const std::vector<std::byte> &rawBlob):
     z{z},
     rawBlob{rawBlob}
 {
+    glLoad();
 }
 
 void Tile::glLoad()
@@ -34,9 +35,5 @@ void Tile::glLoad()
 
 void* Tile::getTexture()
 {
-    if(id == 0) {
-        glLoad();
-    }
-
     return reinterpret_cast<void*>(&id);
 }
