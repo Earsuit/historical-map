@@ -5,6 +5,9 @@
 #include <cstddef>
 #include <curl/curl.h>
 #include <optional>
+#include <chrono>
+
+using namespace std::chrono_literals;
 
 constexpr long SHUT_OFF_THE_PROGRESS_METER = 1;
 
@@ -42,10 +45,41 @@ std::vector<std::byte> requestData(const char* url)
 }
 }
 
-bool TileSoureUrl::request(int x, int y, int z)
+void TileSoureUrl::request(int x, int y, int z)
 {
     requests.emplace_back(std::async(std::launch::async, 
                                 [x, y, z, this](){
-        return Tile{x ,y, z, requestData(this->makeUrl(x, y, z))};
+        return std::make_shared<Tile>(x ,y, z, requestData(this->makeUrl(x, y, z)));
     }));
+}
+
+void TileSoureUrl::waitAll()
+{
+    std::for_each(requests.cbegin(), requests.cend(), [](auto& fut){
+        fut.wait();
+    });
+}
+
+bool TileSoureUrl::isAllReady()
+{
+    return std::all_of(requests.cbegin(), requests.cend(), [](auto& fut){
+        return fut.wait_for(0s) == std::future_status::ready;
+    });
+}
+
+void TileSoureUrl::takeReady(std::vector<std::shared_ptr<Tile>>& tiles)
+{
+    requests.remove_if([&tiles](auto& fut){
+        if (fut.wait_for(0s) == std::future_status::ready) {
+            tiles.emplace_back(fut.get());
+            return true;
+        }
+
+        return false;
+    });
+}
+
+void TileSoureUrl::setUrl(const std::string& url)
+{
+    this->url = url;
 }
