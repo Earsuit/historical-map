@@ -8,20 +8,27 @@
 #include <list>
 #include <memory>
 
-class TileSoureUrl: public TileSource {
+struct Url {
+    std::string url = {};
+    std::string::size_type zoomPos = 0;
+    std::string::size_type xPos = 0;
+    std::string::size_type yPos = 0;
+};
+
+class TileSourceUrl: public TileSource {
 public:
-    TileSoureUrl() = default;
-    ~TileSoureUrl() override;
+    TileSourceUrl() = default;
+    ~TileSourceUrl() override;
 
     void request(int x, int y, int z) override;
     void waitAll() override;
     bool isAllReady() override;
     void takeReady(std::vector<std::shared_ptr<Tile>>& tiles) override;
 
-    void setUrl(const std::string& url);
+    bool setUrl(const std::string& url);
 
 private:
-    std::string url;
+    Url url;
     std::list<std::future<std::shared_ptr<Tile>>> requests;
 
     const char* makeUrl(int x, int y, int z);
