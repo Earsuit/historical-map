@@ -99,8 +99,13 @@ bool TileSourceUrl::setUrl(const std::string& url)
            this->url.yPos != std::string::npos;
 }
 
-const char* makeUrl(int x, int y, int z)
+const char* TileSourceUrl::makeUrl(int x, int y, int z)
 {
-    auto realUrl = url->url;
-    return realUrl.replace(this->url.zoomPos, std::string(z));
+    auto realUrl = url.url;
+
+    realUrl.replace(url.zoomPos, ZOOM_MATCHER_LEN, std::to_string(z));
+    realUrl.replace(url.xPos, X_MATCHER_LEN, std::to_string(x));
+    realUrl.replace(url.yPos, Y_MATCHER_LEN, std::to_string(y));
+    
+    return realUrl.c_str();
 }

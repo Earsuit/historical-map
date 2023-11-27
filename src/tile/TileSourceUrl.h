@@ -8,13 +8,6 @@
 #include <list>
 #include <memory>
 
-struct Url {
-    std::string url = {};
-    std::string::size_type zoomPos = 0;
-    std::string::size_type xPos = 0;
-    std::string::size_type yPos = 0;
-};
-
 class TileSourceUrl: public TileSource {
 public:
     TileSourceUrl() = default;
@@ -28,6 +21,13 @@ public:
     bool setUrl(const std::string& url);
 
 private:
+    struct Url {
+        std::string url = {};
+        std::string::size_type zoomPos = 0;
+        std::string::size_type xPos = 0;
+        std::string::size_type yPos = 0;
+    };
+
     Url url;
     std::list<std::future<std::shared_ptr<Tile>>> requests;
 
