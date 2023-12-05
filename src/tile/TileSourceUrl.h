@@ -7,6 +7,7 @@
 #include <string>
 #include <list>
 #include <memory>
+#include <future>
 
 class TileSourceUrl: public TileSource {
 public:
