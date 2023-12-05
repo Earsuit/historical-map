@@ -6,6 +6,8 @@
 #include <vector>
 #include <memory>
 
+namespace tile {
+
 class TileSource {
 public:
     virtual ~TileSource() = default;
@@ -18,5 +20,7 @@ public:
 
     virtual void takeReady(std::vector<std::shared_ptr<Tile>>& tiles) = 0;
 };
+
+}
 
 #endif

@@ -2,6 +2,8 @@
 
 #include <stb_image.h>
 
+namespace tile {
+
 Tile::Tile(int x, int y, int z, const std::vector<std::byte> &rawBlob):
     x{x},
     y{y},
@@ -36,4 +38,6 @@ void Tile::glLoad()
 void* Tile::getTexture()
 {
     return reinterpret_cast<void*>(&id);
+}
+
 }

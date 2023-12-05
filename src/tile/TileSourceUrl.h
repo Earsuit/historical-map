@@ -9,6 +9,8 @@
 #include <memory>
 #include <future>
 
+namespace tile {
+
 class TileSourceUrl: public TileSource {
 public:
     TileSourceUrl() = default;
@@ -34,5 +36,7 @@ private:
 
     const char* makeUrl(int x, int y, int z);
 };
+
+}
 
 #endif

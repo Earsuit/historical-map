@@ -6,6 +6,7 @@
 
 #include <GL/gl.h>
 
+namespace tile {
 class Tile {
 public:
     Tile(int x, int y, int z, const std::vector<std::byte> &rawBlob);
@@ -24,5 +25,9 @@ private:
 
     void glLoad();
 };
+
+}
+
+
 
 #endif

@@ -8,6 +8,8 @@
 #include <chrono>
 #include <string_view>
 
+namespace tile {
+
 using namespace std::chrono_literals;
 
 constexpr long SHUT_OFF_THE_PROGRESS_METER = 1;
@@ -108,4 +110,6 @@ const char* TileSourceUrl::makeUrl(int x, int y, int z)
     realUrl.replace(url.yPos, Y_MATCHER_LEN, std::to_string(y));
     
     return realUrl.c_str();
+}
+
 }

@@ -2,6 +2,8 @@
 
 #include <cmath>
 
+namespace tile {
+
 constexpr float PI_DEGREE = 360.0;
 constexpr float HALF_PI_DEGREE = 180.0;
 
@@ -26,4 +28,6 @@ std::tuple<float, float> cords2LonLat(int x, int y, int zoom)
     const float latitude = std::atan(std::sinh(M_PI * (1- 2*y/n))) * HALF_PI_DEGREE / M_PI;
 
     return {longitude, latitude};
+}
+
 }
