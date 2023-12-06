@@ -1,5 +1,9 @@
 #include "src/ui/HistoricalMap.h"
 
+#include "external/imgui/imgui.h"
+#include "external/imgui/backends/imgui_impl_glfw.h"
+#include "external/imgui/backends/imgui_impl_opengl3.h"
+
 #include <stdexcept>
 #include <string>
 
@@ -44,8 +48,6 @@ HistoricalMap::HistoricalMap()
 
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
-
-    clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 }
 
 HistoricalMap::~HistoricalMap()
@@ -59,6 +61,8 @@ HistoricalMap::~HistoricalMap()
 
 void HistoricalMap::start()
 {
+    const auto clearColor = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
 
@@ -70,7 +74,7 @@ void HistoricalMap::start()
         int display_w, display_h;
         glfwGetFramebufferSize(window, &display_w, &display_h);
         glViewport(0, 0, display_w, display_h);
-        glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
+        glClearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w);
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
