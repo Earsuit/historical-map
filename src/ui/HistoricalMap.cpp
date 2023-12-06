@@ -13,7 +13,7 @@ constexpr int WINDOW_WIDTH = 1280;
 constexpr int WINDOW_HEIGHT = 720;
 
 namespace {
-static void glfw_error_callback(int error, const char* description)
+static void glfwErrorCallback(int error, const char* description)
 {
     const std::string message = "Glfw Error " + std::to_string(error) + ": " + description;
     throw std::runtime_error(message);
@@ -22,7 +22,7 @@ static void glfw_error_callback(int error, const char* description)
 
 HistoricalMap::HistoricalMap()
 {
-    glfwSetErrorCallback(glfw_error_callback);
+    glfwSetErrorCallback(glfwErrorCallback);
     if (!glfwInit()) {
         throw std::runtime_error("Failed to initialize glfw.");
     }
