@@ -9,6 +9,9 @@
 
 namespace ui {
 
+constexpr int WINDOW_WIDTH = 1280;
+constexpr int WINDOW_HEIGHT = 720;
+
 namespace {
 static void glfw_error_callback(int error, const char* description)
 {
@@ -29,7 +32,7 @@ HistoricalMap::HistoricalMap()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
     // Create window with graphics context
-    window = glfwCreateWindow(1280, 720, "Historical Map", NULL, NULL);
+    window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Historical Map", NULL, NULL);
     if (window == NULL) {
         throw std::runtime_error("Failed to create window.");
     }
@@ -61,7 +64,7 @@ HistoricalMap::~HistoricalMap()
 
 void HistoricalMap::start()
 {
-    const auto clearColor = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    const auto black = ImVec4(0, 0, 0, 1);
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
@@ -74,7 +77,7 @@ void HistoricalMap::start()
         int displayWidth, displayHeight;
         glfwGetFramebufferSize(window, &displayWidth, &displayHeight);
         glViewport(0, 0, displayWidth, displayHeight);
-        glClearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w);
+        glClearColor(black.x, black.y, black.z, black.w);
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
