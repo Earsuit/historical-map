@@ -24,7 +24,7 @@ HistoricalMap::HistoricalMap()
         throw std::runtime_error("Failed to initialize glfw.");
     }
     
-    const auto glsl_version = "#version 130";
+    const auto glslVersion = "#version 130";
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
@@ -47,7 +47,7 @@ HistoricalMap::HistoricalMap()
     ImGui::StyleColorsDark();
 
     ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init(glsl_version);
+    ImGui_ImplOpenGL3_Init(glslVersion);
 }
 
 HistoricalMap::~HistoricalMap()
@@ -71,9 +71,9 @@ void HistoricalMap::start()
         ImGui::NewFrame();
 
         ImGui::Render();
-        int display_w, display_h;
-        glfwGetFramebufferSize(window, &display_w, &display_h);
-        glViewport(0, 0, display_w, display_h);
+        int displayWidth, displayHeight;
+        glfwGetFramebufferSize(window, &displayWidth, &displayHeight);
+        glViewport(0, 0, displayWidth, displayHeight);
         glClearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w);
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
