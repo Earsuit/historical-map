@@ -27,7 +27,7 @@ SET(IMGUI_SRC
 )
 
 add_executable(HistoricalMap main.cpp ${IMGUI_SRC})
-target_link_libraries(HistoricalMap PRIVATE OpenGL::GL glfw GLEW::GLEW)
+target_link_libraries(HistoricalMap PRIVATE OpenGL::GL glfw GLEW::GLEW ${CMAKE_DL_LIBS})
 
 add_subdirectory(src)
 
