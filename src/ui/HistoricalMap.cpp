@@ -3,6 +3,7 @@
 #include "external/imgui/imgui.h"
 #include "external/imgui/backends/imgui_impl_glfw.h"
 #include "external/imgui/backends/imgui_impl_opengl3.h"
+#include "external/implot/implot.h"
 
 #include <stdexcept>
 #include <string>
@@ -47,6 +48,7 @@ HistoricalMap::HistoricalMap()
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
+    ImPlot::CreateContext();
     ImGui::StyleColorsDark();
 
     ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -56,6 +58,7 @@ HistoricalMap::HistoricalMap()
 HistoricalMap::~HistoricalMap()
 {
     ImGui_ImplGlfw_Shutdown();
+    ImPlot::DestroyContext();
     ImGui::DestroyContext();
 
     glfwDestroyWindow(window);
