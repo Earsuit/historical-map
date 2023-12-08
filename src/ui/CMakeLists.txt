@@ -1,6 +1,6 @@
 SET(UI_SRC
-    HistoricalMap.h
     HistoricalMap.cpp
+    MapPlot.cpp
 )
 
 target_sources(HistoricalMap PRIVATE ${UI_SRC})

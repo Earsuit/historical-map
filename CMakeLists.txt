@@ -10,6 +10,7 @@ find_package(glfw3 REQUIRED)
 include_directories(${CMAKE_SOURCE_DIR})
 include_directories(external/imgui)
 include_directories(external/implot)
+include_directories(external/stb)
 
 SET(IMGUI_SRC 
     external/imgui/imgui.cpp
@@ -25,7 +26,11 @@ SET(IMPLOT_SRC
     external/implot/implot_items.cpp
 )
 
-add_executable(HistoricalMap main.cpp ${IMGUI_SRC} ${IMPLOT_SRC})
+SET(STB_SRC
+    external/stb/stb_image.h
+)
+
+add_executable(HistoricalMap main.cpp ${IMGUI_SRC} ${IMPLOT_SRC} ${STB_SRC})
 target_link_libraries(HistoricalMap PRIVATE OpenGL::GL glfw GLEW::GLEW ${CMAKE_DL_LIBS})
 
 add_subdirectory(src)
