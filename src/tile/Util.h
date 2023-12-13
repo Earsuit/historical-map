@@ -5,9 +5,6 @@
 
 namespace tile {
 
-constexpr float PI_DEG = 360.0;
-constexpr float HALF_PI_DEG = 180.0;
-
 // definition https://wiki.openstreetmap.org/wiki/Bounding_Box
 struct BoundingBox {
     float west;

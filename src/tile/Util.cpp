@@ -5,6 +5,8 @@
 namespace tile {
 
 constexpr int TILE_SIZE = 256;
+constexpr float PI_DEG = 360.0;
+constexpr float HALF_PI_DEG = 180.0;
 
 std::tuple<int, int, int> lonLat2Cords(float latitude, float longitude, int zoom)
 {
