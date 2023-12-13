@@ -17,8 +17,7 @@ float deg2Rad(float degree);
 float rad2Deg(float radius);
 std::tuple<int, int, int> lonLat2Cords(float latitude, float longitude, int zoom);
 std::tuple<float, float> cords2LonLat(int x, int y, int zoom);
-// https://learn.microsoft.com/en-us/azure/azure-maps/zoom-levels-and-tile-grid?tabs=csharp#tile-math-source-code
-int bestZoomLevel(const BoundingBox& bbox, int padding, int tileSize);
+int bestZoomLevel(const BoundingBox& bbox, int padding, int mapWidth, int mapHeight);
 
 }
 

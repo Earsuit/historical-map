@@ -41,19 +41,20 @@ float rad2Deg(float radius)
     return radius * HALF_PI_DEG / M_PI;
 }
 
-int bestZoomLevel(const BoundingBox& bbox, int padding, int tileSize)
+// https://learn.microsoft.com/en-us/azure/azure-maps/zoom-levels-and-tile-grid?tabs=csharp#tile-math-source-code
+int bestZoomLevel(const BoundingBox& bbox, int padding, int mapWidth, int mapHeight)
 {
     const float longitudeDelta = bbox.east > bbox.west ? 
                                  bbox.east - bbox.west : 
                                  PI_DEG - (bbox.west - bbox.east);
-    const float resolutionHorizontal = longitudeDelta / (TILE_SIZE - padding * 2);
+    const float resolutionHorizontal = longitudeDelta / (mapWidth - padding * 2);
 
     const float ry1 = std::log((std::sin(deg2Rad(bbox.south)) + 1) / std::cos(deg2Rad(bbox.south)));
     const float ry2 = std::log((std::sin(deg2Rad(bbox.north)) + 1) / std::cos(deg2Rad(bbox.north)));
     const float centerLat = rad2Deg(std::atan(std::sinh((ry1 + ry2) / 2)));
     const float vy0 = std::log(tanf(M_PI * (0.25f + centerLat / PI_DEG)));
     const float vy1 = std::log(tanf(M_PI * (0.25f + bbox.north / PI_DEG)));
-    const float zoomFactorPowered = (TILE_SIZE * 0.5f - padding) / (40.7436654315252 * (vy1 - vy0));
+    const float zoomFactorPowered = (mapHeight * 0.5f - padding) / (40.7436654315252 * (vy1 - vy0));
     const float resolutionVertical = PI_DEG / (zoomFactorPowered * TILE_SIZE);
 
     const float resolution = std::max(resolutionVertical, resolutionHorizontal);
