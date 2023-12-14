@@ -15,7 +15,7 @@ class TileSourceUrl: public TileSource {
 public:
     TileSourceUrl() = default;
     TileSourceUrl(const std::string& url);
-    ~TileSourceUrl() override;
+    ~TileSourceUrl() override = default;
 
     void request(int x, int y, int z) override;
     void waitAll() override;
