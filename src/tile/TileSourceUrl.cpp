@@ -54,6 +54,11 @@ std::vector<std::byte> requestData(const char* url)
 }
 }
 
+TileSourceUrl::TileSourceUrl(const std::string& url)
+{
+    setUrl(url);
+}
+
 void TileSourceUrl::request(int x, int y, int z)
 {
     requests.emplace_back(std::async(std::launch::async, 

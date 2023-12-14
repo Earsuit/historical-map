@@ -14,6 +14,7 @@ namespace tile {
 class TileSourceUrl: public TileSource {
 public:
     TileSourceUrl() = default;
+    TileSourceUrl(const std::string& url);
     ~TileSourceUrl() override;
 
     void request(int x, int y, int z) override;
