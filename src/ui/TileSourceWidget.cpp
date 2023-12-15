@@ -1,6 +1,6 @@
 #include "src/ui/TileSourceWidget.h"
 #include "src/tile/TileSourceUrl.h"
-#include "src/ui/util.h"
+#include "src/ui/Util.h"
 
 #include "external/imgui/imgui.h"
 #include "external/imgui/misc/cpp/imgui_stdlib.h"
