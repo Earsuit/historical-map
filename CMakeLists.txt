@@ -22,16 +22,11 @@ SET(IMGUI_SRC
     external/imgui/backends/imgui_impl_glfw.cpp
     external/imgui/backends/imgui_impl_opengl3.cpp
     external/imgui/misc/cpp/imgui_stdlib.cpp
-    external/imgui/misc/cpp/imgui_stdlib.h
 )
 
 SET(IMPLOT_SRC
     external/implot/implot.cpp
     external/implot/implot_items.cpp
-)
-
-SET(STB_SRC
-    external/stb/stb_image.h
 )
 
 add_executable(HistoricalMap main.cpp ${IMGUI_SRC} ${IMPLOT_SRC} ${STB_SRC})
