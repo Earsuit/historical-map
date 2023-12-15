@@ -76,6 +76,8 @@ void HistoricalMap::start()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
+        tileSourceWidget.paint();
+
         ImGui::Render();
         int displayWidth, displayHeight;
         glfwGetFramebufferSize(window, &displayWidth, &displayHeight);

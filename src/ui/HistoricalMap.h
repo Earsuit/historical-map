@@ -4,6 +4,8 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+#include "src/ui/TileSourceWidget.h"
+
 namespace ui {
 
 class HistoricalMap {
@@ -15,6 +17,7 @@ public:
 
 private:
     GLFWwindow* window;
+    TileSourceWidget tileSourceWidget;
 };
 
 }

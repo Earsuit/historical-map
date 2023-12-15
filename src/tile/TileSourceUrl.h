@@ -35,7 +35,7 @@ private:
     Url url;
     std::list<std::future<std::shared_ptr<Tile>>> requests;
 
-    const char* makeUrl(int x, int y, int z);
+    const std::string makeUrl(int x, int y, int z);
 };
 
 }

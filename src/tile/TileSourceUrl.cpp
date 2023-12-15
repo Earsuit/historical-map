@@ -23,20 +23,21 @@ constexpr auto Y_MATCHER_LEN = Y_MATCHER.size();
 namespace {
 size_t curlCallback(char *ptr, size_t size, size_t nmemb, void *userdata)
 {
+    const auto bytePtr = reinterpret_cast<std::byte*>(ptr);
     auto data = reinterpret_cast<std::vector<std::byte>*>(userdata);
     data->reserve(nmemb);
 
-    data->insert(data->cend(), ptr, ptr + nmemb);
+    data->insert(data->cend(), bytePtr, bytePtr + nmemb);
 
     return nmemb;
 }
 
-std::vector<std::byte> requestData(const char* url)
+std::vector<std::byte> requestData(const std::string& url)
 {
     std::vector<std::byte> data;
 
     const auto curl = curl_easy_init();
-    curl_easy_setopt(curl, CURLOPT_URL, url);
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl, CURLOPT_NOPROGRESS, SHUT_OFF_THE_PROGRESS_METER);
     curl_easy_setopt(curl, CURLOPT_USERAGENT, 'curl');
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, 1);
@@ -106,7 +107,7 @@ bool TileSourceUrl::setUrl(const std::string& url)
            this->url.yPos != std::string::npos;
 }
 
-const char* TileSourceUrl::makeUrl(int x, int y, int z)
+const std::string TileSourceUrl::makeUrl(int x, int y, int z)
 {
     auto realUrl = url.url;
 
@@ -114,7 +115,7 @@ const char* TileSourceUrl::makeUrl(int x, int y, int z)
     realUrl.replace(url.xPos, X_MATCHER_LEN, std::to_string(x));
     realUrl.replace(url.yPos, Y_MATCHER_LEN, std::to_string(y));
     
-    return realUrl.c_str();
+    return realUrl;
 }
 
 }
