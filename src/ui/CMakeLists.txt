@@ -1,6 +1,6 @@
 SET(UI_SRC
     HistoricalMap.cpp
-    MapPlot.cpp
+    MapWidget.cpp
     TileSourceWidget.cpp
     util.cpp
 )

@@ -7,7 +7,7 @@
 
 namespace ui {
 
-class MapPlot {
+class MapWidget {
 public:
     void paint();
 

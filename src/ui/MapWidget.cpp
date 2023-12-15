@@ -1,4 +1,4 @@
-#include "src/ui/MapPlot.h"
+#include "src/ui/MapWidget.h"
 
 #include "external/imgui/imgui.h"
 #include "external/implot/implot.h"
@@ -12,7 +12,7 @@ constexpr auto AXIS_FLAGS = ImPlotAxisFlags_NoLabel | ImPlotAxisFlags_NoGridLine
                        ImPlotAxisFlags_NoInitialFit | ImPlotAxisFlags_NoMenus |
                        ImPlotAxisFlags_NoMenus | ImPlotAxisFlags_NoHighlight;
 
-void MapPlot::paint()
+void MapWidget::paint()
 {
     ImGui::Begin("Map plot");
     if (ImPlot::BeginPlot("##map")) {
@@ -30,7 +30,7 @@ void MapPlot::paint()
 }
 
 // uv0, uv1
-std::pair<ImVec2, ImVec2> MapPlot::calculateBound(int x, int y)
+std::pair<ImVec2, ImVec2> MapWidget::calculateBound(int x, int y)
 {
     return {};
 }
