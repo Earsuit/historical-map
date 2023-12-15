@@ -13,9 +13,9 @@ namespace tile {
 using namespace std::chrono_literals;
 
 constexpr long SHUT_OFF_THE_PROGRESS_METER = 1;
-constexpr std::string_view ZOOM_MATCHER = "$zoom$";
-constexpr std::string_view X_MATCHER = "$x$";
-constexpr std::string_view Y_MATCHER = "$y$";
+constexpr std::string_view ZOOM_MATCHER = "{zoom}";
+constexpr std::string_view X_MATCHER = "{x}";
+constexpr std::string_view Y_MATCHER = "{y}";
 constexpr auto ZOOM_MATCHER_LEN = ZOOM_MATCHER.size();
 constexpr auto X_MATCHER_LEN = X_MATCHER.size();
 constexpr auto Y_MATCHER_LEN = Y_MATCHER.size();

@@ -7,7 +7,7 @@
 
 namespace ui {
 
-constexpr auto DEFAULT_URL = "https://a.tile.openstreetmap.org/$Z$/$X$/$Y$.png";
+constexpr auto DEFAULT_URL = "https://a.tile.openstreetmap.org/{Z}/{X}/{Y}.png";
 constexpr auto CONFIG_TYPE = "URL\0";
 
 TileSourceWidget::TileSourceWidget() :
