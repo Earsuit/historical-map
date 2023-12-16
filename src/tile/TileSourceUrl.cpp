@@ -39,7 +39,7 @@ std::vector<std::byte> requestData(const std::string& url)
     const auto curl = curl_easy_init();
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl, CURLOPT_NOPROGRESS, SHUT_OFF_THE_PROGRESS_METER);
-    curl_easy_setopt(curl, CURLOPT_USERAGENT, 'curl');
+    curl_easy_setopt(curl, CURLOPT_USERAGENT, "curl");
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, 1);
     curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 1);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, reinterpret_cast<void*>(&data));
