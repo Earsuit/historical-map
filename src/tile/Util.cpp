@@ -21,7 +21,7 @@ std::tuple<int, int, int> lonLat2Cords(float latitude, float longitude, int zoom
     return {x, y, n};
 }
 
-std::tuple<float, float> cords2LonLat(int x, int y, int zoom)
+std::tuple<float, float> cords2LonLat(float x, float y, int zoom)
 {
     const auto n = 1 << zoom;
 
@@ -59,7 +59,7 @@ int bestZoomLevel(const BoundingBox& bbox, int padding, int mapWidth, int mapHei
 
     const float resolution = std::max(resolutionVertical, resolutionHorizontal);
 
-    return static_cast<int>(std::log2(PI_DEG / (resolution * PI_DEG)));
+    return static_cast<int>(std::log2(PI_DEG / (resolution * TILE_SIZE)));
 }
 
 }
