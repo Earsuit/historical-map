@@ -14,6 +14,7 @@ include_directories(${CMAKE_SOURCE_DIR})
 include_directories(external/imgui)
 include_directories(external/implot)
 include_directories(external/stb)
+include_directories(external/spdlog/include)
 
 SET(IMGUI_SRC 
     external/imgui/imgui.cpp
