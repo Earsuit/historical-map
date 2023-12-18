@@ -8,8 +8,7 @@
 #include <utility>
 #include <mutex>
 
-namespace logger
-{
+namespace logger {
 class StringSink : public spdlog::sinks::base_sink<std::mutex> {
 public:
     const std::vector<std::string> dumpLogs();

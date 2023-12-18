@@ -11,16 +11,14 @@
 namespace ui {
 class LogWidget {
 public:
-    LogWidget(spdlog::logger& logger, std::shared_ptr<logger::StringSink> sink): 
-        sink{sink},
-        logger{logger} 
-    {}
+    LogWidget(spdlog::logger& logger, std::shared_ptr<logger::StringSink> sink);
     void paint();
 
 private:
     std::shared_ptr<logger::StringSink> sink;
     spdlog::logger& logger;
     std::vector<std::string> logs;
+    int logLevel = spdlog::level::info;
 };
 }
 
