@@ -21,7 +21,10 @@ static void glfwErrorCallback(int error, const char* description)
 }
 }
 
-HistoricalMap::HistoricalMap()
+HistoricalMap::HistoricalMap() :
+    loggerSink{std::make_shared<logger::StringSink>()},
+    logger{"Historical Map", loggerSink},
+    logWidget{logger, loggerSink}
 {
     glfwSetErrorCallback(glfwErrorCallback);
     if (!glfwInit()) {
@@ -53,6 +56,8 @@ HistoricalMap::HistoricalMap()
 
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glslVersion);
+
+    logger.info("Initialization complete.");
 }
 
 HistoricalMap::~HistoricalMap()
@@ -77,6 +82,7 @@ void HistoricalMap::start()
         ImGui::NewFrame();
 
         tileSourceWidget.paint();
+        logWidget.paint();
 
         ImGui::Render();
         int displayWidth, displayHeight;

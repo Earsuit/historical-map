@@ -5,6 +5,12 @@
 #include <GLFW/glfw3.h>
 
 #include "src/ui/TileSourceWidget.h"
+#include "src/ui/LogWidget.h"
+#include "src/logger/StringSink.h"
+
+#include "spdlog/spdlog.h"
+
+#include <memory>
 
 namespace ui {
 
@@ -18,6 +24,9 @@ public:
 private:
     GLFWwindow* window;
     TileSourceWidget tileSourceWidget;
+    std::shared_ptr<logger::StringSink> loggerSink;
+    spdlog::logger logger;
+    LogWidget logWidget;
 };
 
 }
