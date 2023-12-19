@@ -58,6 +58,7 @@ HistoricalMap::HistoricalMap() :
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glslVersion);
 
+    logger.set_pattern("[%D %T %z] [%l] %v");
     logger.info("Initialization complete.");
 }
 
