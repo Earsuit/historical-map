@@ -10,7 +10,8 @@ namespace ui {
 constexpr auto DEFAULT_URL = "https://a.tile.openstreetmap.org/{Z}/{X}/{Y}.png";
 constexpr auto CONFIG_TYPE = "URL\0";
 
-TileSourceWidget::TileSourceWidget() :
+TileSourceWidget::TileSourceWidget(spdlog::logger& logger) :
+    logger{logger},
     tileSource{std::make_shared<tile::TileSourceUrl>(DEFAULT_URL)},
     showConfigWidget{[this](){this->showTileSourceUrlConfig();}}
 {
@@ -40,6 +41,8 @@ void TileSourceWidget::showTileSourceUrlConfig()
         } else {
             tileSource = std::make_shared<tile::TileSourceUrl>(url);
         }
+
+        logger.info("Set url source to {}.", url);
     }
     ImGui::SameLine(); 
     HelpMarker("For different tile server url, please check https://www.trailnotes.org/FetchMap/TileServeSource.html");

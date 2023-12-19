@@ -23,9 +23,9 @@ public:
 
 private:
     GLFWwindow* window;
-    TileSourceWidget tileSourceWidget;
     std::shared_ptr<logger::StringSink> loggerSink;
     spdlog::logger logger;
+    TileSourceWidget tileSourceWidget;
     LogWidget logWidget;
 };
 

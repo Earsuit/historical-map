@@ -24,6 +24,7 @@ static void glfwErrorCallback(int error, const char* description)
 HistoricalMap::HistoricalMap() :
     loggerSink{std::make_shared<logger::StringSink>()},
     logger{"Historical Map", loggerSink},
+    tileSourceWidget{logger},
     logWidget{logger, loggerSink}
 {
     glfwSetErrorCallback(glfwErrorCallback);
