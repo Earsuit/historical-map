@@ -25,7 +25,8 @@ HistoricalMap::HistoricalMap() :
     loggerSink{std::make_shared<logger::StringSink>()},
     logger{"Historical Map", loggerSink},
     tileSourceWidget{logger},
-    logWidget{logger, loggerSink}
+    logWidget{logger, loggerSink},
+    mapWidget{logger}
 {
     glfwSetErrorCallback(glfwErrorCallback);
     if (!glfwInit()) {
@@ -84,6 +85,7 @@ void HistoricalMap::start()
         ImGui::NewFrame();
 
         tileSourceWidget.paint();
+        mapWidget.paint();
         logWidget.paint();
 
         ImGui::Render();

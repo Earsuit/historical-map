@@ -6,6 +6,7 @@
 
 #include "src/ui/TileSourceWidget.h"
 #include "src/ui/LogWidget.h"
+#include "src/ui/MapWidget.h"
 #include "src/logger/StringSink.h"
 
 #include "spdlog/spdlog.h"
@@ -25,8 +26,9 @@ private:
     GLFWwindow* window;
     std::shared_ptr<logger::StringSink> loggerSink;
     spdlog::logger logger;
-    TileSourceWidget tileSourceWidget;
     LogWidget logWidget;
+    TileSourceWidget tileSourceWidget;
+    MapWidget mapWidget;
 };
 
 }
