@@ -15,6 +15,7 @@ public:
 
 private:
     spdlog::logger& logger;
+    int zoom = 0;
 
     std::pair<ImVec2, ImVec2> calculateBound(int x, int y);
 };

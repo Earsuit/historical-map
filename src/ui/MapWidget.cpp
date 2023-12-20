@@ -1,4 +1,5 @@
 #include "src/ui/MapWidget.h"
+#include "src/tile/Util.h"
 
 #include "external/imgui/imgui.h"
 #include "external/implot/implot.h"
@@ -11,6 +12,7 @@ constexpr auto AXIS_FLAGS = ImPlotAxisFlags_NoLabel | ImPlotAxisFlags_NoGridLine
                        ImPlotAxisFlags_NoTickMarks | ImPlotAxisFlags_NoTickLabels |
                        ImPlotAxisFlags_NoInitialFit | ImPlotAxisFlags_NoMenus |
                        ImPlotAxisFlags_NoMenus | ImPlotAxisFlags_NoHighlight;
+constexpr int BBOX_ZOOM_LEVEL = 0; // only compute the zoom level from level 0, otherwise the computed zoom level will be a mess
 
 void MapWidget::paint()
 {
@@ -22,6 +24,20 @@ void MapWidget::paint()
         ImPlot::SetupAxisLimitsConstraints(ImAxis_X1, 0.0, 1.0);
         ImPlot::SetupAxisLimits(ImAxis_X1, 0.0, 1.0);
         ImPlot::SetupAxisLimits(ImAxis_Y1, 0.0, 1.0);
+        
+        const auto plotLimits = ImPlot::GetPlotLimits(ImAxis_X1, ImAxis_Y1);
+        const auto plotSize = ImPlot::GetPlotSize();
+
+        const auto [west, north] = tile::cords2LonLat(plotLimits.X.Min, plotLimits.Y.Min, BBOX_ZOOM_LEVEL);
+        const auto [east, south] = tile::cords2LonLat(plotLimits.X.Max, plotLimits.Y.Max, BBOX_ZOOM_LEVEL);
+        const tile::BoundingBox bbox = {west, south, east, north};
+
+        logger.debug("Plot limit X [{}, {}], Y [{}, {}]", plotLimits.X.Min, plotLimits.X.Max, plotLimits.Y.Min, plotLimits.Y.Max);
+        logger.debug("Plot size x={}, y={} pixels", plotSize.x, plotSize.y);
+        logger.debug("west={}, north={}, east={}, south={}", west, north, east, south);
+
+        zoom = bestZoomLevel(bbox, 0, plotSize.x, plotSize.y);
+        logger.debug("Zoom {}", zoom);
 
         ImPlot::EndPlot();
     }
