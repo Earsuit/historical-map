@@ -13,6 +13,14 @@ struct BoundingBox {
     float north;
 };
 
+struct Coordinate {
+    int x = 0;
+    int y = 0;
+    int z = 0;
+
+    auto operator<=>(const Coordinate& other) const noexcept = default;
+};
+
 float deg2Rad(float degree);
 float rad2Deg(float radius);
 int longitude2X(float longitude, int zoom);

@@ -4,14 +4,23 @@
 #include "external/stb/stb_image.h"
 
 namespace tile {
-
-Tile::Tile(int x, int y, int z, const std::vector<std::byte> &rawBlob):
-    x{x},
-    y{y},
-    z{z},
+Tile::Tile(const Coordinate& coord, const std::vector<std::byte> &rawBlob):
+    coord{coord},
     rawBlob{rawBlob}
 {
     glLoad();
+}
+
+Tile::Tile(int x, int y, int z, const std::vector<std::byte> &rawBlob):
+    coord{x, y, z},
+    rawBlob{rawBlob}
+{
+    glLoad();
+}
+
+const Coordinate Tile::getCoordinate() const noexcept
+{
+    return coord;
 }
 
 void Tile::glLoad()
@@ -39,6 +48,11 @@ void Tile::glLoad()
 void* Tile::getTexture()
 {
     return reinterpret_cast<void*>(&id);
+}
+
+bool Tile::operator==(const Tile& other) const noexcept
+{
+    return coord == other.coord;
 }
 
 }

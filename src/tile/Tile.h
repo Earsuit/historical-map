@@ -1,6 +1,8 @@
 #ifndef SRC_TILE_TILE_H
 #define SRC_TILE_TILE_H
 
+#include "src/tile/Util.h"
+
 #include <vector>
 #include <cstddef>
 
@@ -10,14 +12,16 @@ namespace tile {
 
 class Tile {
 public:
+    Tile(const Coordinate& coord, const std::vector<std::byte> &rawBlob);
     Tile(int x, int y, int z, const std::vector<std::byte> &rawBlob);
 
     void* getTexture();
+    const Coordinate getCoordinate() const noexcept;
+
+    bool operator==(const Tile& other) const noexcept;
 
 private:
-    int x = 0;
-    int y = 0;
-    int z = 0;
+    Coordinate coord;
     int channels;
     GLuint id = 0;
     GLsizei width = 0;
