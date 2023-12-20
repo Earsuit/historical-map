@@ -20,7 +20,7 @@ public:
     void request(int x, int y, int z) override;
     void waitAll() override;
     bool isAllReady() override;
-    void takeReady(std::vector<std::shared_ptr<Tile>>& tiles) override;
+    std::vector<std::shared_ptr<Tile>> takeReady() override;
 
     bool setUrl(const std::string& url);
 

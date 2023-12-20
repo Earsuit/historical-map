@@ -82,8 +82,10 @@ bool TileSourceUrl::isAllReady()
     });
 }
 
-void TileSourceUrl::takeReady(std::vector<std::shared_ptr<Tile>>& tiles)
+std::vector<std::shared_ptr<Tile>> TileSourceUrl::takeReady()
 {
+    std::vector<std::shared_ptr<Tile>> tiles;
+
     requests.remove_if([&tiles](auto& fut){
         if (fut.wait_for(0s) == std::future_status::ready) {
             tiles.emplace_back(fut.get());
@@ -92,6 +94,8 @@ void TileSourceUrl::takeReady(std::vector<std::shared_ptr<Tile>>& tiles)
 
         return false;
     });
+
+    return tiles;
 }
 
 // tile server url format specified by https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames

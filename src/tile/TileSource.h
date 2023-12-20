@@ -18,7 +18,7 @@ public:
 
     virtual bool isAllReady() = 0;
 
-    virtual void takeReady(std::vector<std::shared_ptr<Tile>>& tiles) = 0;
+    virtual std::vector<std::shared_ptr<Tile>> takeReady() = 0;
 };
 
 }
