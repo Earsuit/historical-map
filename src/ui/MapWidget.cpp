@@ -17,7 +17,8 @@ constexpr int BBOX_ZOOM_LEVEL = 0; // only compute the zoom level from level 0, 
 void MapWidget::paint()
 {
     ImGui::Begin("Map plot");
-    if (ImPlot::BeginPlot("##map", ImVec2(0,0))) {
+    const auto sizeAvail = ImGui::GetContentRegionAvail();
+    if (ImPlot::BeginPlot("##map", ImVec2(sizeAvail.x, sizeAvail.y))) {
         ImPlot::SetupAxis(ImAxis_X1, nullptr, AXIS_FLAGS);
         ImPlot::SetupAxis(ImAxis_Y1, nullptr, AXIS_FLAGS | ImPlotAxisFlags_Invert);
         ImPlot::SetupAxisLimitsConstraints(ImAxis_Y1, 0.0, 1.0);
