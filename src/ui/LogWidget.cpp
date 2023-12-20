@@ -37,18 +37,19 @@ void LogWidget::paint()
                 ImGui::LogToClipboard();
             } 
 
-            if (clear) {
-                sink->dumpLogs();
-                std::vector<std::string>().swap(logs);
-            } else if (const auto newLogs = sink->dumpLogs(); !newLogs.empty()){
-                logs.reserve(logs.size() + newLogs.size());
-                logs.insert(logs.end(), newLogs.cbegin(), newLogs.cend());
-            }
-            
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, IMEM_SPACING);
-            std::for_each(logs.cbegin(), logs.cend(), [](const auto& message){
-                ImGui::TextUnformatted(message.c_str());
-            });
+
+            if (clear) {
+                logger.flush();
+                start = end = 0;
+            } else {
+                updateLogs();
+
+                for (auto i = start; i != end; i++) {
+                    ImGui::TextUnformatted(logs[i].c_str());
+                }
+            }
+
             ImGui::PopStyleVar();
 
             if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY()) {
@@ -58,6 +59,18 @@ void LogWidget::paint()
 
         ImGui::EndChild();
         ImGui::End();
+    }
+}
+
+void LogWidget::updateLogs()
+{
+    const auto& newLogs = sink->dumpLogs();
+    for (auto& newLog : newLogs) {
+        logs[end++] = newLog;
+
+        if (end == start) {
+            start++;
+        }
     }
 }
 
