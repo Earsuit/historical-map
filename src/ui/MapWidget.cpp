@@ -28,8 +28,10 @@ void MapWidget::paint()
         const auto plotLimits = ImPlot::GetPlotLimits(ImAxis_X1, ImAxis_Y1);
         const auto plotSize = ImPlot::GetPlotSize();
 
-        const auto [west, north] = tile::cords2LonLat(plotLimits.X.Min, plotLimits.Y.Min, BBOX_ZOOM_LEVEL);
-        const auto [east, south] = tile::cords2LonLat(plotLimits.X.Max, plotLimits.Y.Max, BBOX_ZOOM_LEVEL);
+        const auto west = tile::x2Longitude(plotLimits.X.Min, BBOX_ZOOM_LEVEL);
+        const auto east = tile::x2Longitude(plotLimits.X.Max, BBOX_ZOOM_LEVEL);
+        const auto north = tile::y2Latitude(plotLimits.Y.Min, BBOX_ZOOM_LEVEL);
+        const auto south = tile::y2Latitude(plotLimits.Y.Max, BBOX_ZOOM_LEVEL);
         const tile::BoundingBox bbox = {west, south, east, north};
 
         logger.debug("Plot limit X [{}, {}], Y [{}, {}]", plotLimits.X.Min, plotLimits.X.Max, plotLimits.Y.Min, plotLimits.Y.Max);
@@ -49,6 +51,11 @@ void MapWidget::paint()
 std::pair<ImVec2, ImVec2> MapWidget::calculateBound(int x, int y)
 {
     return {};
+}
+
+void setTileSource(std::shared_ptr<tile::TileSource> tileSource)
+{
+    tileSource = tileSource;
 }
 
 }
