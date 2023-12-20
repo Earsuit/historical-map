@@ -8,27 +8,33 @@ constexpr int TILE_SIZE = 256;
 constexpr float PI_DEG = 360.0;
 constexpr float HALF_PI_DEG = 180.0;
 
-std::tuple<int, int, int> lonLat2Cords(float latitude, float longitude, int zoom)
+int longitude2X(float longitude, int zoom)
 {
     const auto n = 1 << zoom;
 
-    const auto x = static_cast<int>(std::floor(n * (longitude + HALF_PI_DEG) / PI_DEG));
-
-    // to radians
-    latitude = latitude * M_PI / HALF_PI_DEG;
-    const auto y = static_cast<int>(std::floor(n * (1 - (std::asinh(std::tan(latitude)) / M_PI)) / 2));
-
-    return {x, y, n};
+    return static_cast<int>(std::floor(n * (longitude + HALF_PI_DEG) / PI_DEG));
 }
 
-std::tuple<float, float> cords2LonLat(float x, float y, int zoom)
+int latitude2Y(float latitude, int zoom)
 {
     const auto n = 1 << zoom;
 
-    const float longitude = PI_DEG * x / n - HALF_PI_DEG;
-    const float latitude = std::atan(std::sinh(M_PI * (1- 2*y/n))) * HALF_PI_DEG / M_PI;
+    latitude = latitude * M_PI / HALF_PI_DEG;
+    return static_cast<int>(std::floor(n * (1 - (std::asinh(std::tan(latitude)) / M_PI)) / 2));
+}
 
-    return {longitude, latitude};
+float x2Longitude(float x, int zoom)
+{
+    const auto n = 1 << zoom;
+
+    return PI_DEG * x / n - HALF_PI_DEG;
+}
+
+float y2Latitude(float y, int zoom)
+{
+    const auto n = 1 << zoom;
+
+    return std::atan(std::sinh(M_PI * (1- 2*y/n))) * HALF_PI_DEG / M_PI;
 }
 
 float deg2Rad(float degree)
