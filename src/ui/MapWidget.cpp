@@ -17,7 +17,7 @@ constexpr int BBOX_ZOOM_LEVEL = 0; // only compute the zoom level from level 0, 
 void MapWidget::paint()
 {
     ImGui::Begin("Map plot");
-    if (ImPlot::BeginPlot("##map")) {
+    if (ImPlot::BeginPlot("##map", ImVec2(0,0))) {
         ImPlot::SetupAxis(ImAxis_X1, nullptr, AXIS_FLAGS);
         ImPlot::SetupAxis(ImAxis_Y1, nullptr, AXIS_FLAGS | ImPlotAxisFlags_Invert);
         ImPlot::SetupAxisLimitsConstraints(ImAxis_Y1, 0.0, 1.0);
@@ -39,7 +39,20 @@ void MapWidget::paint()
         logger.debug("west={}, north={}, east={}, south={}", west, north, east, south);
 
         zoom = bestZoomLevel(bbox, 0, plotSize.x, plotSize.y);
-        logger.debug("Zoom {}", zoom);
+
+        int xMin = 0, xMax = 0, yMin = 0, yMax = 0;
+
+        // if zoom == 0, there is only one tile [0,0]
+        // but if use longitude2X or latitude2Y, the xMax and yMax will be 1 due to the formula
+        // so we handle them differently
+        if (zoom != 0) {
+            xMin = tile::longitude2X(west, zoom);
+            xMax = tile::longitude2X(east, zoom);
+            yMin = tile::latitude2Y(north, zoom);
+            yMax = tile::latitude2Y(south, zoom);
+        }
+
+        logger.debug("Zoom {} tile X from [{}, {}], Y from [{}, {}]", zoom, xMin, xMax, yMin, yMax);
 
         ImPlot::EndPlot();
     }
