@@ -28,7 +28,7 @@ int latitude2Y(float latitude, int zoom);
 float x2Longitude(float x, int zoom);
 float y2Latitude(float y, int zoom);
 int bestZoomLevel(const BoundingBox& bbox, int padding, int mapWidth, int mapHeight);
-
+float computeTileBound(int coord, int zoom);
 }
 
 #endif

@@ -55,6 +55,21 @@ void MapWidget::paint()
 
         logger.trace("Zoom {} tile X from [{}, {}], Y from [{}, {}]", zoom, xMin, xMax, yMin, yMax);
 
+        ImVec2 bMax = {0, 0};
+        ImVec2 bMin = {0, 0};
+
+        for (auto x = xMin; x <= xMax; x++) {
+            bMax.x = tile::computeTileBound(x+1, zoom);
+            bMin.x = tile::computeTileBound(x, zoom);
+            for (auto y = yMin; y <= yMax; y++) {
+                bMax.y = tile::computeTileBound(y+1, zoom);
+                bMin.y = tile::computeTileBound(y, zoom);
+                if (auto tile = tileLoader.loadTile({x, y, zoom}); tile) {
+                    ImPlot::PlotImage("##", (*tile)->getTexture(), bMin, bMax);
+                }
+            }
+        }
+
         ImPlot::EndPlot();
     }
 
@@ -67,9 +82,9 @@ std::pair<ImVec2, ImVec2> MapWidget::calculateBound(int x, int y)
     return {};
 }
 
-void setTileSource(std::shared_ptr<tile::TileSource> tileSource)
+void MapWidget::setTileSource(std::shared_ptr<tile::TileSource> tileSource)
 {
-    tileSource = tileSource;
+    tileLoader.setTileSource(tileSource);
 }
 
 }

@@ -68,4 +68,9 @@ int bestZoomLevel(const BoundingBox& bbox, int padding, int mapWidth, int mapHei
     return static_cast<int>(std::log2(PI_DEG / (resolution * TILE_SIZE)));
 }
 
+float computeTileBound(int coord, int zoom)
+{
+    return static_cast<float>(coord) / (1<<zoom);
+}
+
 }
