@@ -13,7 +13,6 @@ namespace tile {
 class Tile {
 public:
     Tile(const Coordinate& coord, const std::vector<std::byte> &rawBlob);
-    Tile(int x, int y, int z, const std::vector<std::byte> &rawBlob);
 
     void* getTexture();
     const Coordinate getCoordinate() const noexcept;
