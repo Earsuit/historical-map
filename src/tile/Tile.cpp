@@ -22,7 +22,7 @@ void Tile::glLoad()
         return;
     }
 
-    stbi_set_flip_vertically_on_load(false);
+    stbi_set_flip_vertically_on_load(true);
     const auto ptr = stbi_load_from_memory(reinterpret_cast<stbi_uc const *>(rawBlob.data()),
                                 static_cast<int>(rawBlob.size()), &width, &height,
                                 &channels, STBI_rgb_alpha);
