@@ -1,4 +1,5 @@
 #include "TileSourceUrl.h"
+#include "src/logger/Util.h"
 
 #include <future>
 #include <vector>
@@ -55,7 +56,8 @@ std::vector<std::byte> requestData(const std::string& url)
 }
 }
 
-TileSourceUrl::TileSourceUrl(const std::string& url)
+TileSourceUrl::TileSourceUrl(const std::string& url):
+    logger{spdlog::get(logger::LOGGER_NAME)}
 {
     setUrl(url);
 }
@@ -88,6 +90,8 @@ const std::string TileSourceUrl::makeUrl(const Coordinate& coord)
     realUrl.replace(url.zoomPos, ZOOM_MATCHER_LEN, std::to_string(coord.z));
     realUrl.replace(url.xPos, X_MATCHER_LEN, std::to_string(coord.x));
     realUrl.replace(url.yPos, Y_MATCHER_LEN, std::to_string(coord.y));
+
+    logger->debug("Make url {}", realUrl);
     
     return realUrl;
 }

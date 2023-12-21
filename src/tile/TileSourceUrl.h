@@ -4,6 +4,8 @@
 #include "TileSource.h"
 #include "Tile.h"
 
+#include "spdlog/spdlog.h"
+
 #include <string>
 #include <list>
 #include <memory>
@@ -13,7 +15,6 @@ namespace tile {
 
 class TileSourceUrl: public TileSource {
 public:
-    TileSourceUrl() = default;
     TileSourceUrl(const std::string& url);
     ~TileSourceUrl() override = default;
 
@@ -31,6 +32,7 @@ private:
 
     Url url;
 
+    std::shared_ptr<spdlog::logger> logger;
     const std::string makeUrl(const Coordinate& coord);
 };
 
