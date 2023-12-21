@@ -36,6 +36,7 @@ size_t curlCallback(char *ptr, size_t size, size_t nmemb, void *userdata)
 std::vector<std::byte> requestData(const std::string& url)
 {
     std::vector<std::byte> data;
+    auto logger = spdlog::get(logger::LOGGER_NAME);
 
     const auto curl = curl_easy_init();
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
@@ -49,8 +50,10 @@ std::vector<std::byte> requestData(const std::string& url)
     curl_easy_cleanup(curl);
 
     if (res == CURLE_OK) {
+        logger->debug("CURL get success for url {}", url);
         return data;
     } else {
+        logger->error("CURL get fail for url {}, error code {}", url, static_cast<int>(res));
         return {};
     }
 }
