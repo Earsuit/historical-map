@@ -10,40 +10,36 @@ TileLoader::TileLoader(spdlog::logger& logger):
 {
 }
 
-void TileLoader::load(int xMin, int xMax, int yMin, int yMax, int zoom)
+void TileLoader::request(const Coordinate& coord)
 {
     if (!tileSource) {
         logger.debug("TileLoader doesn't have a valid TileSource object, abort loading tiles.");
         return;
     }
 
-    for (auto x = xMin; x <= xMax; x++) {
-        for (auto y = yMin; y <= yMax; y++) {
-            Coordinate coord{x, y, zoom};
-            if (!(futureTiles.contains(coord) || tiles.contains(coord))) {
-                logger.debug("Request tile at x={}, y={}, z={}", x, y, zoom);
-                futureTiles.emplace(std::make_pair(coord, tileSource->request(coord)));
-            }
-        }
+    if (!(futureTiles.contains(coord) || tiles.contains(coord))) {
+        logger.debug("Request tile at x={}, y={}, z={}", coord.x, coord.y, coord.z);
+        futureTiles.emplace(std::make_pair(coord, tileSource->request(coord)));
     }
-
-    std::erase_if(futureTiles, [this](auto& kv){
-        auto& [coord, futureTile] = kv;
-
-        if (futureTile.wait_for(0s) == std::future_status::ready) {
-            this->logger.debug("Tile at x={}, y={}, z={} is ready", coord.x, coord.y, coord.z);
-            this->tiles.emplace(std::make_pair(coord, futureTile.get()));
-            return true;
-        } else {
-            return false;
-        }
-    });
 }
 
-std::optional<std::shared_ptr<Tile>> TileLoader::getTile(int x, int y, int zoom)
+void TileLoader::load(const Coordinate& coord)
 {
-    if (tiles.contains({x, y, zoom})) {
-        return tiles[{x, y, zoom}];
+    if (futureTiles.contains(coord) && futureTiles[coord].wait_for(0s) == std::future_status::ready) {
+        this->logger.debug("Tile at x={}, y={}, z={} is ready", coord.x, coord.y, coord.z);
+        this->tiles.emplace(std::make_pair(coord, futureTiles[coord].get()));
+        futureTiles.erase(coord);
+    }
+}
+
+std::optional<std::shared_ptr<Tile>> TileLoader::loadTile(const Coordinate& coord)
+{
+    request(coord);
+
+    load(coord);
+
+    if (tiles.contains(coord)) {
+        return tiles[coord];
     }
     
     return std::nullopt;

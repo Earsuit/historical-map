@@ -3,6 +3,7 @@
 
 #include "src/tile/TileSource.h"
 #include "src/tile/Tile.h"
+#include "src/tile/Util.h"
 
 #include "spdlog/spdlog.h"
 
@@ -18,14 +19,16 @@ public:
 
     void setTileSource(std::shared_ptr<TileSource> tileSource);
 
-    void load(int xMin, int xMax, int yMin, int yMax, int zoom);
-    std::optional<std::shared_ptr<Tile>> getTile(int x, int y, int zoom);
+    std::optional<std::shared_ptr<Tile>> loadTile(const Coordinate& coord);
 
 private:
     spdlog::logger& logger;
     std::shared_ptr<TileSource> tileSource;
     std::map<Coordinate, std::shared_ptr<Tile>> tiles;
     std::map<Coordinate, std::future<std::shared_ptr<Tile>>> futureTiles;
+
+    void request(const Coordinate& coord);
+    void load(const Coordinate& coord);
 };
 }
 
