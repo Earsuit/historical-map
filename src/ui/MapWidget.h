@@ -3,6 +3,7 @@
 
 #include "src/tile/TileSource.h"
 #include "src/tile/TileLoader.h"
+#include "src/logger/Util.h"
 
 #include "external/imgui/imgui.h"
 #include "spdlog/spdlog.h"
@@ -14,12 +15,12 @@ namespace ui {
 
 class MapWidget {
 public:
-    MapWidget(spdlog::logger& logger): logger{logger}, tileLoader{logger} {}
+    MapWidget(): logger{spdlog::get(logger::LOGGER_NAME)} {}
     void setTileSource(std::shared_ptr<tile::TileSource> tileSource);
     void paint();
 
 private:
-    spdlog::logger& logger;
+    std::shared_ptr<spdlog::logger> logger;
     tile::TileLoader tileLoader;
     int zoom = 0;   
 

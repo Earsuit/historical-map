@@ -15,14 +15,14 @@
 namespace tile {
 class TileLoader {
 public:
-    TileLoader(spdlog::logger& logger);
+    TileLoader();
 
     void setTileSource(std::shared_ptr<TileSource> tileSource);
 
     std::optional<std::shared_ptr<Tile>> loadTile(const Coordinate& coord);
 
 private:
-    spdlog::logger& logger;
+    std::shared_ptr<spdlog::logger> logger;
     std::shared_ptr<TileSource> tileSource;
     std::map<Coordinate, std::shared_ptr<Tile>> tiles;
     std::map<Coordinate, std::future<std::shared_ptr<Tile>>> futureTiles;

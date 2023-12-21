@@ -1,6 +1,7 @@
 #include "src/ui/TileSourceWidget.h"
-#include "src/tile/TileSourceUrl.h"
 #include "src/ui/Util.h"
+#include "src/tile/TileSourceUrl.h"
+#include "src/logger/Util.h"
 
 #include "external/imgui/imgui.h"
 #include "external/imgui/misc/cpp/imgui_stdlib.h"
@@ -10,11 +11,11 @@ namespace ui {
 constexpr auto DEFAULT_URL = "https://a.tile.openstreetmap.org/{Z}/{X}/{Y}.png";
 constexpr auto CONFIG_TYPE = "URL\0";
 
-TileSourceWidget::TileSourceWidget(spdlog::logger& logger) :
-    logger{logger},
+TileSourceWidget::TileSourceWidget() :
+    logger{spdlog::get(logger::LOGGER_NAME)},
     tileSource{std::make_shared<tile::TileSourceUrl>(DEFAULT_URL)},
     showConfigWidget{[this](){this->showTileSourceUrlConfig();}}
-{
+{ 
 }
 
 void TileSourceWidget::paint()
@@ -42,7 +43,7 @@ void TileSourceWidget::showTileSourceUrlConfig()
             tileSource = std::make_shared<tile::TileSourceUrl>(url);
         }
 
-        logger.info("Set url source to {}.", url);
+        logger->info("Set url source to {}.", url);
     }
     ImGui::SameLine(); 
     HelpMarker("For different tile server url, please check https://www.trailnotes.org/FetchMap/TileServeSource.html");

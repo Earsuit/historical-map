@@ -35,9 +35,9 @@ void MapWidget::paint()
         const auto south = tile::y2Latitude(plotLimits.Y.Max, BBOX_ZOOM_LEVEL);
         const tile::BoundingBox bbox = {west, south, east, north};
 
-        logger.trace("Plot limit X [{}, {}], Y [{}, {}]", plotLimits.X.Min, plotLimits.X.Max, plotLimits.Y.Min, plotLimits.Y.Max);
-        logger.trace("Plot size x={}, y={} pixels", plotSize.x, plotSize.y);
-        logger.trace("west={}, north={}, east={}, south={}", west, north, east, south);
+        logger->trace("Plot limit X [{}, {}], Y [{}, {}]", plotLimits.X.Min, plotLimits.X.Max, plotLimits.Y.Min, plotLimits.Y.Max);
+        logger->trace("Plot size x={}, y={} pixels", plotSize.x, plotSize.y);
+        logger->trace("west={}, north={}, east={}, south={}", west, north, east, south);
 
         zoom = bestZoomLevel(bbox, 0, plotSize.x, plotSize.y);
 
@@ -53,7 +53,7 @@ void MapWidget::paint()
             yMax = tile::latitude2Y(south, zoom);
         }
 
-        logger.trace("Zoom {} tile X from [{}, {}], Y from [{}, {}]", zoom, xMin, xMax, yMin, yMax);
+        logger->trace("Zoom {} tile X from [{}, {}], Y from [{}, {}]", zoom, xMin, xMax, yMin, yMax);
 
         ImVec2 bMax = {0, 0};
         ImVec2 bMin = {0, 0};

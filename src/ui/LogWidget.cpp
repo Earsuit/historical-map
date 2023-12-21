@@ -1,4 +1,5 @@
 #include "src/ui/LogWidget.h"
+#include "src/logger/Util.h"
 
 #include "external/imgui/imgui.h"
 
@@ -10,11 +11,13 @@ constexpr ImVec2 IMEM_SPACING{0,0};
 constexpr float Y_BOTTOM = 1.0;
 constexpr const char* LOG_LEVEL[] = {"TRACE", "DEBUG", "INFO", "WARN", "ERROR", "CRITICAL", "OFF"};
 
-LogWidget::LogWidget(spdlog::logger& logger, std::shared_ptr<logger::StringSink> sink) :
-    sink{sink},
-    logger{logger} 
+LogWidget::LogWidget() :
+    sink{std::make_shared<logger::StringSink>()},
+    logger{std::make_shared<spdlog::logger>(logger::LOGGER_NAME, sink)}
 {
-    logger.set_level(spdlog::level::level_enum{logLevel});
+    logger->set_pattern("[%D %T %z] [%l] %v");
+    logger->set_level(spdlog::level::level_enum{logLevel});
+    spdlog::initialize_logger(logger);
 }
 
 void LogWidget::paint()
@@ -27,7 +30,7 @@ void LogWidget::paint()
         bool copy = ImGui::Button("Copy");
         ImGui::SameLine();
         if (ImGui::Combo("##Level", &logLevel, LOG_LEVEL, IM_ARRAYSIZE(LOG_LEVEL))) {
-            logger.set_level(spdlog::level::level_enum{logLevel});
+            logger->set_level(spdlog::level::level_enum{logLevel});
         }
 
         ImGui::Separator();
@@ -40,7 +43,7 @@ void LogWidget::paint()
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, IMEM_SPACING);
 
             if (clear) {
-                logger.flush();
+                logger->flush();
                 start = end = 0;
             } else {
                 updateLogs();

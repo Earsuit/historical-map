@@ -1,9 +1,12 @@
 #include "src/ui/HistoricalMap.h"
+#include "src/logger/Util.h"
 
 #include "external/imgui/imgui.h"
 #include "external/imgui/backends/imgui_impl_glfw.h"
 #include "external/imgui/backends/imgui_impl_opengl3.h"
 #include "external/implot/implot.h"
+
+#include "spdlog/spdlog.h"
 
 #include <stdexcept>
 #include <string>
@@ -21,12 +24,7 @@ static void glfwErrorCallback(int error, const char* description)
 }
 }
 
-HistoricalMap::HistoricalMap() :
-    loggerSink{std::make_shared<logger::StringSink>()},
-    logger{"Historical Map", loggerSink},
-    tileSourceWidget{logger},
-    logWidget{logger, loggerSink},
-    mapWidget{logger}
+HistoricalMap::HistoricalMap()
 {
     glfwSetErrorCallback(glfwErrorCallback);
     if (!glfwInit()) {
@@ -59,8 +57,7 @@ HistoricalMap::HistoricalMap() :
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glslVersion);
 
-    logger.set_pattern("[%D %T %z] [%l] %v");
-    logger.info("Initialization complete.");
+    spdlog::get(logger::LOGGER_NAME)->info("Initialization complete.");
 }
 
 HistoricalMap::~HistoricalMap()

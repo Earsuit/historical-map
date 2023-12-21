@@ -8,6 +8,7 @@
 
 #include <array>
 #include <string>
+#include <memory>
 
 namespace ui {
 
@@ -17,12 +18,12 @@ constexpr int MAX_SIZE = (1 << BIT_NUM);
 
 class LogWidget {
 public:
-    LogWidget(spdlog::logger& logger, std::shared_ptr<logger::StringSink> sink);
+    LogWidget();
     void paint();
 
 private:
     std::shared_ptr<logger::StringSink> sink;
-    spdlog::logger& logger;
+    std::shared_ptr<spdlog::logger> logger;
     int logLevel = spdlog::level::info;
     std::array<std::string, MAX_SIZE> logs;
     logger::Index<uint16_t, BIT_NUM> start{0};

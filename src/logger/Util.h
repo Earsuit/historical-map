@@ -5,6 +5,8 @@
 #include <type_traits>
 
 namespace logger {
+
+constexpr auto LOGGER_NAME = "Historical Map";
 constexpr uint8_t BITS_PER_BYTE = 8;
 
 template<typename Y, uint8_t BIT_NUM>

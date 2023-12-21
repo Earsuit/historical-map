@@ -9,8 +9,6 @@
 #include "src/ui/MapWidget.h"
 #include "src/logger/StringSink.h"
 
-#include "spdlog/spdlog.h"
-
 #include <memory>
 
 namespace ui {
@@ -24,8 +22,6 @@ public:
 
 private:
     GLFWwindow* window;
-    std::shared_ptr<logger::StringSink> loggerSink;
-    spdlog::logger logger;
     LogWidget logWidget;
     TileSourceWidget tileSourceWidget;
     MapWidget mapWidget;
