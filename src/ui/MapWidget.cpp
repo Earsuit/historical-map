@@ -5,6 +5,7 @@
 #include "external/implot/implot.h"
 
 #include <cmath>
+#include <algorithm>
 
 namespace ui {
 
@@ -13,6 +14,8 @@ constexpr auto AXIS_FLAGS = ImPlotAxisFlags_NoLabel | ImPlotAxisFlags_NoGridLine
                        ImPlotAxisFlags_NoInitialFit | ImPlotAxisFlags_NoMenus |
                        ImPlotAxisFlags_NoMenus | ImPlotAxisFlags_NoHighlight;
 constexpr int BBOX_ZOOM_LEVEL = 0; // only compute the zoom level from level 0, otherwise the computed zoom level will be a mess
+constexpr int MIN_ZOOM_LEVEL = 0;
+constexpr int MAX_ZOOM_LEVEL = 18;
 
 void MapWidget::paint()
 {
@@ -39,7 +42,7 @@ void MapWidget::paint()
         logger->trace("Plot size x={}, y={} pixels", plotSize.x, plotSize.y);
         logger->trace("west={}, north={}, east={}, south={}", west, north, east, south);
 
-        zoom = bestZoomLevel(bbox, 0, plotSize.x, plotSize.y);
+        zoom = std::clamp(bestZoomLevel(bbox, 0, plotSize.x, plotSize.y), MIN_ZOOM_LEVEL, MAX_ZOOM_LEVEL);
 
         int xMin = 0, xMax = 0, yMin = 0, yMax = 0;
 
