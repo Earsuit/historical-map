@@ -11,6 +11,8 @@
 #include <optional>
 #include <map>
 #include <tuple>
+#include <cstddef>
+#include <vector>
 
 namespace tile {
 class TileLoader {
@@ -25,7 +27,7 @@ private:
     std::shared_ptr<spdlog::logger> logger;
     std::shared_ptr<TileSource> tileSource;
     std::map<Coordinate, std::shared_ptr<Tile>> tiles;
-    std::map<Coordinate, std::future<std::shared_ptr<Tile>>> futureTiles;
+    std::map<Coordinate, std::future<std::vector<std::byte>>> futureData;
 
     void request(const Coordinate& coord);
     void load(const Coordinate& coord);

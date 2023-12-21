@@ -14,7 +14,7 @@ class TileSource {
 public:
     virtual ~TileSource() = default;
 
-    virtual std::future<std::shared_ptr<Tile>> request(const Coordinate& coord) = 0;
+    virtual std::future<std::vector<std::byte>> request(const Coordinate& coord) = 0;
 };
 
 }

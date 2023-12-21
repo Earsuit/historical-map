@@ -18,18 +18,23 @@ void TileLoader::request(const Coordinate& coord)
         return;
     }
 
-    if (!(futureTiles.contains(coord) || tiles.contains(coord))) {
+    if (!(futureData.contains(coord) || tiles.contains(coord))) {
         logger->debug("Request tile at x={}, y={}, z={}", coord.x, coord.y, coord.z);
-        futureTiles.emplace(std::make_pair(coord, tileSource->request(coord)));
+        futureData.emplace(std::make_pair(coord, tileSource->request(coord)));
     }
 }
 
 void TileLoader::load(const Coordinate& coord)
 {
-    if (futureTiles.contains(coord) && futureTiles[coord].wait_for(0s) == std::future_status::ready) {
-        this->logger->debug("Tile at x={}, y={}, z={} is ready", coord.x, coord.y, coord.z);
-        this->tiles.emplace(std::make_pair(coord, futureTiles[coord].get()));
-        futureTiles.erase(coord);
+    if (futureData.contains(coord) && futureData[coord].wait_for(0s) == std::future_status::ready) {
+        if (const auto& data = futureData[coord].get(); !data.empty()) {
+            this->logger->debug("Tile at x={}, y={}, z={} is ready", coord.x, coord.y, coord.z);
+            this->tiles.emplace(std::make_pair(coord, std::make_shared<Tile>(coord, data)));
+        } else {
+            this->logger->debug("Tile at x={}, y={}, z={} failed to load.", coord.x, coord.y, coord.z);
+        }
+
+        futureData.erase(coord);
     }
 }
 

@@ -2,7 +2,6 @@
 #define SRC_TILE_TILE_SOURCE_URL_H
 
 #include "TileSource.h"
-#include "Tile.h"
 
 #include "spdlog/spdlog.h"
 
@@ -10,6 +9,7 @@
 #include <list>
 #include <memory>
 #include <future>
+#include <cstddef>
 
 namespace tile {
 
@@ -18,7 +18,7 @@ public:
     TileSourceUrl(const std::string& url);
     ~TileSourceUrl() override = default;
 
-    std::future<std::shared_ptr<Tile>> request(const Coordinate& coord) override;
+    std::future<std::vector<std::byte>> request(const Coordinate& coord) override;
 
     bool setUrl(const std::string& url);
 

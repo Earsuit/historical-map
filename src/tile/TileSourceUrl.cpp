@@ -3,7 +3,6 @@
 
 #include <future>
 #include <vector>
-#include <cstddef>
 #include <curl/curl.h>
 #include <optional>
 #include <chrono>
@@ -65,11 +64,11 @@ TileSourceUrl::TileSourceUrl(const std::string& url):
     setUrl(url);
 }
 
-std::future<std::shared_ptr<Tile>> TileSourceUrl::request(const Coordinate& coord)
+std::future<std::vector<std::byte>> TileSourceUrl::request(const Coordinate& coord)
 {
     return std::async(std::launch::async, 
                                 [coord, this](){
-        return std::make_shared<Tile>(coord, requestData(this->makeUrl(coord)));
+        return requestData(this->makeUrl(coord));
     });
 }
 
