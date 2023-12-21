@@ -17,10 +17,7 @@ public:
     TileSourceUrl(const std::string& url);
     ~TileSourceUrl() override = default;
 
-    void request(int x, int y, int z) override;
-    void waitAll() override;
-    bool isAllReady() override;
-    std::vector<std::shared_ptr<Tile>> takeReady() override;
+    std::future<std::shared_ptr<Tile>> request(const Coordinate& coord) override;
 
     bool setUrl(const std::string& url);
 
@@ -33,9 +30,8 @@ private:
     };
 
     Url url;
-    std::list<std::future<std::shared_ptr<Tile>>> requests;
 
-    const std::string makeUrl(int x, int y, int z);
+    const std::string makeUrl(const Coordinate& coord);
 };
 
 }

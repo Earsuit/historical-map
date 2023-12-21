@@ -25,6 +25,7 @@ private:
     spdlog::logger& logger;
     std::shared_ptr<TileSource> tileSource;
     std::map<Coordinate, std::shared_ptr<Tile>> tiles;
+    std::map<Coordinate, std::future<std::shared_ptr<Tile>>> futureTiles;
 };
 }
 

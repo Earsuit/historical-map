@@ -60,42 +60,12 @@ TileSourceUrl::TileSourceUrl(const std::string& url)
     setUrl(url);
 }
 
-void TileSourceUrl::request(int x, int y, int z)
+std::future<std::shared_ptr<Tile>> TileSourceUrl::request(const Coordinate& coord)
 {
-    requests.emplace_back(std::async(std::launch::async, 
-                                [x, y, z, this](){
-        return std::make_shared<Tile>(x ,y, z, requestData(this->makeUrl(x, y, z)));
-    }));
-}
-
-void TileSourceUrl::waitAll()
-{
-    std::for_each(requests.cbegin(), requests.cend(), [](auto& fut){
-        fut.wait();
+    return std::async(std::launch::async, 
+                                [coord, this](){
+        return std::make_shared<Tile>(coord, requestData(this->makeUrl(coord)));
     });
-}
-
-bool TileSourceUrl::isAllReady()
-{
-    return std::all_of(requests.cbegin(), requests.cend(), [](auto& fut){
-        return fut.wait_for(0s) == std::future_status::ready;
-    });
-}
-
-std::vector<std::shared_ptr<Tile>> TileSourceUrl::takeReady()
-{
-    std::vector<std::shared_ptr<Tile>> tiles;
-
-    requests.remove_if([&tiles](auto& fut){
-        if (fut.wait_for(0s) == std::future_status::ready) {
-            tiles.emplace_back(fut.get());
-            return true;
-        }
-
-        return false;
-    });
-
-    return tiles;
 }
 
 // tile server url format specified by https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
@@ -111,13 +81,13 @@ bool TileSourceUrl::setUrl(const std::string& url)
            this->url.yPos != std::string::npos;
 }
 
-const std::string TileSourceUrl::makeUrl(int x, int y, int z)
+const std::string TileSourceUrl::makeUrl(const Coordinate& coord)
 {
     auto realUrl = url.url;
 
-    realUrl.replace(url.zoomPos, ZOOM_MATCHER_LEN, std::to_string(z));
-    realUrl.replace(url.xPos, X_MATCHER_LEN, std::to_string(x));
-    realUrl.replace(url.yPos, Y_MATCHER_LEN, std::to_string(y));
+    realUrl.replace(url.zoomPos, ZOOM_MATCHER_LEN, std::to_string(coord.z));
+    realUrl.replace(url.xPos, X_MATCHER_LEN, std::to_string(coord.x));
+    realUrl.replace(url.yPos, Y_MATCHER_LEN, std::to_string(coord.y));
     
     return realUrl;
 }
