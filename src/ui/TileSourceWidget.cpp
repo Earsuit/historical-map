@@ -42,8 +42,6 @@ void TileSourceWidget::showTileSourceUrlConfig()
         } else {
             tileSource = std::make_shared<tile::TileSourceUrl>(url);
         }
-
-        logger->info("Set url source to {}.", url);
     }
     ImGui::SameLine(); 
     HelpMarker("For different tile server url, please check https://www.trailnotes.org/FetchMap/TileServeSource.html");
