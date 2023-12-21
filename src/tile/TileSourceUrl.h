@@ -23,14 +23,7 @@ public:
     bool setUrl(const std::string& url);
 
 private:
-    struct Url {
-        std::string url = {};
-        std::string::size_type zoomPos = 0;
-        std::string::size_type xPos = 0;
-        std::string::size_type yPos = 0;
-    };
-
-    Url url;
+    std::string url;
 
     std::shared_ptr<spdlog::logger> logger;
     const std::string makeUrl(const Coordinate& coord);

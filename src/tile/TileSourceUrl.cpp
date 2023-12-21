@@ -14,10 +14,10 @@ namespace tile {
 using namespace std::chrono_literals;
 
 constexpr long SHUT_OFF_THE_PROGRESS_METER = 1;
-constexpr std::string_view ZOOM_MATCHER = "{zoom}";
-constexpr std::string_view X_MATCHER = "{x}";
-constexpr std::string_view Y_MATCHER = "{y}";
-constexpr auto ZOOM_MATCHER_LEN = ZOOM_MATCHER.size();
+constexpr std::string_view Z_MATCHER = "{Z}";
+constexpr std::string_view X_MATCHER = "{X}";
+constexpr std::string_view Y_MATCHER = "{Y}";
+constexpr auto Z_MATCHER_LEN = Z_MATCHER.size();
 constexpr auto X_MATCHER_LEN = X_MATCHER.size();
 constexpr auto Y_MATCHER_LEN = Y_MATCHER.size();
 
@@ -73,34 +73,45 @@ std::future<std::shared_ptr<Tile>> TileSourceUrl::request(const Coordinate& coor
     });
 }
 
-// tile server url format specified by https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
+// tile server url format specified by https://www.trailnotes.org/FetchMap/TileServeSource.html
 bool TileSourceUrl::setUrl(const std::string& url)
 {
-    this->url.url = url;
-    this->url.zoomPos = url.find_first_of(ZOOM_MATCHER);
-    this->url.xPos = url.find_first_of(X_MATCHER);
-    this->url.xPos = url.find_first_of(Y_MATCHER);
+    if (url.find(Z_MATCHER) != std::string::npos &&
+        url.find(X_MATCHER) != std::string::npos &&
+        url.find(Y_MATCHER) != std::string::npos) {
+        logger->info("Set url {} success", url);
 
-    auto res = this->url.zoomPos != std::string::npos &&
-               this->url.xPos != std::string::npos &&
-               this->url.yPos != std::string::npos;
+        this->url = url;
 
-    logger->debug("Set url xPos={} yPos={}, zPos={}", this->url.xPos, this->url.yPos, this->url.zoomPos);
-    logger->info("Set url {} {}", url, res ? "success" : "fail");
-
-    return res;
+        return true;
+    } else {
+        logger->error("Set url {} fail", url);
+        this->url = "";
+        return false;
+    }
 }
 
 const std::string TileSourceUrl::makeUrl(const Coordinate& coord)
 {
-    auto realUrl = url.url;
-
-    realUrl.replace(url.zoomPos, ZOOM_MATCHER_LEN, std::to_string(coord.z));
-    realUrl.replace(url.xPos, X_MATCHER_LEN, std::to_string(coord.x));
-    realUrl.replace(url.yPos, Y_MATCHER_LEN, std::to_string(coord.y));
-
-    logger->debug("Make url {}", realUrl);
+    auto realUrl = url;
+    for (auto it = realUrl.cbegin(); it != realUrl.cend(); it++) {
+        if (*it == '{') {
+            switch(*(it+1)) {
+                case 'X':
+                    realUrl.replace(it, it + X_MATCHER_LEN, std::to_string(coord.x));
+                    break;
+                case 'Y':
+                    realUrl.replace(it, it + Y_MATCHER_LEN, std::to_string(coord.y));
+                    break;
+                case 'Z':
+                    realUrl.replace(it, it + Z_MATCHER_LEN, std::to_string(coord.z));
+                    break;
+            }
+        }
+    }
     
+    logger->debug("From z={}, x={}, y={} make url {}", coord.z, coord.x, coord.y ,realUrl);
+
     return realUrl;
 }
 
