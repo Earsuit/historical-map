@@ -50,10 +50,11 @@ void MapWidget::paint()
         // but if use longitude2X or latitude2Y, the xMax and yMax will be 1 due to the formula
         // so we handle them differently
         if (zoom != 0) {
-            xMin = tile::longitude2X(west, zoom);
-            xMax = tile::longitude2X(east, zoom);
-            yMin = tile::latitude2Y(north, zoom);
-            yMax = tile::latitude2Y(south, zoom);
+            const auto limit = (1 << zoom) - 1;
+            xMin = std::clamp(tile::longitude2X(west, zoom), 0, limit);
+            xMax = std::clamp(tile::longitude2X(east, zoom), 0, limit);
+            yMin = std::clamp(tile::latitude2Y(north, zoom), 0, limit);
+            yMax = std::clamp(tile::latitude2Y(south, zoom), 0, limit);
         }
 
         logger->trace("Zoom {} tile X from [{}, {}], Y from [{}, {}]", zoom, xMin, xMax, yMin, yMax);
