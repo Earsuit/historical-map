@@ -8,7 +8,7 @@ Tile::Tile(const Coordinate& coord, const std::vector<std::byte> &rawBlob):
     coord{coord},
     rawBlob{rawBlob}
 {
-    
+    glLoad();
 }
 
 const Coordinate Tile::getCoordinate() const noexcept
@@ -40,9 +40,6 @@ void Tile::glLoad()
 
 void* Tile::getTexture()
 {
-    if (id == 0) {
-        glLoad();
-    }
     return reinterpret_cast<void*>(id);
 }
 
