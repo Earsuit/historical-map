@@ -81,11 +81,14 @@ bool TileSourceUrl::setUrl(const std::string& url)
     this->url.xPos = url.find_first_of(X_MATCHER);
     this->url.xPos = url.find_first_of(Y_MATCHER);
 
-    logger->info("Set url {}", url);
+    auto res = this->url.zoomPos != std::string::npos &&
+               this->url.xPos != std::string::npos &&
+               this->url.yPos != std::string::npos;
 
-    return this->url.zoomPos != std::string::npos &&
-           this->url.xPos != std::string::npos &&
-           this->url.yPos != std::string::npos;
+    logger->debug("Set url xPos={} yPos={}, zPos={}", this->url.xPos, this->url.yPos, this->url.zoomPos);
+    logger->info("Set url {} {}", url, res ? "success" : "fail");
+
+    return res;
 }
 
 const std::string TileSourceUrl::makeUrl(const Coordinate& coord)
