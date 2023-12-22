@@ -1,5 +1,4 @@
 #include "src/ui/TileSourceWidget.h"
-#include "src/ui/Util.h"
 #include "src/tile/TileSourceUrl.h"
 #include "src/logger/Util.h"
 
@@ -10,6 +9,7 @@ namespace ui {
 
 constexpr auto DEFAULT_URL = "https://a.tile.openstreetmap.org/{Z}/{X}/{Y}.png";
 constexpr auto CONFIG_TYPE = "URL\0";
+constexpr auto TRANSPARENT = IM_COL32(0, 0, 0, 0);
 
 TileSourceWidget::TileSourceWidget() :
     logger{spdlog::get(logger::LOGGER_NAME)},
@@ -20,7 +20,7 @@ TileSourceWidget::TileSourceWidget() :
 
 void TileSourceWidget::paint()
 {
-    ImGui::Begin("##Tile source widget");
+    ImGui::Begin("Tile source");
 
     ImGui::Combo("Source", &sourceIdx, CONFIG_TYPE);
 
@@ -34,6 +34,7 @@ void TileSourceWidget::paint()
 void TileSourceWidget::showTileSourceUrlConfig()
 {
     static std::string url = DEFAULT_URL;
+    const auto text = "For different tile server url, please check https://www.trailnotes.org/FetchMap/TileServeSource.html";
     ImGui::InputText("##url", &url);
     ImGui::SameLine();
     if (ImGui::Button("Set")) {
@@ -43,8 +44,9 @@ void TileSourceWidget::showTileSourceUrlConfig()
             tileSource = std::make_shared<tile::TileSourceUrl>(url);
         }
     }
-    ImGui::SameLine(); 
-    HelpMarker("For different tile server url, please check https://www.trailnotes.org/FetchMap/TileServeSource.html");
+    ImGui::PushStyleColor(ImGuiCol_FrameBg, TRANSPARENT);  // Transparent background
+    ImGui::InputText("##text", (char*)text, strlen(text) + 1, ImGuiInputTextFlags_ReadOnly);
+    ImGui::PopStyleColor(1);
 }
 
 std::shared_ptr<tile::TileSource> TileSourceWidget::getTileSource()
