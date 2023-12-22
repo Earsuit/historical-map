@@ -28,6 +28,8 @@ private:
     std::array<std::string, MAX_SIZE> logs;
     logger::Index<uint16_t, BIT_NUM> start{0};
     logger::Index<uint16_t, BIT_NUM> end{0};
+    std::string filter;
+    bool filterEnable = false;
 
     void updateLogs();
 };

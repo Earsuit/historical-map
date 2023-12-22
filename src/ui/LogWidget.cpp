@@ -2,7 +2,10 @@
 #include "src/logger/Util.h"
 
 #include "external/imgui/imgui.h"
+#include "external/imgui/misc/cpp/imgui_stdlib.h"
 
+#include <regex>
+#include <iostream>
 namespace ui {
 
 constexpr ImVec2 WINDOW_SIZE{800, 200};
@@ -25,7 +28,6 @@ void LogWidget::paint()
 {
     ImGui::SetNextWindowSize(WINDOW_SIZE, ImGuiCond_FirstUseEver);
     if (ImGui::Begin("Log")) {
-
         bool clear = ImGui::Button("Clear");
         ImGui::SameLine();
         bool copy = ImGui::Button("Copy");
@@ -34,6 +36,18 @@ void LogWidget::paint()
         if (ImGui::Combo("##Level", &logLevel, LOG_LEVEL, IM_ARRAYSIZE(LOG_LEVEL))) {
             logger->set_level(spdlog::level::level_enum{logLevel});
         }
+        ImGui::SameLine();
+
+        if (filterEnable) {
+            ImGui::BeginDisabled();
+        }
+        ImGui::InputText("Filter", &filter);
+        if (filterEnable) {
+            ImGui::EndDisabled();
+        }
+
+        ImGui::SameLine();
+        ImGui::Checkbox("Set", &filterEnable);
 
         ImGui::Separator();
 
@@ -51,7 +65,19 @@ void LogWidget::paint()
                 updateLogs();
 
                 for (auto i = start; i != end; i++) {
-                    ImGui::TextUnformatted(logs[i].c_str());
+                    if (!filterEnable) {
+                        ImGui::TextUnformatted(logs[i].c_str());
+                    } else {
+                        try {
+                            if (std::regex_search(logs[i], std::regex{filter})) {
+                                ImGui::TextUnformatted(logs[i].c_str());
+                            }
+                        }
+                        catch (const std::regex_error&) {
+                            filterEnable = false;
+                            logger->error("Invalid regex string.");
+                        }
+                    }
                 }
             }
 
