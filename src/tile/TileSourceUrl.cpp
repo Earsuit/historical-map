@@ -16,9 +16,7 @@ constexpr long SHUT_OFF_THE_PROGRESS_METER = 1;
 constexpr std::string_view Z_MATCHER = "{Z}";
 constexpr std::string_view X_MATCHER = "{X}";
 constexpr std::string_view Y_MATCHER = "{Y}";
-constexpr auto Z_MATCHER_LEN = Z_MATCHER.size();
-constexpr auto X_MATCHER_LEN = X_MATCHER.size();
-constexpr auto Y_MATCHER_LEN = Y_MATCHER.size();
+constexpr auto MATCHER_LEN = 3;
 
 namespace {
 size_t curlCallback(char *ptr, size_t size, size_t nmemb, void *userdata)
@@ -93,17 +91,22 @@ bool TileSourceUrl::setUrl(const std::string& url)
 const std::string TileSourceUrl::makeUrl(const Coordinate& coord)
 {
     auto realUrl = url;
+    std::string x{std::to_string(coord.x)};
+    std::string y{std::to_string(coord.y)};
+    std::string z{std::to_string(coord.z)};
+    realUrl.reserve(realUrl.size() - MATCHER_LEN*3 + x.size() + y.size() + z.size());
+
     for (auto it = realUrl.cbegin(); it != realUrl.cend(); it++) {
         if (*it == '{') {
             switch(*(it+1)) {
                 case 'X':
-                    realUrl.replace(it, it + X_MATCHER_LEN, std::to_string(coord.x));
+                    realUrl.replace(it, it + MATCHER_LEN, x);
                     break;
                 case 'Y':
-                    realUrl.replace(it, it + Y_MATCHER_LEN, std::to_string(coord.y));
+                    realUrl.replace(it, it + MATCHER_LEN, y);
                     break;
                 case 'Z':
-                    realUrl.replace(it, it + Z_MATCHER_LEN, std::to_string(coord.z));
+                    realUrl.replace(it, it + MATCHER_LEN, z);
                     break;
             }
         }
