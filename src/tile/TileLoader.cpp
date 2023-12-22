@@ -68,7 +68,12 @@ void TileLoader::resourceClean(const Coordinate& coord)
 
 void TileLoader::setTileSource(std::shared_ptr<TileSource> tileSource)
 {
-    this->tileSource = tileSource;
+    if (this->tileSource != tileSource) {
+        tiles = std::array<std::map<Coordinate, std::shared_ptr<Tile>>, MAX_ZOOM_LEVEL>{};
+        futureData.clear();
+
+        this->tileSource = tileSource;
+    }
 }
 
 }
