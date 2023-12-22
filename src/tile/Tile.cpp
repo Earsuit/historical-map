@@ -1,5 +1,7 @@
 #include "Tile.h"
 
+#include <iostream>
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "external/stb/stb_image.h"
 
@@ -7,6 +9,13 @@ namespace tile {
 Tile::Tile(const Coordinate& coord, const std::vector<std::byte> &rawBlob):
     coord{coord},
     rawBlob{rawBlob}
+{
+    glLoad();
+}
+
+Tile::Tile(const Coordinate& coord, std::vector<std::byte>&& rawBlob):
+    coord{coord},
+    rawBlob{std::move(rawBlob)}
 {
     glLoad();
 }

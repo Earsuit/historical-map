@@ -12,7 +12,8 @@ namespace tile {
 
 class Tile {
 public:
-    Tile(const Coordinate& coord, const std::vector<std::byte> &rawBlob);
+    Tile(const Coordinate& coord, const std::vector<std::byte>& rawBlob);
+    Tile(const Coordinate& coord, std::vector<std::byte>&& rawBlob);
 
     void* getTexture();
     const Coordinate getCoordinate() const noexcept;
