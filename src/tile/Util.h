@@ -7,10 +7,10 @@ namespace tile {
 
 // definition https://wiki.openstreetmap.org/wiki/Bounding_Box
 struct BoundingBox {
-    float west;
-    float south;
-    float east;
-    float north;
+    float west = 0.0f;
+    float south = 0.0f;
+    float east = 0.0f;
+    float north = 0.0f;
 };
 
 struct Coordinate {

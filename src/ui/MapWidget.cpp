@@ -1,8 +1,6 @@
 #include "src/ui/MapWidget.h"
-#include "src/tile/Util.h"
 
 #include "external/imgui/imgui.h"
-#include "external/implot/implot.h"
 
 #include <cmath>
 #include <algorithm>
@@ -17,9 +15,24 @@ constexpr int BBOX_ZOOM_LEVEL = 0; // only compute the zoom level from level 0, 
 constexpr int MIN_ZOOM_LEVEL = 0;
 constexpr int MAX_ZOOM_LEVEL = 18;
 
-void MapWidget::paint()
+void MapWidget::paint(ImGuiIO& io)
 {
     ImGui::Begin("Map plot");
+
+    displayInfo(io);
+    ImGui::SeparatorText("");
+    renderTile();
+
+    ImGui::End();
+}
+
+void MapWidget::setTileSource(std::shared_ptr<tile::TileSource> tileSource)
+{
+    tileLoader.setTileSource(tileSource);
+}
+
+void MapWidget::renderTile()
+{
     const auto sizeAvail = ImGui::GetContentRegionAvail();
     if (ImPlot::BeginPlot("##map", ImVec2(sizeAvail.x, sizeAvail.y))) {
         ImPlot::SetupAxis(ImAxis_X1, nullptr, AXIS_FLAGS);
@@ -31,12 +44,13 @@ void MapWidget::paint()
         
         const auto plotLimits = ImPlot::GetPlotLimits(ImAxis_X1, ImAxis_Y1);
         const auto plotSize = ImPlot::GetPlotSize();
+        mousePos = ImPlot::GetPlotMousePos();
 
         const auto west = tile::x2Longitude(plotLimits.X.Min, BBOX_ZOOM_LEVEL);
         const auto east = tile::x2Longitude(plotLimits.X.Max, BBOX_ZOOM_LEVEL);
         const auto north = tile::y2Latitude(plotLimits.Y.Min, BBOX_ZOOM_LEVEL);
         const auto south = tile::y2Latitude(plotLimits.Y.Max, BBOX_ZOOM_LEVEL);
-        const tile::BoundingBox bbox = {west, south, east, north};
+        bbox = {west, south, east, north};
 
         logger->trace("Plot limit X [{}, {}], Y [{}, {}]", plotLimits.X.Min, plotLimits.X.Max, plotLimits.Y.Min, plotLimits.Y.Max);
         logger->trace("Plot size x={}, y={} pixels", plotSize.x, plotSize.y);
@@ -76,19 +90,13 @@ void MapWidget::paint()
 
         ImPlot::EndPlot();
     }
-
-    ImGui::End();
 }
 
-// uv0, uv1
-std::pair<ImVec2, ImVec2> MapWidget::calculateBound(int x, int y)
+void MapWidget::displayInfo(ImGuiIO& io)
 {
-    return {};
-}
-
-void MapWidget::setTileSource(std::shared_ptr<tile::TileSource> tileSource)
-{
-    tileLoader.setTileSource(tileSource);
+    ImGui::Text("FPS: %.f", io.Framerate);
+    ImGui::Text("Cursor at: %.2f, %.2f", tile::x2Longitude(mousePos.x, BBOX_ZOOM_LEVEL), tile::y2Latitude(mousePos.y, BBOX_ZOOM_LEVEL));
+    ImGui::Text("View range west %.2f, east %.2f, north %.2f, south %.2f", bbox.west, bbox.east, bbox.north, bbox.south);
 }
 
 }

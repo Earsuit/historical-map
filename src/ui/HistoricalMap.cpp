@@ -74,6 +74,8 @@ void HistoricalMap::start()
 {
     const auto black = ImVec4(0, 0, 0, 1);
 
+    auto& io = ImGui::GetIO();
+
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
 
@@ -83,7 +85,7 @@ void HistoricalMap::start()
 
         tileSourceWidget.paint();
         mapWidget.setTileSource(tileSourceWidget.getTileSource());
-        mapWidget.paint();
+        mapWidget.paint(io);
         logWidget.paint();
 
         ImGui::Render();
