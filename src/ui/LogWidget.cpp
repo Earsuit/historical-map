@@ -73,9 +73,9 @@ void LogWidget::paint()
                                 ImGui::TextUnformatted(logs[i].c_str());
                             }
                         }
-                        catch (const std::regex_error&) {
+                        catch (const std::regex_error& e) {
                             filterEnable = false;
-                            logger->error("Invalid regex string.");
+                            logger->error("Invalid regex string: {}", e.what());
                         }
                     }
                 }
