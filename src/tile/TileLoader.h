@@ -13,6 +13,7 @@
 #include <tuple>
 #include <cstddef>
 #include <vector>
+#include <array>
 
 namespace tile {
 class TileLoader {
@@ -26,11 +27,12 @@ public:
 private:
     std::shared_ptr<spdlog::logger> logger;
     std::shared_ptr<TileSource> tileSource;
-    std::map<Coordinate, std::shared_ptr<Tile>> tiles;
+    std::array<std::map<Coordinate, std::shared_ptr<Tile>>, MAX_ZOOM_LEVEL> tiles;
     std::map<Coordinate, std::future<std::vector<std::byte>>> futureData;
 
     void request(const Coordinate& coord);
     void load(const Coordinate& coord);
+    void resourceClean(const Coordinate& coord);
 };
 }
 

@@ -5,6 +5,9 @@
 
 namespace tile {
 
+constexpr int MIN_ZOOM_LEVEL = 0;
+constexpr int MAX_ZOOM_LEVEL = 18;
+
 // definition https://wiki.openstreetmap.org/wiki/Bounding_Box
 struct BoundingBox {
     float west = 0.0f;
