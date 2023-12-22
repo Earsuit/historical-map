@@ -15,9 +15,9 @@ LogWidget::LogWidget() :
     sink{std::make_shared<logger::StringSink>()},
     logger{std::make_shared<spdlog::logger>(logger::LOGGER_NAME, sink)}
 {
+    spdlog::initialize_logger(logger);
     logger->set_pattern("[%D %T %z] [%l] %v");
     logger->set_level(spdlog::level::level_enum{logLevel});
-    spdlog::initialize_logger(logger);
 }
 
 void LogWidget::paint()
