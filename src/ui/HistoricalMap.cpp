@@ -73,8 +73,9 @@ HistoricalMap::~HistoricalMap()
 void HistoricalMap::start()
 {
     const auto black = ImVec4(0, 0, 0, 1);
-
     auto& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    io.ConfigDockingWithShift = true;
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
@@ -82,6 +83,8 @@ void HistoricalMap::start()
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
+
+        ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
 
         tileSourceWidget.paint();
         mapWidget.setTileSource(tileSourceWidget.getTileSource());
