@@ -89,8 +89,9 @@ void LogWidget::paint()
         }
 
         ImGui::EndChild();
-        ImGui::End();
     }
+
+    ImGui::End();
 }
 
 void LogWidget::updateLogs()
