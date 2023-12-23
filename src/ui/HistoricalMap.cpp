@@ -113,25 +113,31 @@ void HistoricalMap::buildDockSpace(ImGuiIO& io)
 
     // We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
     // because it would be confusing to have two docking targets within each others.
-    const ImGuiWindowFlags windowFlags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking |
-                                    ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | 
-                                    ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
-                                    ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+    const ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoDocking |
+                                         ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | 
+                                         ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
+                                         ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 
     ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->Pos);
     ImGui::SetNextWindowSize(viewport->Size);
     ImGui::SetNextWindowViewport(viewport->ID);
 
+    // Docked windows currently have the flag ImGuiWindowFlags_ChildWindow
+    // If we want to remvoe the space between the docked window and the main window, we have to set the style here
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding,  ImVec2(0, 0));
+    ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 0.0f);
     ImGui::Begin("DockSpace", nullptr, windowFlags);
+    ImGui::PopStyleVar(3);
 
-    ImGui::DockSpace(dockspace);
+    ImGui::DockSpace(dockspace, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode | ImGuiDockNodeFlags_AutoHideTabBar);
 
     if (firstTime) {
         firstTime = false;
 
         ImGui::DockBuilderRemoveNode(dockspace); // clear any previous layout
-		ImGui::DockBuilderAddNode(dockspace, ImGuiDockNodeFlags_DockSpace);
+		ImGui::DockBuilderAddNode(dockspace, ImGuiDockNodeFlags_DockSpace | ImGuiDockNodeFlags_PassthruCentralNode);
 		ImGui::DockBuilderSetNodeSize(dockspace, viewport->Size);
 
 		// split the dockspace into nodes -- DockBuilderSplitNode takes in the following args in the following order

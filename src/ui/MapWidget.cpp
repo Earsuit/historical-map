@@ -8,15 +8,19 @@
 namespace ui {
 
 constexpr auto AXIS_FLAGS = ImPlotAxisFlags_NoLabel | ImPlotAxisFlags_NoGridLines |
-                       ImPlotAxisFlags_NoTickMarks | ImPlotAxisFlags_NoTickLabels |
-                       ImPlotAxisFlags_NoInitialFit | ImPlotAxisFlags_NoMenus |
-                       ImPlotAxisFlags_NoMenus | ImPlotAxisFlags_NoHighlight;
+                            ImPlotAxisFlags_NoTickMarks | ImPlotAxisFlags_NoTickLabels |
+                            ImPlotAxisFlags_NoInitialFit | ImPlotAxisFlags_NoMenus |
+                            ImPlotAxisFlags_NoMenus | ImPlotAxisFlags_NoHighlight;
 constexpr int BBOX_ZOOM_LEVEL = 0; // only compute the zoom level from level 0, otherwise the computed zoom level will be a mess
 
 void MapWidget::paint(ImGuiIO& io)
 {
-    ImGui::Begin(MAP_WIDGET_NAME);
-
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding,  ImVec2(0, 0));
+    ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 0.0f);
+    ImGui::Begin(MAP_WIDGET_NAME, nullptr,  ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground);
+    ImGui::PopStyleVar(3);
+    
     displayInfo(io);
     ImGui::SeparatorText("");
     renderTile();
@@ -32,7 +36,7 @@ void MapWidget::setTileSource(std::shared_ptr<tile::TileSource> tileSource)
 void MapWidget::renderTile()
 {
     const auto sizeAvail = ImGui::GetContentRegionAvail();
-    if (ImPlot::BeginPlot("##map", ImVec2(sizeAvail.x, sizeAvail.y))) {
+    if (ImPlot::BeginPlot("##map", ImVec2(sizeAvail.x, sizeAvail.y), ImPlotFlags_NoFrame)) {
         ImPlot::SetupAxis(ImAxis_X1, nullptr, AXIS_FLAGS);
         ImPlot::SetupAxis(ImAxis_Y1, nullptr, AXIS_FLAGS | ImPlotAxisFlags_Invert);
         ImPlot::SetupAxisLimitsConstraints(ImAxis_Y1, 0.0, 1.0);
