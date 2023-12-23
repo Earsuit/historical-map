@@ -15,7 +15,7 @@ constexpr int BBOX_ZOOM_LEVEL = 0; // only compute the zoom level from level 0, 
 
 void MapWidget::paint(ImGuiIO& io)
 {
-    ImGui::Begin("Map plot");
+    ImGui::Begin(MAP_WIDGET_NAME);
 
     displayInfo(io);
     ImGui::SeparatorText("");

@@ -10,6 +10,8 @@
 #include <functional>
 
 namespace ui {
+constexpr auto TILE_SOURCE_WIDGET_NAME = "Tile source";
+
 class TileSourceWidget {
 public:
     TileSourceWidget();

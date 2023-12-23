@@ -2,6 +2,7 @@
 #include "src/logger/Util.h"
 
 #include "external/imgui/imgui.h"
+#include "external/imgui/imgui_internal.h"
 #include "external/imgui/backends/imgui_impl_glfw.h"
 #include "external/imgui/backends/imgui_impl_opengl3.h"
 #include "external/implot/implot.h"
@@ -13,8 +14,9 @@
 
 namespace ui {
 
-constexpr int WINDOW_WIDTH = 1280;
-constexpr int WINDOW_HEIGHT = 720;
+constexpr int WINDOW_WIDTH = 720;
+constexpr int WINDOW_HEIGHT = 1080;
+constexpr float MAP_WIDGET_SIZE = 2.0f/3.0f;
 
 namespace {
 static void glfwErrorCallback(int error, const char* description)
@@ -84,7 +86,7 @@ void HistoricalMap::start()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
+        buildDockSpace(io);
 
         tileSourceWidget.paint();
         mapWidget.setTileSource(tileSourceWidget.getTileSource());
@@ -101,6 +103,50 @@ void HistoricalMap::start()
 
         glfwSwapBuffers(window);
     }
+}
+
+// based on example https://gist.github.com/moebiussurfing/d7e6ec46a44985dd557d7678ddfeda99
+void HistoricalMap::buildDockSpace(ImGuiIO& io)
+{
+    static auto firstTime = true;
+    ImGuiID dockspace = ImGui::GetID("MyDockSpace");
+
+    // We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
+    // because it would be confusing to have two docking targets within each others.
+    const ImGuiWindowFlags windowFlags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking |
+                                    ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | 
+                                    ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
+                                    ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+
+    ImGuiViewport* viewport = ImGui::GetMainViewport();
+    ImGui::SetNextWindowPos(viewport->Pos);
+    ImGui::SetNextWindowSize(viewport->Size);
+    ImGui::SetNextWindowViewport(viewport->ID);
+
+    ImGui::Begin("DockSpace", nullptr, windowFlags);
+
+    ImGui::DockSpace(dockspace);
+
+    if (firstTime) {
+        firstTime = false;
+
+        ImGui::DockBuilderRemoveNode(dockspace); // clear any previous layout
+		ImGui::DockBuilderAddNode(dockspace, ImGuiDockNodeFlags_DockSpace);
+		ImGui::DockBuilderSetNodeSize(dockspace, viewport->Size);
+
+		// split the dockspace into nodes -- DockBuilderSplitNode takes in the following args in the following order
+		//   window ID to split, direction, fraction (between 0 and 1), the final two setting let's us choose which id we want (which ever one we DON'T set as NULL, will be returned by the function)
+		//                                                              out_id_at_dir is the id of the node in the direction we specified earlier, out_id_at_opposite_dir is in the opposite direction
+        const auto down = ImGui::DockBuilderSplitNode(dockspace, ImGuiDir_Down, 1 - MAP_WIDGET_SIZE, nullptr, &dockspace);
+
+		// we now dock our windows into the docking node we made above
+		ImGui::DockBuilderDockWindow(MAP_WIDGET_NAME, dockspace);
+		ImGui::DockBuilderDockWindow(LOG_WIDGET_NAME, down);
+		ImGui::DockBuilderDockWindow(TILE_SOURCE_WIDGET_NAME, down);
+		ImGui::DockBuilderFinish(dockspace);
+    }
+
+    ImGui::End();
 }
 
 }

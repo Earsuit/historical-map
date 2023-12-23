@@ -25,6 +25,8 @@ private:
     LogWidget logWidget;
     TileSourceWidget tileSourceWidget;
     MapWidget mapWidget;
+
+    void buildDockSpace(ImGuiIO& io);
 };
 
 }

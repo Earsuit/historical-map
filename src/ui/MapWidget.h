@@ -15,6 +15,8 @@
 
 namespace ui {
 
+constexpr auto MAP_WIDGET_NAME = "Map plot";
+
 class MapWidget {
 public:
     MapWidget(): logger{spdlog::get(logger::LOGGER_NAME)} {}

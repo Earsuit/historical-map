@@ -20,7 +20,7 @@ TileSourceWidget::TileSourceWidget() :
 
 void TileSourceWidget::paint()
 {
-    ImGui::Begin("Tile source");
+    ImGui::Begin(TILE_SOURCE_WIDGET_NAME);
 
     ImGui::Combo("Source", &sourceIdx, CONFIG_TYPE);
 
