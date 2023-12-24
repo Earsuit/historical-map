@@ -16,7 +16,7 @@ namespace ui {
 
 constexpr int WINDOW_WIDTH = 720;
 constexpr int WINDOW_HEIGHT = 1080;
-constexpr float MAP_WIDGET_SIZE = 2.0f/3.0f;
+constexpr float MAP_WIDGET_RATIO = 2.0f/3.0f;
 constexpr ImVec4 backgroundColor = {0.45f, 0.55f, 0.60f, 1.00f};
 
 namespace {
@@ -143,7 +143,7 @@ void HistoricalMap::buildDockSpace(ImGuiIO& io)
 		// split the dockspace into nodes -- DockBuilderSplitNode takes in the following args in the following order
 		//   window ID to split, direction, fraction (between 0 and 1), the final two setting let's us choose which id we want (which ever one we DON'T set as NULL, will be returned by the function)
 		//                                                              out_id_at_dir is the id of the node in the direction we specified earlier, out_id_at_opposite_dir is in the opposite direction
-        const auto down = ImGui::DockBuilderSplitNode(dockspace, ImGuiDir_Down, 1 - MAP_WIDGET_SIZE, nullptr, &dockspace);
+        const auto down = ImGui::DockBuilderSplitNode(dockspace, ImGuiDir_Down, 1 - MAP_WIDGET_RATIO, nullptr, &dockspace);
 
 		// we now dock our windows into the docking node we made above
 		ImGui::DockBuilderDockWindow(MAP_WIDGET_NAME, dockspace);
