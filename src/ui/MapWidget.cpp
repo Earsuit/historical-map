@@ -62,18 +62,11 @@ void MapWidget::renderTile()
 
         zoom = std::clamp(bestZoomLevel(bbox, 0, plotSize.x, plotSize.y), tile::MIN_ZOOM_LEVEL, tile::MAX_ZOOM_LEVEL);
 
-        int xMin = 0, xMax = 0, yMin = 0, yMax = 0;
-
-        // if zoom == 0, there is only one tile [0,0]
-        // but if use longitude2X or latitude2Y, the xMax and yMax will be 1 due to the formula
-        // so we handle them differently
-        if (zoom != 0) {
-            const auto limit = (1 << zoom) - 1;
-            xMin = std::clamp(tile::longitude2X(west, zoom), 0, limit);
-            xMax = std::clamp(tile::longitude2X(east, zoom), 0, limit);
-            yMin = std::clamp(tile::latitude2Y(north, zoom), 0, limit);
-            yMax = std::clamp(tile::latitude2Y(south, zoom), 0, limit);
-        }
+        const auto limit = (1 << zoom) - 1;
+        const auto xMin = std::clamp(tile::longitude2X(west, zoom), 0, limit);
+        const auto xMax = std::clamp(tile::longitude2X(east, zoom), 0, limit);
+        const auto yMin = std::clamp(tile::latitude2Y(north, zoom), 0, limit);
+        const auto yMax = std::clamp(tile::latitude2Y(south, zoom), 0, limit);
 
         logger->trace("Zoom {} tile X from [{}, {}], Y from [{}, {}]", zoom, xMin, xMax, yMin, yMax);
 
