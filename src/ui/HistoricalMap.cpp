@@ -17,6 +17,7 @@ namespace ui {
 constexpr int WINDOW_WIDTH = 720;
 constexpr int WINDOW_HEIGHT = 1080;
 constexpr float MAP_WIDGET_SIZE = 2.0f/3.0f;
+constexpr ImVec4 backgroundColor = {0.45f, 0.55f, 0.60f, 1.00f};
 
 namespace {
 static void glfwErrorCallback(int error, const char* description)
@@ -74,7 +75,6 @@ HistoricalMap::~HistoricalMap()
 
 void HistoricalMap::start()
 {
-    const auto black = ImVec4(0, 0, 0, 1);
     auto& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     io.ConfigDockingWithShift = true;
@@ -90,14 +90,14 @@ void HistoricalMap::start()
 
         tileSourceWidget.paint();
         mapWidget.setTileSource(tileSourceWidget.getTileSource());
-        mapWidget.paint(io);
+        mapWidget.paint();
         logWidget.paint();
 
         ImGui::Render();
         int displayWidth, displayHeight;
         glfwGetFramebufferSize(window, &displayWidth, &displayHeight);
         glViewport(0, 0, displayWidth, displayHeight);
-        glClearColor(black.x, black.y, black.z, black.w);
+        glClearColor(backgroundColor.x, backgroundColor.y, backgroundColor.z, backgroundColor.w);
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 

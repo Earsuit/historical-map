@@ -12,20 +12,17 @@ constexpr auto AXIS_FLAGS = ImPlotAxisFlags_NoLabel | ImPlotAxisFlags_NoGridLine
                             ImPlotAxisFlags_NoInitialFit | ImPlotAxisFlags_NoMenus |
                             ImPlotAxisFlags_NoMenus | ImPlotAxisFlags_NoHighlight;
 constexpr int BBOX_ZOOM_LEVEL = 0; // only compute the zoom level from level 0, otherwise the computed zoom level will be a mess
+constexpr ImVec4 OVERLAY_BACKGROUND_COLOR = {0.0f, 0.0f, 0.0f, 0.35f};
+constexpr float OVERLAY_PAD = 10.0f;
+constexpr float MAX_LONGITUDE = 180.0f;
+constexpr float MIN_LONGITUDE = -180.0f;
+constexpr float MAX_LATITUDE = 85.05112878f;
+constexpr float MIN_LATITUDE = -85.05112878f;
 
-void MapWidget::paint(ImGuiIO& io)
+void MapWidget::paint()
 {
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding,  ImVec2(0, 0));
-    ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 0.0f);
-    ImGui::Begin(MAP_WIDGET_NAME, nullptr,  ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground);
-    ImGui::PopStyleVar(3);
-    
-    displayInfo(io);
-    ImGui::SeparatorText("");
     renderTile();
-
-    ImGui::End();
+    overlay();
 }
 
 void MapWidget::setTileSource(std::shared_ptr<tile::TileSource> tileSource)
@@ -35,6 +32,11 @@ void MapWidget::setTileSource(std::shared_ptr<tile::TileSource> tileSource)
 
 void MapWidget::renderTile()
 {
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding,  ImVec2(0, 0));
+    ImGui::Begin(MAP_WIDGET_NAME, nullptr,  ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground);
+    ImGui::PopStyleVar(2);
+    
     const auto sizeAvail = ImGui::GetContentRegionAvail();
     if (ImPlot::BeginPlot("##map", ImVec2(sizeAvail.x, sizeAvail.y), ImPlotFlags_NoFrame)) {
         ImPlot::SetupAxis(ImAxis_X1, nullptr, AXIS_FLAGS);
@@ -92,13 +94,41 @@ void MapWidget::renderTile()
 
         ImPlot::EndPlot();
     }
+
+    ImGui::End();
 }
 
-void MapWidget::displayInfo(ImGuiIO& io)
+void MapWidget::overlay()
 {
-    ImGui::Text("FPS: %.f", io.Framerate);
-    ImGui::Text("Cursor at: %.2f, %.2f", tile::x2Longitude(mousePos.x, BBOX_ZOOM_LEVEL), tile::y2Latitude(mousePos.y, BBOX_ZOOM_LEVEL));
-    ImGui::Text("View range west %.2f, east %.2f, north %.2f, south %.2f", bbox.west, bbox.east, bbox.north, bbox.south);
+    static bool firstTime = true;
+    const ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoMove |
+                                         ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | 
+                                         ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
+
+    if (firstTime) {
+        firstTime = false;
+        const ImGuiViewport* viewport = ImGui::GetMainViewport();
+
+        ImVec2 work_pos = viewport->WorkPos; // Use work area to avoid menu-bar/task-bar, if any!
+        ImVec2 work_size = viewport->WorkSize;
+        ImVec2 window_pos, window_pos_pivot;
+        window_pos.x = work_pos.x + OVERLAY_PAD;
+        window_pos.y = work_pos.y + OVERLAY_PAD;
+        ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
+        ImGui::SetNextWindowViewport(viewport->ID);
+    }
+
+    ImGui::PushStyleColor(ImGuiCol_TitleBg, OVERLAY_BACKGROUND_COLOR);
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, OVERLAY_BACKGROUND_COLOR);
+    if (ImGui::Begin("##Overlay", nullptr, windowFlags)) {
+        ImGui::Text("FPS: %.f", ImGui::GetIO().Framerate);
+        ImGui::Text("Cursor at: lon %.2f, lat %.2f", std::clamp(tile::x2Longitude(mousePos.x, BBOX_ZOOM_LEVEL), MIN_LONGITUDE, MAX_LONGITUDE), 
+                                                     std::clamp(tile::y2Latitude(mousePos.y, BBOX_ZOOM_LEVEL), MIN_LATITUDE, MAX_LATITUDE));
+        ImGui::Text("View range: west %.2f, east %.2f, \n\t\t\tnorth %.2f, south %.2f", bbox.west, bbox.east, bbox.north, bbox.south);
+        
+    }
+    ImGui::PopStyleColor(2);
+    ImGui::End();
 }
 
 }

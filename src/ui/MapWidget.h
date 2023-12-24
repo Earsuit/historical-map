@@ -21,7 +21,7 @@ class MapWidget {
 public:
     MapWidget(): logger{spdlog::get(logger::LOGGER_NAME)} {}
     void setTileSource(std::shared_ptr<tile::TileSource> tileSource);
-    void paint(ImGuiIO& io);
+    void paint();
 
 private:
     std::shared_ptr<spdlog::logger> logger;
@@ -31,7 +31,7 @@ private:
     ImPlotPoint mousePos = {0.0f, 0.0f};
 
     void renderTile();
-    void displayInfo(ImGuiIO& io);
+    void overlay();
 };
 }
 
