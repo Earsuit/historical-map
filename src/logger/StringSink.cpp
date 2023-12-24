@@ -1,7 +1,7 @@
 #include "src/logger/StringSink.h"
 
 namespace logger {
-const std::vector<std::string> StringSink::dumpLogs()
+std::vector<std::string> StringSink::dumpLogs()
 {
     std::lock_guard lock(mutex_);
 

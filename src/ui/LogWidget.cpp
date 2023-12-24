@@ -96,8 +96,7 @@ void LogWidget::paint()
 
 void LogWidget::updateLogs()
 {
-    const auto& newLogs = sink->dumpLogs();
-    for (auto& newLog : newLogs) {
+    for (auto&& newLog : sink->dumpLogs()) {
         logs[end++] = newLog;
 
         if (end == start) {

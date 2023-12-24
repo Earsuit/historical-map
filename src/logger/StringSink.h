@@ -11,7 +11,7 @@
 namespace logger {
 class StringSink : public spdlog::sinks::base_sink<std::mutex> {
 public:
-    const std::vector<std::string> dumpLogs();
+    std::vector<std::string> dumpLogs();
 
 protected:
     void sink_it_(const spdlog::details::log_msg& msg) override;
