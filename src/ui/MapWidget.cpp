@@ -38,7 +38,7 @@ void MapWidget::renderTile()
     ImGui::PopStyleVar(2);
     
     const auto sizeAvail = ImGui::GetContentRegionAvail();
-    if (ImPlot::BeginPlot("##map", ImVec2(sizeAvail.x, sizeAvail.y), ImPlotFlags_NoFrame)) {
+    if (ImPlot::BeginPlot("##map", ImVec2(sizeAvail.x, sizeAvail.y), ImPlotFlags_NoFrame | ImPlotFlags_Equal)) {
         ImPlot::SetupAxis(ImAxis_X1, nullptr, AXIS_FLAGS);
         ImPlot::SetupAxis(ImAxis_Y1, nullptr, AXIS_FLAGS | ImPlotAxisFlags_Invert);
         ImPlot::SetupAxisLimitsConstraints(ImAxis_Y1, 0.0, 1.0);
