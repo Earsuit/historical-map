@@ -137,7 +137,7 @@ void HistoricalMap::buildDockSpace(ImGuiIO& io)
         firstTime = false;
 
         ImGui::DockBuilderRemoveNode(dockspace); // clear any previous layout
-		ImGui::DockBuilderAddNode(dockspace, ImGuiDockNodeFlags_DockSpace | ImGuiDockNodeFlags_PassthruCentralNode);
+		ImGui::DockBuilderAddNode(dockspace, ImGuiDockNodeFlags_DockSpace);
 		ImGui::DockBuilderSetNodeSize(dockspace, viewport->Size);
 
 		// split the dockspace into nodes -- DockBuilderSplitNode takes in the following args in the following order
