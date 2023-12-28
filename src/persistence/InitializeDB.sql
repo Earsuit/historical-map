@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS relationship (
     country_id INTEGER NOT NULL,
     border_id INTEGER NOT NULL,
     FOREIGN KEY (country_id) REFERENCES countries(id),
-    FOREIGN KEY (border_id) REFERENCES borders(id)
+    FOREIGN KEY (border_id) REFERENCES borders(id),
     FOREIGN KEY (year_id) REFERENCES years(id)
 );
 
@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS events (
 
 CREATE TABLE IF NOT EXISTS years (
     id INTEGER PRIMARY KEY,
-    year INTEGER NOT NULL,
+    year INTEGER NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS countries (
