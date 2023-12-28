@@ -4,7 +4,7 @@ set(SQL_FILE ${CMAKE_CURRENT_SOURCE_DIR}/InitializeDB.sql)
 
 add_custom_target(
   table_header
-  COMMAND python ${DDL_TO_TABLE_SCRIPT} ${SQL_FILE} ${TABLE_HEADER} persistence -identity-naming
+  COMMAND python ${DDL_TO_TABLE_SCRIPT} ${SQL_FILE} ${TABLE_HEADER} persistence
   DEPENDS ${PYTHON_SCRIPT}
   COMMENT "Generating ${TABLE_HEADER}.h from ${CMAKE_CURRENT_SOURCE_DIR}/db.ddl"
 )
