@@ -3,7 +3,7 @@ set(TABLE_HEADER ${CMAKE_CURRENT_BINARY_DIR}/Table)
 
 add_custom_target(
   table_header
-  COMMAND python ${DDL_TO_TABLE_SCRIPT} ${CMAKE_CURRENT_SOURCE_DIR}/db.ddl ${TABLE_HEADER} persistence -identity-naming
+  COMMAND python ${DDL_TO_TABLE_SCRIPT} ${CMAKE_CURRENT_SOURCE_DIR}/db.sql ${TABLE_HEADER} persistence -identity-naming
   DEPENDS ${PYTHON_SCRIPT}
   COMMENT "Generating ${TABLE_HEADER}.h from ${CMAKE_CURRENT_SOURCE_DIR}/db.ddl"
 )
@@ -14,7 +14,7 @@ set(SQL_COMMANDS_HEADER ${CMAKE_CURRENT_BINARY_DIR}/Commands.h)
 add_custom_target(
   command_header
   COMMAND python ${DDL_TO_SQL_COMMAND_SCRIPT}
-                 ${CMAKE_CURRENT_SOURCE_DIR}/db.ddl 
+                 ${CMAKE_CURRENT_SOURCE_DIR}/db.sql 
                  ${SQL_COMMANDS_HEADER} 
                  persistence
   COMMENT "Generating ${SQL_COMMANDS_HEADER}.h from ${CMAKE_CURRENT_SOURCE_DIR}/db.ddl"
