@@ -8,14 +8,19 @@ CREATE TABLE IF NOT EXISTS relationships (
     FOREIGN KEY (year_id) REFERENCES years(id)
 );
 
-/* Cities may not belong to any country*/
+CREATE TABLE IF NOT EXISTS yearCities (
+    id INTEGER PRIMARY KEY,
+    city_id TEXT NOT NULL,
+    year_id INTEGER NOT NULL,
+    FOREIGN KEY (year_id) REFERENCES years(id)
+    FOREIGN KEY (city_id) REFERENCES cities(id)
+);
+
 CREATE TABLE IF NOT EXISTS cities (
     id INTEGER PRIMARY KEY,
     name TEXT NOT NULL,
-    year_id INTEGER NOT NULL,
     latitude real NOT NULL,
-    longitude real NOT NULL,
-    FOREIGN KEY (year_id) REFERENCES years(id)
+    longitude real NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS events (
