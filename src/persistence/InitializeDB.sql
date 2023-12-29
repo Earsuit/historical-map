@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS yearCities (
 
 CREATE TABLE IF NOT EXISTS cities (
     id INTEGER PRIMARY KEY,
-    name TEXT NOT NULL,
+    name TEXT NOT NULL UNIQUE,
     latitude real NOT NULL,
     longitude real NOT NULL
 );
