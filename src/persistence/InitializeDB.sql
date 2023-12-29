@@ -37,10 +37,10 @@ CREATE TABLE IF NOT EXISTS years (
 
 CREATE TABLE IF NOT EXISTS countries (
     id INTEGER PRIMARY KEY,
-    name TEXT NOT NULL
+    name TEXT NOT NULL UNIQUE
 );
 
 CREATE TABLE IF NOT EXISTS borders (
     id INTEGER PRIMARY KEY,
-    contour blob NOT NULL  -- A list of (latitude, longitude) defines the contour of the country
+    contour blob NOT NULL UNIQUE -- A list of (latitude, longitude) defines the contour of the country
 );
