@@ -62,3 +62,4 @@ add_executable(HistoricalMap main.cpp ${IMGUI_SRC} ${IMPLOT_SRC} ${STB_SRC})
 target_link_libraries(HistoricalMap PRIVATE OpenGL::GL glfw GLEW::GLEW Threads::Threads CURL::libcurl sqlpp11::sqlite3 ${CMAKE_DL_LIBS})
 
 add_subdirectory(src)
+add_subdirectory(test)
