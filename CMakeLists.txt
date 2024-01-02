@@ -1,4 +1,8 @@
 cmake_minimum_required(VERSION 3.19 FATAL_ERROR)
+
+set(CMAKE_C_COMPILER /usr/bin/gcc)
+set(CMAKE_CXX_COMPILER /usr/bin/g++)
+
 project(Historical_map C CXX)
 
 set(CMAKE_CXX_STANDARD 20)

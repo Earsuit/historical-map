@@ -1,3 +1,3 @@
 add_executable(PersistenceTest PersistenceTest.cpp)
-target_link_libraries(PersistenceTest PRIVATE GTest::gtest_main)
+target_link_libraries(PersistenceTest PRIVATE GTest::gtest_main sqlpp11::sqlite3)
 gtest_discover_tests(PersistenceTest)

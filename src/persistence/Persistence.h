@@ -13,23 +13,9 @@
 #include <future>
 #include <utility>
 #include <future>
-#include<tr2/type_traits>
+#include <tuple>
 
 namespace persistence {
-
-// A template to extract and hold the arguments
-template <typename T>
-struct extract_table_members;
-
-// Specializing the template for sqlpp::table_t
-template <template <typename...> class Table, typename Self, typename ...Args>
-struct extract_table_members<std::tr2::__reflection_typelist<Table<Self, Args...>>> {
-    // Now Args... are the types used in the base template
-    using types = std::tuple<Args...>;
-};
-
-template <typename Table>
-using extract_table_members_t = extract_table_members<Table>::types;
 
 template<typename T>
 auto launchAsync(T func) {
@@ -63,153 +49,132 @@ public:
     Data load(int year) {
         Data data{.year = year};
 
-        if (const auto yearId = getYearId(year); yearId) {
-            auto futureEvent = launchAsync([this, yearId = *yearId](){
-                return this->getEvent(yearId);
+        if (const auto& years = request<table::Years>(YEARS.year == year); !years.empty()) {
+            const auto yearId = years.front().id;
+
+            auto requestCountriesTask = launchAsync([this, yearId](){
+                std::vector<Country> countries;
+                for (const auto& row : request<table::Relationships>(RELATIONSHIPS.yearId == yearId)) {
+                    const auto& countryName = this->request<table::Countries>(COUNTRIES.id == row.countryId).front().name;
+                    const auto& borderContour = this->request<table::Borders>(BORDERS.id == row.borderId).front().contour;
+
+                    countries.emplace_back(countryName, {borderContour.blob, borderContour.blob + borderContour.len});
+                }
+
+                return countries;
             });
 
-            for (auto [countryId, borderId] : getRelationship(yearId)) {
-                auto futureCountryName = launchAsync([this, countryId](){
-                    return this->getCountryName(countryId);
-                });
+            auto requestCitiesTask = launchAsync([this, yearId](){
+                std::vector<City> cities;
+                for (const auto& row : this->request<table::YearCities>(YEAR_CITIES.yearId == yearId)) {
+                    const auto& city = this->request<table::Cities>(CITIES.id == row.cityId).front();
 
-                auto futureBorderContour = launchAsync([this, borderId](){
-                    return this->getBorderContour(borderId);
-                });
-
-                if (auto [countryName, borderContour] = std::make_pair(futureBorderContour.get(), futureBorderContour.get()); 
-                    countryName) {
-                    data.countries.emplace_back(*countryName, borderContour);
+                    cities.emplace_back(city.name, Coordinate{city.latitude, city.longitude});
                 }
-            }
 
-            data.event = futureEvent.get();
+                return cities;
+            });
+
+            auto requestEventTask = launchAsync([this, yearId]() -> std::optional<Event> {
+                if (const auto& ret = this->request<table::Events>(EVENTS.yearId == yearId); !ret.empty()) {
+                    return Event{ret.front().event};
+                } else {
+                    return std::nullopt;
+                }
+            });
+
+            data.countries = requestCountriesTask.wait();
+            data.cities = requestCitiesTask.get();
+            data.event = requestEventTask.get();
         }
 
         return data;
     }
 
+    void upsert(const Data& data)
+    {
+        if (const auto& years = request<table::Years>(YEARS.year == data.year); !years.empty()) {
+            const auto yearId = years.front().id;
+
+            auto upsertCountriesTask = launchAsync([this, yearId, &countries = data.countries](){
+                for (const auto& country : countries) {
+                    this->upsert<table::Countries>(COUNTRIES.name == country.name, COUNTRIES.name = country.name);
+                    this->upsert<table::Borders>(BORDERS.contour == country.borderContour, BORDERS.contour = country.borderContour);
+
+                    const auto countryId = this->request<table::Countries>(COUNTRIES.name == country.name).front().id;
+                    const auto borderId = this->request<table::Borders>(BORDERS.contour == country.borderContour).front().id;
+                    
+                    this->upsert<table::Relationships>(RELATIONSHIPS.yearId == yearId && RELATIONSHIPS.countryId == countryId && RELATIONSHIPS.borderId == borderId,
+                                                       RELATIONSHIPS.yearId = yearId,
+                                                       RELATIONSHIPS.countryId = countryId,
+                                                       RELATIONSHIPS.borderId = borderId);
+                }
+            });
+
+            auto upsertCitiesTask = launchAsync([this, yearId, &cities = data.cities](){
+                for (const auto& city : cities) {
+                    this->upsert<table::Cities>(CITIES.name == city.name, 
+                                                CITIES.name = city.name, 
+                                                CITIES.latitude = city.coordinate.latitude,
+                                                CITIES.longitude = city.coordinate.longitude);
+
+                    const auto cityId = this->request<table::Cities>(CITIES.name == city.name).front().id;
+
+                    this->upsert<table::YearCities>(YEAR_CITIES.yearId == yearId && YEAR_CITIES.cityId == cityId, 
+                                                    YEAR_CITIES.cityId = cityId);
+                }
+            });
+
+            auto upsertEventTask = launchAsync([this, yearId, &event = data.event](){
+                if (event) {
+                    this->upsert<table::Events>(EVENTS.yearId == yearId, EVENTS.event = (*event).description);
+                }
+            });
+        }
+    }
+
 private:
     Pool pool;
 
-    // less than 0 is BC
-    std::optional<size_t> getYearId(int year) {
-        for (const auto& row : pool.get()(sqlpp::select(YEARS.id).from(YEARS).where(YEARS.year == year))) {
-            return row.id;
-        }
-
-        return std::nullopt;
-    }
-
-    std::vector<std::pair<size_t, size_t>> getRelationship(size_t yearId) {
-        std::vector<std::pair<size_t, size_t>> countryAndBorderIds;
-
-        for (const auto& row : pool.get()(sqlpp::select(RELATIONSHIPS.countryId, RELATIONSHIPS.borderId).
-                                          from(RELATIONSHIPS).
-                                          where(RELATIONSHIPS.yearId == yearId))) {
-            countryAndBorderIds.emplace_back(row.countryId, row.borderId);
-        }
-
-        return countryAndBorderIds;
-    }
-
-    std::optional<std::string> getCountryName(size_t countryId) {
-        for (const auto& row : pool.get()(sqlpp::select(COUNTRIES.name).from(COUNTRIES).where(COUNTRIES.id == countryId))) {
-            return row.name;
-        }
-
-        return std::nullopt;
-    }
-
-    std::optional<size_t> getCountryId(std::string_view name)
+    template<typename Table>
+    auto request()
     {
-        for (const auto& row : pool.get()(sqlpp::select(COUNTRIES.id).from(COUNTRIES).where(COUNTRIES.name == name))) {
-            return row.id;
-        }
-
-        return std::nullopt;
+        constexpr const Table table;
+        return pool.get()(sqlpp::select(sqlpp::all_of(table)).from(table).unconditionally());
     }
 
-    std::vector<Coordinate> getBorderContour(size_t borderId) {
-        for (const auto& row : pool.get()(sqlpp::select(BORDERS.contour).from(BORDERS).where(BORDERS.id == borderId))) {
-            return std::vector<Coordinate>{row.contour.blob, row.contour.blob + row.contour.len};
-        }
-
-        return {};
-    }
-
-    std::vector<int> getCityInfoIds(size_t yearId) {
-        std::vector<int> ids;
-
-        for (const auto& row : pool.get()(sqlpp::select(YEAR_CITIES.cityId).from(YEAR_CITIES).where(YEAR_CITIES.yearId == yearId))) {
-            ids.emplace_back(row.cityInfoId);
-        }
-
-        return ids;
-    }
-
-    std::vector<City> getCities(const std::vector<int>& ids)
+    template<typename Table, typename Expression>
+    auto request(Expression&& expression)
     {
-        std::vector<City> cities;
-
-        for (auto id : ids) {
-            for (const auto& row : pool.get()(sqlpp::select(sqlpp::all_of(CITIES)).from(CITIES).where(CITIES.id == id))) {
-                cities.emplace_back(row.name, Coordinate{row.latitude, row.longitude});
-            }
-        }
-        
-        return cities;
+        constexpr const Table table;
+        return pool.get()(sqlpp::select(sqlpp::all_of(table)).from(table).where(std::forward<Expression>(expression)));
     }
 
-    std::optional<City> getCity(std::string_view name)
+    template<typename Table, typename... Assignments>
+    void insert(Assignments... assignments)
     {
-        for (const auto& row : pool.get()(sqlpp::select(CITIES.latitude, CITIES.longitude).from(CITIES).where(CITIES.name == name))) {
-            return City{name, Coordinate{row.latitude, row.longitude}};
-        }
-
-        return std::nullopt;
+        constexpr const Table table;
+        pool.get()(sqlpp::insert_into(table).set(std::make_tuple(assignments...)));
     }
 
-    std::optional<Event> getEvent(size_t yearId)
+    template<typename Table, typename Expression, typename... Assignments>
+    void update(Expression&& expression, Assignments... assignments)
     {
-        for (const auto& row : pool.get()(sqlpp::select(EVENTS.event).from(EVENTS).where(EVENTS.yearId == yearId))) {
-            return Event{row.event};
-        }
-        
-        return std::nullopt;
+        constexpr const Table table;
+        pool.get()(sqlpp::update(table).set(std::make_tuple(assignments...)).where(std::forward<Expression>(expression)));
     }
 
-    void upsert(int year)
+    template<typename Table, typename Expression, typename... Assignments>
+    void upsert(Expression&& expression, Assignments... assignments)
     {
-        if (auto yearId = getYearId(year); !yearId) {
-            pool.get()(sqlpp::insert_into(YEARS).set(YEARS.year = year));
-        }
-    }
-
-    void upsert(int yearId, const Event& event)
-    {
-        if (auto e = getEvent(yearId); e) {
-            pool.get()(sqlpp::update(EVENTS).set(EVENTS.event = event.description).where(EVENTS.yearId == yearId));
+        constexpr const Table table;
+        const auto& ret = request<Table>(std::forward<Expression>(expression));
+        if (ret.empty()) {
+            insert<Table>(std::forward<Assignments>(assignments)...);
         } else {
-            pool.get()(sqlpp::insert_into(EVENTS).set(EVENTS.yearId = yearId, EVENTS.event = event.description));
+            update<Table>(std::forward<Expression>(expression), std::forward<Assignments>(assignments)...);
         }
     }
-
-    void upsert(int yearId, const City& city)
-    {
-        if (auto c = getCity(city.name); c && (*c != city)) {
-            pool.get()(sqlpp::update(CITIES).set(CITIES.latitude = city.coordinate.latitude, CITIES.longitude = city.coordinate.longitude).where(CITIES.name == city.name));
-        } else {
-            pool.get()(sqlpp::insert_into(CITIES).set(CITIES.latitude = city.coordinate.latitude, CITIES.longitude = city.coordinate.longitude, CITIES.name = city.name));
-
-            const auto& row = pool.get()(sqlpp::select(CITIES.id).from(CITIES).where(CITIES.name == city.name));
-            const auto cityId = row.front().id;
-
-            pool.get()(sqlpp::insert_into(YEAR_CITIES).set(YEAR_CITIES.cityId = cityId, YEAR_CITIES.yearId = yearId));
-        }
-    }
-
-
 };
 }
 
