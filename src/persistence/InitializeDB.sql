@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS relationships (
 
 CREATE TABLE IF NOT EXISTS yearCities (
     id INTEGER PRIMARY KEY,
-    city_id TEXT NOT NULL,
+    city_id INTEGER NOT NULL,
     year_id INTEGER NOT NULL,
     FOREIGN KEY (year_id) REFERENCES years(id)
     FOREIGN KEY (city_id) REFERENCES cities(id)
@@ -42,5 +42,5 @@ CREATE TABLE IF NOT EXISTS countries (
 
 CREATE TABLE IF NOT EXISTS borders (
     id INTEGER PRIMARY KEY,
-    contour blob NOT NULL UNIQUE -- A list of (latitude, longitude) defines the contour of the country
+    contour blob NOT NULL UNIQUE
 );
