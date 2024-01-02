@@ -4,7 +4,7 @@
 #include "src/persistence/Persistence.h"
 
 #include <gtest/gtest.h>
-#include <iostream>
+
 namespace {
 using namespace sqlpp::sqlite3;
 
@@ -18,9 +18,14 @@ public:
     persistence::Persistence<connection_pool, connection_config> persistence;
 };
 
-TEST_F(PersistenceTest, Simple)
+TEST_F(PersistenceTest, InsertOneCountry)
 {
-    
+    persistence::Country country{"TestCountry", {persistence::Coordinate{1,2}, persistence::Coordinate{3,4}}};
+    persistence::Data data{1900, {country}};
+
+    persistence.upsert(data);
+
+    EXPECT_EQ(persistence.load(1900), data);
 }
 
 

@@ -1,16 +1,26 @@
 #ifndef SRC_PERSISTENCE_DATA_H
 #define SRC_PERSISTENCE_DATA_H
 
+#include <cereal/archives/binary.hpp>
+#include <cereal/types/vector.hpp>
+
 #include <string>
 #include <vector>
 #include <optional>
+#include <sstream>
+#include <cstdint>
 
 namespace persistence {
 struct Coordinate {
-    float latitude = 0;
-    float longitude = 0;
+    double latitude = 0;
+    double longitude = 0;
 
     auto operator<=>(const Coordinate&) const = default;
+
+    template <class Archive>
+    void serialize(Archive& ar) {
+        ar(latitude, longitude);
+    }
 };
 
 struct Country {
@@ -41,6 +51,30 @@ struct Data {
 
     auto operator<=>(const Data&) const = default;
 };
+
+static auto serializeContour(const std::vector<Coordinate>& contour)
+{
+    std::stringstream ss;
+    {
+        cereal::BinaryOutputArchive oarchive(ss);
+        oarchive(contour); // Serialize the vector of Coordinates
+    }
+
+    std::string serializedStr = ss.str();
+    return std::vector<uint8_t>{serializedStr.begin(), serializedStr.end()};
+}
+
+static auto deserializeContour(const std::vector<uint8_t>& bytes)
+{
+    std::istringstream ss{std::string{reinterpret_cast<const char*>(bytes.data()), bytes.size()}};
+    std::vector<Coordinate> contour;
+    {
+        cereal::BinaryInputArchive iarchive(ss);
+        iarchive(contour); // Deserialize data into deserializedBorderContour
+    }
+
+    return contour;
+}
 }
 
 #endif

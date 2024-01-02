@@ -14,6 +14,7 @@
 #include <utility>
 #include <future>
 #include <tuple>
+#include <vector>
 
 namespace persistence {
 
@@ -57,8 +58,9 @@ public:
                 for (const auto& row : request<table::Relationships>(RELATIONSHIPS.yearId == yearId)) {
                     const auto& countryName = this->request<table::Countries>(COUNTRIES.id == row.countryId).front().name;
                     const auto& borderContour = this->request<table::Borders>(BORDERS.id == row.borderId).front().contour;
+                    const auto& contour = deserializeContour(std::vector<uint8_t>{borderContour.blob, borderContour.blob + borderContour.len});
 
-                    countries.emplace_back(countryName, {borderContour.blob, borderContour.blob + borderContour.len});
+                    countries.emplace_back(countryName, contour);
                 }
 
                 return countries;
@@ -83,7 +85,7 @@ public:
                 }
             });
 
-            data.countries = requestCountriesTask.wait();
+            data.countries = requestCountriesTask.get();
             data.cities = requestCitiesTask.get();
             data.event = requestEventTask.get();
         }
@@ -98,9 +100,11 @@ public:
 
             auto upsertCountriesTask = launchAsync([this, yearId, &countries = data.countries](){
                 for (const auto& country : countries) {
+                    const auto& serializedContour = serializeContour(country.borderContour);
+
                     if (const auto& countryIdOpt = this->upsert<table::Countries>(COUNTRIES.name == country.name, COUNTRIES.name = country.name); countryIdOpt) {
                         // country doesn't exist in the table before, it means the contour doesn't exist either
-                        const auto borderId = this->insert<table::Borders>(BORDERS.contour = country.borderContour);
+                        const auto borderId = this->insert<table::Borders>(BORDERS.contour = serializedContour);
 
                         this->insert<table::Relationships>(RELATIONSHIPS.yearId = yearId, RELATIONSHIPS.countryId = *countryIdOpt, RELATIONSHIPS.borderId = borderId);
                     } else {
@@ -108,7 +112,7 @@ public:
                         const auto countryId = this->request<table::Countries>(COUNTRIES.name == country.name).front().id;
                         const auto borderId = this->request<table::Relationships>(RELATIONSHIPS.yearId == yearId && RELATIONSHIPS.countryId == countryId).front().id;
 
-                        this->update<table::Borders>(BORDERS.id == borderId, BORDERS.contour = country.borderContour);
+                        this->update<table::Borders>(BORDERS.id == borderId, BORDERS.contour = serializedContour);
                     }
                 }
             });
@@ -132,9 +136,13 @@ public:
 
             auto upsertEventTask = launchAsync([this, yearId, &event = data.event](){
                 if (event) {
-                    this->upsert<table::Events>(EVENTS.yearId == yearId, EVENTS.event = (*event).description);
+                    this->upsert<table::Events>(EVENTS.yearId == yearId, EVENTS.yearId = yearId, EVENTS.event = event->description);
                 }
             });
+
+            upsertCountriesTask.wait();
+            upsertCitiesTask.wait();
+            upsertEventTask.wait();
         }
     }
 
