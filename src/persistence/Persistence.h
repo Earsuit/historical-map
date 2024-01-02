@@ -98,30 +98,35 @@ public:
 
             auto upsertCountriesTask = launchAsync([this, yearId, &countries = data.countries](){
                 for (const auto& country : countries) {
-                    this->upsert<table::Countries>(COUNTRIES.name == country.name, COUNTRIES.name = country.name);
-                    this->upsert<table::Borders>(BORDERS.contour == country.borderContour, BORDERS.contour = country.borderContour);
+                    if (const auto& countryIdOpt = this->upsert<table::Countries>(COUNTRIES.name == country.name, COUNTRIES.name = country.name); countryIdOpt) {
+                        // country doesn't exist in the table before, it means the contour doesn't exist either
+                        const auto borderId = this->insert<table::Borders>(BORDERS.contour = country.borderContour);
 
-                    const auto countryId = this->request<table::Countries>(COUNTRIES.name == country.name).front().id;
-                    const auto borderId = this->request<table::Borders>(BORDERS.contour == country.borderContour).front().id;
-                    
-                    this->upsert<table::Relationships>(RELATIONSHIPS.yearId == yearId && RELATIONSHIPS.countryId == countryId && RELATIONSHIPS.borderId == borderId,
-                                                       RELATIONSHIPS.yearId = yearId,
-                                                       RELATIONSHIPS.countryId = countryId,
-                                                       RELATIONSHIPS.borderId = borderId);
+                        this->insert<table::Relationships>(RELATIONSHIPS.yearId = yearId, RELATIONSHIPS.countryId = *countryIdOpt, RELATIONSHIPS.borderId = borderId);
+                    } else {
+                        // country already exists in the table, so as the border
+                        const auto countryId = this->request<table::Countries>(COUNTRIES.name == country.name).front().id;
+                        const auto borderId = this->request<table::Relationships>(RELATIONSHIPS.yearId == yearId && RELATIONSHIPS.countryId == countryId).front().id;
+
+                        this->update<table::Borders>(BORDERS.id == borderId, BORDERS.contour = country.borderContour);
+                    }
                 }
             });
 
             auto upsertCitiesTask = launchAsync([this, yearId, &cities = data.cities](){
                 for (const auto& city : cities) {
-                    this->upsert<table::Cities>(CITIES.name == city.name, 
-                                                CITIES.name = city.name, 
-                                                CITIES.latitude = city.coordinate.latitude,
-                                                CITIES.longitude = city.coordinate.longitude);
-
-                    const auto cityId = this->request<table::Cities>(CITIES.name == city.name).front().id;
+                    uint64_t cityId = 0;
+                    if (const auto cityIdOpt = this->upsert<table::Cities>(CITIES.name == city.name, 
+                                                                        CITIES.name = city.name, 
+                                                                        CITIES.latitude = city.coordinate.latitude,
+                                                                        CITIES.longitude = city.coordinate.longitude); cityIdOpt) {
+                        cityId = *cityIdOpt;
+                    } else {
+                        cityId = this->request<table::Cities>(CITIES.name == city.name).front().id;
+                    }
 
                     this->upsert<table::YearCities>(YEAR_CITIES.yearId == yearId && YEAR_CITIES.cityId == cityId, 
-                                                    YEAR_CITIES.cityId = cityId);
+                                                    YEAR_CITIES.yearId = yearId, YEAR_CITIES.cityId = cityId);
                 }
             });
 
@@ -151,10 +156,12 @@ private:
     }
 
     template<typename Table, typename... Assignments>
-    void insert(Assignments... assignments)
+    uint64_t insert(Assignments... assignments)
     {
         constexpr const Table table;
-        pool.get()(sqlpp::insert_into(table).set(std::make_tuple(assignments...)));
+        auto db = pool.get();
+        db(sqlpp::insert_into(table).set(std::make_tuple(assignments...)));
+        return db.last_insert_id();
     }
 
     template<typename Table, typename Expression, typename... Assignments>
@@ -165,14 +172,15 @@ private:
     }
 
     template<typename Table, typename Expression, typename... Assignments>
-    void upsert(Expression&& expression, Assignments... assignments)
+    std::optional<uint64_t> upsert(Expression&& expression, Assignments... assignments)
     {
         constexpr const Table table;
         const auto& ret = request<Table>(std::forward<Expression>(expression));
         if (ret.empty()) {
-            insert<Table>(std::forward<Assignments>(assignments)...);
+            return insert<Table>(std::forward<Assignments>(assignments)...);
         } else {
             update<Table>(std::forward<Expression>(expression), std::forward<Assignments>(assignments)...);
+            return std::nullopt;
         }
     }
 };
