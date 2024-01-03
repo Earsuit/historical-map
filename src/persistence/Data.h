@@ -66,7 +66,7 @@ static auto serializeContour(const std::vector<Coordinate>& contour)
 
 static auto deserializeContour(const std::vector<uint8_t>& bytes)
 {
-    std::istringstream ss{std::string{reinterpret_cast<const char*>(bytes.data()), bytes.size()}};
+    std::stringstream ss{std::string{reinterpret_cast<const char*>(bytes.data()), bytes.size()}};
     std::vector<Coordinate> contour;
     {
         cereal::BinaryInputArchive iarchive(ss);
