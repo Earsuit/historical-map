@@ -50,15 +50,15 @@ public:
     Data load(int year) {
         Data data{.year = year};
 
-        if (const auto& years = request<table::Years>(YEARS.year == year); !years.empty()) {
+        if (const auto& years = request<table::Years>(YEARS.year == year, YEARS.id); !years.empty()) {
             const auto yearId = years.front().id;
 
             auto requestCountriesTask = launchAsync([this, yearId](){
                 std::vector<Country> countries;
                 for (const auto& row : request<table::Relationships>(RELATIONSHIPS.yearId == yearId)) {
-                    const auto countryName = this->request<table::Countries>(COUNTRIES.id == row.countryId).front().name;
+                    const auto countryName = this->request<table::Countries>(COUNTRIES.id == row.countryId, COUNTRIES.name).front().name;
 
-                    const auto& borderRows = this->request<table::Borders>(BORDERS.id == row.borderId);
+                    const auto& borderRows = this->request<table::Borders>(BORDERS.id == row.borderId, BORDERS.contour);
                     const auto& borderContour = borderRows.front().contour;
                     const auto& contour = deserializeContour(std::vector<uint8_t>{borderContour.blob, borderContour.blob + borderContour.len});
 
@@ -72,7 +72,7 @@ public:
 
             auto requestCitiesTask = launchAsync([this, yearId](){
                 std::vector<City> cities;
-                for (const auto& row : this->request<table::YearCities>(YEAR_CITIES.yearId == yearId)) {
+                for (const auto& row : this->request<table::YearCities>(YEAR_CITIES.yearId == yearId, YEAR_CITIES.cityId)) {
                     const auto& cityRows = this->request<table::Cities>(CITIES.id == row.cityId);
                     const auto& city = cityRows.front();
 
@@ -85,7 +85,7 @@ public:
             data.cities = requestCitiesTask.get();
 
             auto requestEventTask = launchAsync([this, yearId]() -> std::optional<Event> {
-                if (const auto& ret = this->request<table::Events>(EVENTS.yearId == yearId); !ret.empty()) {
+                if (const auto& ret = this->request<table::Events>(EVENTS.yearId == yearId, EVENTS.event); !ret.empty()) {
                     return Event{ret.front().event};
                 } else {
                     return std::nullopt;
@@ -101,7 +101,7 @@ public:
     void upsert(const Data& data)
     {
         uint64_t yearId = 0;
-        if (const auto& years = request<table::Years>(YEARS.year == data.year); !years.empty()) {
+        if (const auto& years = request<table::Years>(YEARS.year == data.year, YEARS.id); !years.empty()) {
             yearId = years.front().id;
         } else {
             yearId = insert<table::Years>(YEARS.year = data.year);
@@ -118,8 +118,8 @@ public:
                     this->insert<table::Relationships>(RELATIONSHIPS.yearId = yearId, RELATIONSHIPS.countryId = *countryIdOpt, RELATIONSHIPS.borderId = borderId);
                 } else {
                     // country already exists in the table, so as the border
-                    const uint64_t countryId = this->request<table::Countries>(COUNTRIES.name == country.name).front().id;
-                    const uint64_t borderId = this->request<table::Relationships>(RELATIONSHIPS.yearId == yearId && RELATIONSHIPS.countryId == countryId).front().id;
+                    const uint64_t countryId = this->request<table::Countries>(COUNTRIES.name == country.name, COUNTRIES.id).front().id;
+                    const uint64_t borderId = this->request<table::Relationships>(RELATIONSHIPS.yearId == yearId && RELATIONSHIPS.countryId == countryId, RELATIONSHIPS.borderId).front().borderId;
 
                     this->update<table::Borders>(BORDERS.id == borderId, BORDERS.contour = serializedContour);
                 }
@@ -135,7 +135,7 @@ public:
                                                                     CITIES.longitude = city.coordinate.longitude); cityIdOpt) {
                     cityId = *cityIdOpt;
                 } else {
-                    cityId = this->request<table::Cities>(CITIES.name == city.name).front().id;
+                    cityId = this->request<table::Cities>(CITIES.name == city.name, CITIES.id).front().id;
                 }
 
                 this->upsert<table::YearCities>(YEAR_CITIES.yearId == yearId && YEAR_CITIES.cityId == cityId, 
@@ -164,38 +164,45 @@ private:
         return pool.get()(sqlpp::select(sqlpp::all_of(table)).from(table).unconditionally());
     }
 
+    template<typename Table, typename Expression, typename... Column>
+    auto request(Expression&& expression, Column&&... column)
+    {
+        constexpr const Table table;
+        return pool.get()(sqlpp::select(std::forward<Column>(column)...).from(table).where(std::forward<Expression>(expression)));
+    }
+
     template<typename Table, typename Expression>
     auto request(Expression&& expression)
     {
         constexpr const Table table;
         return pool.get()(sqlpp::select(sqlpp::all_of(table)).from(table).where(std::forward<Expression>(expression)));
     }
-
-    template<typename Table, typename... Assignments>
-    uint64_t insert(Assignments... assignments)
+ 
+    template<typename Table, typename... Assignment>
+    uint64_t insert(Assignment&&... assignment)
     {
         constexpr const Table table;
         auto db = pool.get();
-        db(sqlpp::insert_into(table).set(std::make_tuple(assignments...)));
+        db(sqlpp::insert_into(table).set(std::make_tuple(std::forward<Assignment>(assignment)...)));
         return db.last_insert_id();
     }
 
-    template<typename Table, typename Expression, typename... Assignments>
-    void update(Expression&& expression, Assignments... assignments)
+    template<typename Table, typename Expression, typename... Assignment>
+    void update(Expression&& expression, Assignment&&... assignment)
     {
         constexpr const Table table;
-        pool.get()(sqlpp::update(table).set(std::make_tuple(assignments...)).where(std::forward<Expression>(expression)));
+        pool.get()(sqlpp::update(table).set(std::make_tuple(std::forward<Assignment>(assignment)...)).where(std::forward<Expression>(expression)));
     }
 
-    template<typename Table, typename Expression, typename... Assignments>
-    std::optional<uint64_t> upsert(Expression&& expression, Assignments... assignments)
+    template<typename Table, typename Expression, typename... Assignment>
+    std::optional<uint64_t> upsert(Expression&& expression, Assignment&&... assignment)
     {
         constexpr const Table table;
         const auto& ret = request<Table>(std::forward<Expression>(expression));
         if (ret.empty()) {
-            return insert<Table>(std::forward<Assignments>(assignments)...);
+            return insert<Table>(std::forward<Assignment>(assignment)...);
         } else {
-            update<Table>(std::forward<Expression>(expression), std::forward<Assignments>(assignments)...);
+            update<Table>(std::forward<Expression>(expression), std::forward<Assignment>(assignment)...);
             return std::nullopt;
         }
     }
