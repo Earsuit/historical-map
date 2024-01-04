@@ -136,6 +136,28 @@ TEST_F(PersistenceTest, UpdateOneOfTheCountry)
     EXPECT_EQ(count, 2);
 }
 
+TEST_F(PersistenceTest, InsertTwoCountriesWithSameContourAtDifferentYear)
+{
+    int year1 = 1900;
+    int year2 = 2000;
+    persistence::Country country1{"One", {persistence::Coordinate{1,2}, persistence::Coordinate{3,4}}};
+    persistence::Country country2{"Two", {persistence::Coordinate{1,2}, persistence::Coordinate{3,4}}};
+    persistence::Data data1{year1, {country1}};
+    persistence::Data data2{year2, {country2}};
+
+    persistence.upsert(data1);
+    persistence.upsert(data2);
+
+    EXPECT_EQ(persistence.load(year1), data1);
+    EXPECT_EQ(persistence.load(year2), data2);
+
+    int count = 0;
+    for (const auto& row : monitor(sqlpp::select(all_of(persistence::BORDERS)).from(persistence::BORDERS).unconditionally())) {
+        count++;
+    }
+    EXPECT_EQ(count, 1);
+}
+
 TEST_F(PersistenceTest, InsertOneCity)
 {
     int year = 1900;
