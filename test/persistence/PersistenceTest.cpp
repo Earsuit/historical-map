@@ -42,6 +42,17 @@ TEST_F(PersistenceTest, InsertOneCountry)
     EXPECT_EQ(persistence.load(1900), data);
 }
 
+TEST_F(PersistenceTest, InsertDuplicateCountries)
+{
+    const persistence::Country country{"TestCountry", {persistence::Coordinate{1,2}, persistence::Coordinate{3,4}}};
+    const persistence::Data data{1900, {country}};
+
+    persistence.upsert(data);
+    persistence.upsert(data);
+
+    EXPECT_EQ(persistence.load(1900), data);
+}
+
 TEST_F(PersistenceTest, InsertTwoCountriesDifferentYear)
 {
     int year1 = 1900;
@@ -112,6 +123,18 @@ TEST_F(PersistenceTest, InsertOneCity)
     persistence::Data data{year};
     data.cities.emplace_back("One", persistence::Coordinate{1, 2});
 
+    persistence.upsert(data);
+
+    EXPECT_EQ(persistence.load(year), data);
+}
+
+TEST_F(PersistenceTest, InsertDuplicateCities)
+{
+    int year = 1900;
+    persistence::Data data{year};
+    data.cities.emplace_back("One", persistence::Coordinate{1, 2});
+
+    persistence.upsert(data);
     persistence.upsert(data);
 
     EXPECT_EQ(persistence.load(year), data);
