@@ -3,17 +3,17 @@ CREATE TABLE IF NOT EXISTS relationships (
     year_id INTEGER NOT NULL,
     country_id INTEGER NOT NULL,
     border_id INTEGER NOT NULL,
-    FOREIGN KEY (country_id) REFERENCES countries(id),
-    FOREIGN KEY (border_id) REFERENCES borders(id),
-    FOREIGN KEY (year_id) REFERENCES years(id)
+    FOREIGN KEY (country_id) REFERENCES countries(id) ON DELETE CASCADE
+    FOREIGN KEY (border_id) REFERENCES borders(id) ON DELETE CASCADE
+    FOREIGN KEY (year_id) REFERENCES years(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS yearCities (
     id INTEGER PRIMARY KEY,
     city_id INTEGER NOT NULL,
     year_id INTEGER NOT NULL,
-    FOREIGN KEY (year_id) REFERENCES years(id)
-    FOREIGN KEY (city_id) REFERENCES cities(id)
+    FOREIGN KEY (year_id) REFERENCES years(id) ON DELETE CASCADE
+    FOREIGN KEY (city_id) REFERENCES cities(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS cities (
@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS events (
     id INTEGER PRIMARY KEY,
     year_id INTEGER NOT NULL,
     event TEXT NOT NULL,
-    FOREIGN KEY (year_id) REFERENCES years(id)
+    FOREIGN KEY (year_id) REFERENCES years(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS years (

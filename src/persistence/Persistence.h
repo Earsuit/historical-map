@@ -45,6 +45,8 @@ public:
         for (const auto& command : COMMANDS) {
             connection.execute(command);
         }
+
+        connection.execute("PRAGMA foreign_keys = ON;");
     }
 
     Data load(int year) {
