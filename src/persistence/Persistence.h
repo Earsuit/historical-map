@@ -107,26 +107,32 @@ public:
 
         auto upsertCountriesTask = launchAsync([this, yearId, &countries = data.countries](){
             for (const auto& country : countries) {
-                const auto& serializedContour = serializeContour(country.borderContour);
+                const auto& [serializedVector, serializedSting] = serializeContour(country.borderContour);
+                const auto contourHash = std::hash<std::string>{}(serializedSting);
+                const auto countryId = this->upsert<table::Countries>(COUNTRIES.name == country.name, COUNTRIES.name = country.name);
+                
 
-                if (const auto& countryIdOpt = this->upsert<table::Countries>(COUNTRIES.name == country.name, COUNTRIES.name = country.name); countryIdOpt) {
-                    // country doesn't exist in the table before, it means the contour doesn't exist either
-                    const auto borderId = this->insert<table::Borders>(BORDERS.contour = serializedContour);
-
-                    this->insert<table::Relationships>(RELATIONSHIPS.yearId = yearId, RELATIONSHIPS.countryId = *countryIdOpt, RELATIONSHIPS.borderId = borderId);
-                } else {
-                    const uint64_t countryId = this->request<table::Countries>(COUNTRIES.name == country.name, COUNTRIES.id).front().id;
-
-                    // country already exists in the table, now check the border
-                    if (const auto& relationshipsRow = this->request<table::Relationships>(RELATIONSHIPS.yearId == yearId && 
-                                                                                           RELATIONSHIPS.countryId == countryId, 
-                                                                                           RELATIONSHIPS.borderId); relationshipsRow.empty()) {
-                        // border doesn't exist
-                        const auto borderId = this->insert<table::Borders>(BORDERS.contour = serializedContour);
-                        this->insert<table::Relationships>(RELATIONSHIPS.yearId = yearId, RELATIONSHIPS.countryId = countryId, RELATIONSHIPS.borderId = borderId);
+                if (const auto& relationshipsRow = this->request<table::Relationships>(RELATIONSHIPS.yearId == yearId && RELATIONSHIPS.countryId == countryId,
+                                                                                       RELATIONSHIPS.borderId);
+                                                                                       relationshipsRow.empty()) {
+                    uint64_t borderId = 0;
+                    // We don't use upsert for border because update contour is relative slow
+                    if (const auto& borderRow = this->request<table::Borders>(BORDERS.hash == contourHash, BORDERS.id); borderRow.empty()) {
+                        borderId = this->insert<table::Borders>(BORDERS.hash = contourHash, BORDERS.contour = serializedVector);
                     } else {
-                        // border already exist
-                        this->update<table::Borders>(BORDERS.id == relationshipsRow.front().borderId, BORDERS.contour = serializedContour);
+                        borderId = borderRow.front().id;
+                    }
+
+                    this->insert<table::Relationships>(RELATIONSHIPS.yearId = yearId,
+                                                       RELATIONSHIPS.countryId = countryId,
+                                                       RELATIONSHIPS.borderId = borderId);
+                } else {
+                    // border id exists, check if we need to update
+                    if (contourHash != static_cast<decltype(contourHash)>(this->request<table::Borders>(BORDERS.id == relationshipsRow.front().borderId, 
+                                                                                                        BORDERS.hash).front().hash)) {
+                        this->update<table::Borders>(BORDERS.id == relationshipsRow.front().borderId, 
+                                                     BORDERS.hash = contourHash, 
+                                                     BORDERS.contour = serializedVector);
                     }
                 }
             }
@@ -134,15 +140,10 @@ public:
 
         auto upsertCitiesTask = launchAsync([this, yearId, &cities = data.cities](){
             for (const auto& city : cities) {
-                uint64_t cityId = 0;
-                if (const auto cityIdOpt = this->upsert<table::Cities>(CITIES.name == city.name, 
-                                                                    CITIES.name = city.name, 
-                                                                    CITIES.latitude = city.coordinate.latitude,
-                                                                    CITIES.longitude = city.coordinate.longitude); cityIdOpt) {
-                    cityId = *cityIdOpt;
-                } else {
-                    cityId = this->request<table::Cities>(CITIES.name == city.name, CITIES.id).front().id;
-                }
+                const auto cityId = this->upsert<table::Cities>(CITIES.name == city.name, 
+                                                                CITIES.name = city.name, 
+                                                                CITIES.latitude = city.coordinate.latitude,
+                                                                CITIES.longitude = city.coordinate.longitude);
 
                 this->upsert<table::YearCities>(YEAR_CITIES.yearId == yearId && YEAR_CITIES.cityId == cityId, 
                                                 YEAR_CITIES.yearId = yearId, YEAR_CITIES.cityId = cityId);
@@ -199,7 +200,7 @@ private:
     }
 
     template<typename Table, typename Expression, typename... Assignment>
-    std::optional<uint64_t> upsert(Expression&& expression, Assignment&&... assignment)
+    uint64_t upsert(Expression&& expression, Assignment&&... assignment)
     {
         constexpr const Table table;
         // Here we can't forward the expression otherwise it will be moved inside the sqlpp,
@@ -209,7 +210,7 @@ private:
             return insert<Table>(std::forward<Assignment>(assignment)...);
         } else {
             update<Table>(std::forward<Expression>(expression), std::forward<Assignment>(assignment)...);
-            return std::nullopt;
+            return ret.front().id;
         }
     }
 };

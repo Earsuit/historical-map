@@ -52,7 +52,7 @@ struct Data {
     auto operator<=>(const Data&) const = default;
 };
 
-static auto serializeContour(const std::vector<Coordinate>& contour)
+auto serializeContour(const std::vector<Coordinate>& contour)
 {
     std::stringstream ss;
     {
@@ -61,10 +61,10 @@ static auto serializeContour(const std::vector<Coordinate>& contour)
     }
 
     std::string serializedStr = ss.str();
-    return std::vector<uint8_t>{serializedStr.begin(), serializedStr.end()};
+    return std::make_pair(std::vector<uint8_t>{serializedStr.begin(), serializedStr.end()}, serializedStr);
 }
 
-static auto deserializeContour(const std::vector<uint8_t>& bytes)
+auto deserializeContour(const std::vector<uint8_t>& bytes)
 {
     std::stringstream ss{std::string{reinterpret_cast<const char*>(bytes.data()), bytes.size()}};
     std::vector<Coordinate> contour;

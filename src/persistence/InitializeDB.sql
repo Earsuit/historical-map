@@ -42,5 +42,7 @@ CREATE TABLE IF NOT EXISTS countries (
 
 CREATE TABLE IF NOT EXISTS borders (
     id INTEGER PRIMARY KEY,
-    contour blob NOT NULL
+    hash INTEGER NOT NULL UNIQUE,
+    contour blob NOT NULL,
+    CHECK ((hash IS NULL AND contour IS NULL) OR (hash IS NOT NULL AND contour IS NOT NULL))
 );
