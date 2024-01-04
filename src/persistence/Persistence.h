@@ -198,7 +198,9 @@ private:
     std::optional<uint64_t> upsert(Expression&& expression, Assignment&&... assignment)
     {
         constexpr const Table table;
-        const auto& ret = request<Table>(std::forward<Expression>(expression));
+        // Here we can't forward the expression otherwise it will be moved inside the sqlpp,
+        // and the expression used by the following update will have empty expression
+        const auto& ret = request<Table>(expression);
         if (ret.empty()) {
             return insert<Table>(std::forward<Assignment>(assignment)...);
         } else {
