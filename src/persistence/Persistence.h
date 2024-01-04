@@ -115,11 +115,19 @@ public:
 
                     this->insert<table::Relationships>(RELATIONSHIPS.yearId = yearId, RELATIONSHIPS.countryId = *countryIdOpt, RELATIONSHIPS.borderId = borderId);
                 } else {
-                    // country already exists in the table, so as the border
                     const uint64_t countryId = this->request<table::Countries>(COUNTRIES.name == country.name, COUNTRIES.id).front().id;
-                    const uint64_t borderId = this->request<table::Relationships>(RELATIONSHIPS.yearId == yearId && RELATIONSHIPS.countryId == countryId, RELATIONSHIPS.borderId).front().borderId;
 
-                    this->update<table::Borders>(BORDERS.id == borderId, BORDERS.contour = serializedContour);
+                    // country already exists in the table, now check the border
+                    if (const auto& relationshipsRow = this->request<table::Relationships>(RELATIONSHIPS.yearId == yearId && 
+                                                                                           RELATIONSHIPS.countryId == countryId, 
+                                                                                           RELATIONSHIPS.borderId); relationshipsRow.empty()) {
+                        // border doesn't exist
+                        const auto borderId = this->insert<table::Borders>(BORDERS.contour = serializedContour);
+                        this->insert<table::Relationships>(RELATIONSHIPS.yearId = yearId, RELATIONSHIPS.countryId = countryId, RELATIONSHIPS.borderId = borderId);
+                    } else {
+                        // border already exist
+                        this->update<table::Borders>(BORDERS.id == relationshipsRow.front().borderId, BORDERS.contour = serializedContour);
+                    }
                 }
             }
         });

@@ -117,6 +117,22 @@ TEST_F(PersistenceTest, InsertOneCity)
     EXPECT_EQ(persistence.load(year), data);
 }
 
+TEST_F(PersistenceTest, InsertOneCountryWithDifferentContourAtDifferentYear)
+{
+    int year1 = 1900;
+    int year2 = 2000;
+    persistence::Country country1{"One", {persistence::Coordinate{1,2}, persistence::Coordinate{3,4}}};
+    persistence::Country country2{"One", {persistence::Coordinate{5,6}, persistence::Coordinate{7,8}}};
+    persistence::Data data1{year1, {country1}};
+    persistence::Data data2{year2, {country2}};
+
+    persistence.upsert(data1);
+    persistence.upsert(data2);
+
+    EXPECT_EQ(persistence.load(year1), data1);
+    EXPECT_EQ(persistence.load(year2), data2);
+}
+
 TEST_F(PersistenceTest, InsertTwoCitiesSameYearSeparately)
 {
     int year = 1900;
