@@ -68,8 +68,6 @@ public:
                 return countries;
             });
 
-            data.countries = requestCountriesTask.get();
-
             auto requestCitiesTask = launchAsync([this, yearId](){
                 std::vector<City> cities;
                 for (const auto& row : this->request<table::YearCities>(YEAR_CITIES.yearId == yearId, YEAR_CITIES.cityId)) {
@@ -82,8 +80,6 @@ public:
                 return cities;
             });
 
-            data.cities = requestCitiesTask.get();
-
             auto requestEventTask = launchAsync([this, yearId]() -> std::optional<Event> {
                 if (const auto& ret = this->request<table::Events>(EVENTS.yearId == yearId, EVENTS.event); !ret.empty()) {
                     return Event{ret.front().event};
@@ -92,6 +88,8 @@ public:
                 }
             });
 
+            data.countries = requestCountriesTask.get();
+            data.cities = requestCitiesTask.get();
             data.event = requestEventTask.get();
         }
 
