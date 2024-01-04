@@ -191,4 +191,19 @@ TEST_F(PersistenceTest, UpdateEvent)
     EXPECT_EQ(persistence.load(year), data);
 }
 
+TEST_F(PersistenceTest, InsertAllTogether)
+{
+    int year = 1900;
+    const persistence::Event event{"Test"};
+    const persistence::Country country1{"Country1", {persistence::Coordinate{1,2}, persistence::Coordinate{3,4}}};
+    const persistence::Country country2{"Country2", {persistence::Coordinate{5,6}, persistence::Coordinate{7,8}}};
+    const persistence::City city1{"One", {1,2}};
+    const persistence::City city2{"Two", {3,4}};
+    persistence::Data data{year, {country1, country2}, {city1, city2}, event};
+
+    persistence.upsert(data);
+
+    EXPECT_EQ(persistence.load(year), data);
+}
+
 }
