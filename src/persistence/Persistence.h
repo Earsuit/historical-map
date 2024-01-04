@@ -182,9 +182,7 @@ private:
     uint64_t insert(Assignment&&... assignment)
     {
         constexpr const Table table;
-        auto db = pool.get();
-        db(sqlpp::insert_into(table).set(std::make_tuple(std::forward<Assignment>(assignment)...)));
-        return db.last_insert_id();
+        return pool.get()(sqlpp::insert_into(table).set(std::make_tuple(std::forward<Assignment>(assignment)...)));
     }
 
     template<typename Table, typename Expression, typename... Assignment>
