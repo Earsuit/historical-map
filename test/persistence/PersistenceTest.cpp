@@ -8,14 +8,21 @@
 namespace {
 using namespace sqlpp::sqlite3;
 
+// https://www.sqlite.org/inmemorydb.html
+// share the same in memory database from two connections
+constexpr auto DATABASE_NAME = "file:memdb1?mode=memory&cache=shared";
+
 class PersistenceTest : public ::testing::Test {
 public:
     PersistenceTest():
-        persistence{std::make_shared<connection_config>("file::memory:?cache=shared", SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,  "", true)}
+        persistence{config},
+        monitor{config}
     {
     }
 
+    std::shared_ptr<connection_config> config = std::make_shared<connection_config>(DATABASE_NAME, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,  "", true);
     persistence::Persistence<connection_pool, connection_config> persistence;
+    connection monitor;
 };
 
 TEST_F(PersistenceTest, InsertEmpty)
@@ -51,6 +58,12 @@ TEST_F(PersistenceTest, InsertDuplicateCountries)
     persistence.upsert(data);
 
     EXPECT_EQ(persistence.load(1900), data);
+    
+    int count = 0;
+    for (const auto& row : monitor(sqlpp::select(all_of(persistence::BORDERS)).from(persistence::BORDERS).unconditionally())) {
+        count++;
+    }
+    EXPECT_EQ(count, 1);
 }
 
 TEST_F(PersistenceTest, InsertTwoCountriesDifferentYear)
@@ -115,6 +128,12 @@ TEST_F(PersistenceTest, UpdateOneOfTheCountry)
     const persistence::Data expect{year, {country1, updateCountry2}};
 
     EXPECT_EQ(persistence.load(year), expect);
+
+    int count = 0;
+    for (const auto& row : monitor(sqlpp::select(all_of(persistence::BORDERS)).from(persistence::BORDERS).unconditionally())) {
+        count++;
+    }
+    EXPECT_EQ(count, 2);
 }
 
 TEST_F(PersistenceTest, InsertOneCity)
