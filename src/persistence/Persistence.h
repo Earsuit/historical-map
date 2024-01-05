@@ -62,7 +62,7 @@ public:
 
                     const auto& borderRows = this->request<table::Borders>(BORDERS.id == row.borderId, BORDERS.contour);
                     const auto& borderContour = borderRows.front().contour;
-                    const auto& contour = deserializeContour(std::vector<uint8_t>{borderContour.blob, borderContour.blob + borderContour.len});
+                    const auto& contour = deserializeContour(Stream{borderContour.blob, borderContour.len});
 
                     countries.emplace_back(countryName, contour);
                 }
@@ -109,10 +109,9 @@ public:
 
         auto upsertCountriesTask = launchAsync([this, yearId, &countries = data.countries](){
             for (const auto& country : countries) {
-                const auto& [serializedVector, serializedSting] = serializeContour(country.borderContour);
-                const auto contourHash = std::hash<std::string>{}(serializedSting);
+                const auto stream = serializeContour<Stream>(country.borderContour);
+                const auto contourHash = std::hash<std::string>{}(stream);
                 const auto countryId = this->upsert<table::Countries>(COUNTRIES.name == country.name, COUNTRIES.name = country.name);
-                
 
                 if (const auto& relationshipsRow = this->request<table::Relationships>(RELATIONSHIPS.yearId == yearId && RELATIONSHIPS.countryId == countryId,
                                                                                        RELATIONSHIPS.borderId);
@@ -120,7 +119,7 @@ public:
                     uint64_t borderId = 0;
                     // We don't use upsert for border because update contour is relative slow
                     if (const auto& borderRow = this->request<table::Borders>(BORDERS.hash == contourHash, BORDERS.id); borderRow.empty()) {
-                        borderId = this->insert<table::Borders>(BORDERS.hash = contourHash, BORDERS.contour = serializedVector);
+                        borderId = this->insert<table::Borders>(BORDERS.hash = contourHash, BORDERS.contour = std::vector<uint8_t>{stream});
                     } else {
                         borderId = borderRow.front().id;
                     }
@@ -134,7 +133,7 @@ public:
                                                                                                         BORDERS.hash).front().hash)) {
                         this->update<table::Borders>(BORDERS.id == relationshipsRow.front().borderId, 
                                                      BORDERS.hash = contourHash, 
-                                                     BORDERS.contour = serializedVector);
+                                                     BORDERS.contour = std::vector<uint8_t>{stream});
                     }
                 }
             }
@@ -172,8 +171,8 @@ public:
                 for (const auto& country : countries) {
                     std::optional<uint64_t> countryId;
                     std::optional<uint64_t> borderId;
-                    const auto& [serializedVector, serializedSting] = serializeContour(country.borderContour);
-                    const auto contourHash = std::hash<std::string>{}(serializedSting);
+                    const auto stream  = serializeContour<Stream>(country.borderContour);
+                    const auto contourHash = std::hash<std::string>{}(stream);
 
                     if (const auto rows = this->request<table::Countries>(COUNTRIES.name == country.name, COUNTRIES.id); !rows.empty()) {
                         countryId = rows.front().id;

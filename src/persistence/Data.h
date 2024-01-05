@@ -52,21 +52,46 @@ struct Data {
     auto operator<=>(const Data&) const = default;
 };
 
-auto serializeContour(const std::vector<Coordinate>& contour)
+struct Stream : public std::stringstream {
+    using std::stringstream::stringstream;
+
+    Stream(Stream&& ss) :
+        std::stringstream(std::move(ss))
+    {
+    }
+
+    Stream(const uint8_t* blob, size_t len) :
+        std::stringstream(std::string{reinterpret_cast<const char*>(blob), len})
+    {
+    }
+
+    operator std::vector<uint8_t>() const 
+    {
+        const auto string{str()};
+        return std::vector<uint8_t>{string.cbegin(), string.cend()};
+    }
+
+    operator std::string() const 
+    {
+        return str();
+    }
+};
+
+template<typename T>
+T serializeContour(const std::vector<Coordinate>& contour)
 {
-    std::stringstream ss;
+    T ss;
     {
         cereal::BinaryOutputArchive oarchive(ss);
         oarchive(contour); // Serialize the vector of Coordinates
     }
 
-    std::string serializedStr = ss.str();
-    return std::make_pair(std::vector<uint8_t>{serializedStr.begin(), serializedStr.end()}, serializedStr);
+    return ss;
 }
 
-auto deserializeContour(const std::vector<uint8_t>& bytes)
+template<typename T>
+auto deserializeContour(T&& ss)
 {
-    std::stringstream ss{std::string{reinterpret_cast<const char*>(bytes.data()), bytes.size()}};
     std::vector<Coordinate> contour;
     {
         cereal::BinaryInputArchive iarchive(ss);
@@ -75,6 +100,7 @@ auto deserializeContour(const std::vector<uint8_t>& bytes)
 
     return contour;
 }
+
 }
 
 #endif
