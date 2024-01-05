@@ -158,6 +158,103 @@ TEST_F(PersistenceTest, InsertTwoCountriesWithSameContourAtDifferentYear)
     EXPECT_EQ(count, 1);
 }
 
+TEST_F(PersistenceTest, RemoveOneCountryDifferentBorder)
+{
+    int year = 1900;
+    persistence::Country country1{"One", {persistence::Coordinate{1,2}, persistence::Coordinate{3,4}}};
+    persistence::Country country2{"Two", {persistence::Coordinate{5,6}, persistence::Coordinate{7,8}}};
+    persistence::Data data{year, {country1, country2}};
+    persistence::Data remove{year, {country2}};
+    persistence::Data expect{year, {country1}};
+
+    persistence.upsert(data);
+
+    persistence.remove(remove);
+
+    EXPECT_EQ(persistence.load(year), expect);
+
+    int count = 0;
+    for (const auto& row : monitor(sqlpp::select(all_of(persistence::BORDERS)).from(persistence::BORDERS).unconditionally())) {
+        count++;
+    }
+    EXPECT_EQ(count, 1);
+}
+
+TEST_F(PersistenceTest, RemoveOneCountrySameBorderSameName)
+{
+    int year1 = 1900;
+    int year2 = 2000;
+    persistence::Country country1{"One", {persistence::Coordinate{1,2}, persistence::Coordinate{3,4}}};
+    persistence::Country country2{"One", {persistence::Coordinate{1,2}, persistence::Coordinate{3,4}}};
+    persistence::Data remove{year2, {country2}};
+    persistence::Data expect{year1, {country1}};
+
+    persistence.upsert(persistence::Data{year1, {country1}});
+    persistence.upsert(persistence::Data{year2, {country2}});
+
+    persistence.remove(remove);
+
+    EXPECT_EQ(persistence.load(year1), expect);
+}
+
+TEST_F(PersistenceTest, RemoveOneCountrySameBorderDifferentName)
+{
+    int year1 = 1900;
+    int year2 = 2000;
+    persistence::Country country1{"One", {persistence::Coordinate{1,2}, persistence::Coordinate{3,4}}};
+    persistence::Country country2{"Two", {persistence::Coordinate{1,2}, persistence::Coordinate{3,4}}};
+    persistence::Data remove{year2, {country2}};
+    persistence::Data expect{year1, {country1}};
+
+    persistence.upsert(persistence::Data{year1, {country1}});
+    persistence.upsert(persistence::Data{year2, {country2}});
+
+    persistence.remove(remove);
+
+    EXPECT_EQ(persistence.load(year1), expect);
+}
+
+TEST_F(PersistenceTest, RemoveOneCountryFromWrongYear)
+{
+    int year1 = 1900;
+    int year2 = 2000;
+    int year3 = 3000;
+    persistence::Country country1{"One", {persistence::Coordinate{1,2}, persistence::Coordinate{3,4}}};
+    persistence::Country country2{"Two", {persistence::Coordinate{1,2}, persistence::Coordinate{3,4}}};
+    persistence::Data remove{year3, {country2}};
+    persistence::Data expect1{year1, {country1}};
+    persistence::Data expect2{year2, {country2}};
+
+    persistence.upsert(persistence::Data{year1, {country1}});
+    persistence.upsert(persistence::Data{year2, {country2}});
+
+    persistence.remove(remove);
+
+    EXPECT_EQ(persistence.load(year1), expect1);
+    EXPECT_EQ(persistence.load(year2), expect2);
+}
+
+TEST_F(PersistenceTest, RemoveAllCountries)
+{
+    int year = 1900;
+    persistence::Country country1{"One", {persistence::Coordinate{1,2}, persistence::Coordinate{3,4}}};
+    persistence::Country country2{"Two", {persistence::Coordinate{1,2}, persistence::Coordinate{3,4}}};
+    persistence::Data remove{year, {country1, country2}};
+    persistence::Data expect{year};
+
+    persistence.upsert(persistence::Data{year, {country1, country2}});
+
+    persistence.remove(remove);
+
+    EXPECT_EQ(persistence.load(year), expect);
+
+    int count = 0;
+    for (const auto& row : monitor(sqlpp::select(all_of(persistence::BORDERS)).from(persistence::BORDERS).unconditionally())) {
+        count++;
+    }
+    EXPECT_EQ(count, 0);
+}
+
 TEST_F(PersistenceTest, InsertOneCity)
 {
     int year = 1900;
@@ -244,6 +341,36 @@ TEST_F(PersistenceTest, UpdateOneOfTheCity)
     EXPECT_EQ(persistence.load(year), expect);
 }
 
+TEST_F(PersistenceTest, RemoveAllCities)
+{
+    int year = 1900;
+    const persistence::City city1{"One", {1, 2}};
+    const persistence::City city2{"Two", {3,4}};
+    const persistence::Data data{year, {}, {city1, city2}};
+    const persistence::Data remove{year, {}, {city1, city2}};
+    const persistence::Data expect{year};
+
+    persistence.upsert(data);
+    persistence.remove(remove);
+
+    EXPECT_EQ(persistence.load(year), expect);
+}
+
+TEST_F(PersistenceTest, RemoveOneCity)
+{
+    int year = 1900;
+    const persistence::City city1{"One", {1, 2}};
+    const persistence::City city2{"Two", {3,4}};
+    const persistence::Data data{year, {}, {city1, city2}};
+    const persistence::Data remove{year, {}, {city2}};
+    const persistence::Data expect{year, {}, {city1}};
+
+    persistence.upsert(data);
+    persistence.remove(remove);
+
+    EXPECT_EQ(persistence.load(year), expect);
+}
+
 TEST_F(PersistenceTest, InsertEvent)
 {
     int year = 1900;
@@ -269,6 +396,19 @@ TEST_F(PersistenceTest, UpdateEvent)
     persistence.upsert(data);
 
     EXPECT_EQ(persistence.load(year), data);
+}
+
+TEST_F(PersistenceTest, RemoveEvent)
+{
+    int year = 1900;
+    const persistence::Event event{"Test"};
+    const persistence::Data data{year, {}, {}, event};
+    const persistence::Data remove{year, {}, {}, event};
+
+    persistence.upsert(data);
+    persistence.remove(remove);
+
+    EXPECT_EQ(persistence.load(year), persistence::Data{year});
 }
 
 TEST_F(PersistenceTest, InsertAllTogether)

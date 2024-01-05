@@ -163,6 +163,72 @@ public:
         upsertEventTask.wait();
     }
 
+    void remove(const Data& data)
+    {
+        if (const auto& years = request<table::Years>(YEARS.year == data.year, YEARS.id); !years.empty()) {
+            const auto yearId = years.front().id;
+
+            auto removeCountriesTask = launchAsync([this, yearId, &countries = data.countries](){
+                for (const auto& country : countries) {
+                    std::optional<uint64_t> countryId;
+                    std::optional<uint64_t> borderId;
+                    const auto& [serializedVector, serializedSting] = serializeContour(country.borderContour);
+                    const auto contourHash = std::hash<std::string>{}(serializedSting);
+
+                    if (const auto rows = this->request<table::Countries>(COUNTRIES.name == country.name, COUNTRIES.id); !rows.empty()) {
+                        countryId = rows.front().id;
+                    }
+
+                    if (const auto rows = this->request<table::Borders>(BORDERS.hash == contourHash, BORDERS.id); !rows.empty()) {
+                        borderId = rows.front().id;
+                    }
+
+                    if (countryId && borderId) {
+                        this->remove<table::Relationships>(RELATIONSHIPS.yearId == yearId &&
+                                                           RELATIONSHIPS.countryId == *countryId &&
+                                                           RELATIONSHIPS.borderId == *borderId);
+                    }
+
+                    if (countryId) {
+                        if (const auto& rows = this->request<table::Relationships>(RELATIONSHIPS.countryId == *countryId, RELATIONSHIPS.id); rows.empty()) {
+                            // we don't have any record of this country in the relationships table, so we can safely remove it from the countries table
+                            this->remove<table::Countries>(COUNTRIES.id == *countryId);
+                        }
+                    }
+                    
+                    if (borderId) {
+                        if (const auto& rows = this->request<table::Relationships>(RELATIONSHIPS.borderId == *borderId, RELATIONSHIPS.id); rows.empty()) {
+                            // we don't have any record of this border in the relationships table, so we can safely remove it from the borders table
+                            this->remove<table::Borders>(BORDERS.id == *borderId);
+                        }
+                    }
+                }
+            });
+
+            auto removeCitiesTask = launchAsync([this, yearId, &cities = data.cities](){
+                for (const auto& city : cities) {
+                    if (const auto& rows = this->request<table::Cities>(CITIES.name == city.name); !rows.empty()) {
+                        const auto cityId = rows.front().id;
+
+                        this->remove<table::YearCities>(YEAR_CITIES.cityId == cityId && YEAR_CITIES.yearId == yearId);
+
+                        if (const auto rows = this->request<table::YearCities>(YEAR_CITIES.cityId == cityId); rows.empty()) {
+                            // we don't have any record of this city in the yearCities table, so we can safely remove it from the cities table
+                            this->remove<table::Cities>(CITIES.id == cityId);
+                        }
+                    }
+                }
+            });
+            
+            if (data.event) {
+                this->remove<table::Events>(EVENTS.event == data.event->description && EVENTS.yearId == yearId);
+            }
+            
+            removeCountriesTask.wait();
+            removeCitiesTask.wait();
+        }
+    }
+
 private:
     Pool pool;
 
@@ -214,6 +280,13 @@ private:
             update<Table>(std::forward<Expression>(expression), std::forward<Assignment>(assignment)...);
             return ret.front().id;
         }
+    }
+
+    template<typename Table, typename Expression>
+    auto remove(Expression&& expression)
+    {
+        constexpr const Table table;
+        return pool.get()(sqlpp::remove_from(table).where(std::forward<Expression>(expression)));
     }
 };
 }
