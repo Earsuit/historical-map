@@ -34,6 +34,15 @@ TEST_F(PersistenceTest, InsertEmpty)
     EXPECT_EQ(persistence.load(1900), data);
 }
 
+TEST_F(PersistenceTest, RemoveEmpty)
+{
+    const persistence::Data data{1900};
+
+    persistence.remove(data);
+
+    EXPECT_EQ(persistence.load(1900), data);
+}
+
 TEST_F(PersistenceTest, LoadNonExistYear)
 {
     EXPECT_EQ(persistence.load(2000), persistence::Data{2000});
