@@ -67,8 +67,7 @@ struct Stream : public std::stringstream {
 
     operator std::vector<uint8_t>() const 
     {
-        const auto string{str()};
-        return std::vector<uint8_t>{string.cbegin(), string.cend()};
+        return std::vector<uint8_t>{view().cbegin(), view().cend()};
     }
 
     operator std::string() const 
