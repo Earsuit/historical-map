@@ -52,7 +52,7 @@ Data PersistenceManager::load(int year)
 {
     Data data;
     while (loadQueue.try_dequeue(data)){
-        cache.emplace(std::make_pair(year, data));
+        cache[year] = data;
     }
 
     if (cache.contains(year)) {
