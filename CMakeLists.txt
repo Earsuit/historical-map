@@ -43,6 +43,7 @@ include_directories(external/implot)
 include_directories(external/stb)
 include_directories(external/spdlog/include)
 include_directories(external/cereal/include)
+include_directories(external/readerwriterqueue)
 include_directories(${CMAKE_BINARY_DIR}) # For generated headers
 include_directories(${sqlpp11_SOURCE_DIR}/include)
 include_directories(${date_SOURCE_DIR}/include) # dependency of sqlpp11
