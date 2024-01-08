@@ -52,12 +52,16 @@ Data PersistenceManager::load(int year)
 {
     Data data;
     while (loadQueue.try_dequeue(data)){
+        logger->debug("Update cache for year {}.", data.year);
         cache[year] = data;
     }
 
     if (cache.contains(year)) {
+        logger->debug("Load cached data for year {}.", year);
         return cache[year];
     }
+
+    logger->debug("No cached data found for year {}.", year);
 
     request(year);
 
