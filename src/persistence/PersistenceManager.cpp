@@ -2,7 +2,7 @@
 #include "src/logger/Util.h"
 
 namespace persistence {
-constexpr auto DATABASE_NAME = "HistoricalMap";
+constexpr auto DATABASE_NAME = "HistoricalMapDB";
 constexpr auto QUEUE_SIZE = 128;
 
 PersistenceManager::PersistenceManager():
