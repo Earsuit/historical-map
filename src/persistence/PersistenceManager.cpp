@@ -21,9 +21,6 @@ PersistenceManager::~PersistenceManager()
 
 void PersistenceManager::startWorkerThread()
 {
-    // Make sure the previous thread is started before creating a new one
-    stopWorkerThread();
-
     runWorkerThread = true;
     workerThread = std::thread(&PersistenceManager::runWorkerThread, this);
 }
@@ -51,7 +48,7 @@ void PersistenceManager::worker()
     }
 }
 
-Data PersistenceManager::loadData(int year)
+Data PersistenceManager::load(int year)
 {
     Data data;
     while (loadQueue.try_dequeue(data)){

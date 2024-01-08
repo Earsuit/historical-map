@@ -21,7 +21,7 @@ public:
     PersistenceManager();
     ~PersistenceManager();
 
-    Data loadData(int year);
+    Data load(int year);
     void remove(const Data data);
     void update(const Data data);
 
