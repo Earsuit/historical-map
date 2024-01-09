@@ -3,14 +3,14 @@
 
 #include <cstdint>
 #include <type_traits>
+#include <climits>
 
 namespace logger {
 
 constexpr auto LOGGER_NAME = "Historical Map";
-constexpr uint8_t BITS_PER_BYTE = 8;
 
 template<typename Y, uint8_t BIT_NUM>
-requires(std::is_unsigned_v<Y> && sizeof(Y) * BITS_PER_BYTE > BIT_NUM)
+requires(std::is_unsigned_v<Y> && sizeof(Y) * CHAR_BIT > BIT_NUM)
 struct Index {
     Y idx: BIT_NUM;
 
