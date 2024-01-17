@@ -49,7 +49,6 @@ void CountryInfoWidget::paint(std::optional<persistence::Coordinate>& selected)
 
                                                     if (hovered) {
                                                         selected = coordinate;
-                                                        this->logger->trace("Select coordinate lat={}, lon={}.", coordinate.latitude, coordinate.longitude);
                                                     }
 
                                                     ImGui::PopID();
@@ -82,7 +81,6 @@ void CountryInfoWidget::paint(std::optional<persistence::Coordinate>& selected)
 
         if (hovered) {
             selected = newCorrd;
-            logger->trace("Select coordinate lat={}, lon={}.", latitude, longitude);
         }
 
         if (pressed) {

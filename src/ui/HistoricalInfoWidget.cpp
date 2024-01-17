@@ -76,6 +76,11 @@ void HistoricalInfoWidget::countryInfo()
         if (ImGui::TreeNode(name)) {
             ImGui::SeparatorText(name);
             countryInfoWidget.paint(this->selected);
+
+            if (this->selected) {
+                this->logger->trace("Select coordinate lat {}, lon {} for country {}", this->selected->latitude, this->selected->longitude, name);
+            }
+            
             if (ImGui::Button("Delete country")) {
                 this->cache.countries.erase(countryInfoWidget.getCountryIterator());
                 this->logger->debug("Delete country {}, current country num in cache: {}", name, this->cache.countries.size());
