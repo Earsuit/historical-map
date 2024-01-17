@@ -14,7 +14,7 @@
 namespace ui {
 class CountryInfoWidget {
 public:
-    CountryInfoWidget(std::vector<persistence::Country>::iterator it):
+    CountryInfoWidget(std::list<persistence::Country>::iterator it):
         logger{spdlog::get(logger::LOGGER_NAME)},
         it{it},
         country{*it}
@@ -29,7 +29,7 @@ public:
 
 private:
     std::shared_ptr<spdlog::logger> logger;
-    std::vector<persistence::Country>::iterator it;
+    std::list<persistence::Country>::iterator it;
     persistence::Country& country;
     std::string latitude{};
     std::string longitude{};

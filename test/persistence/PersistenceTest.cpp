@@ -130,7 +130,7 @@ TEST_F(PersistenceTest, UpdateOneOfTheCountry)
 
     persistence.upsert(data);
 
-    data.countries = std::vector<persistence::Country>{updateCountry2};
+    data.countries = std::list<persistence::Country>{updateCountry2};
 
     persistence.upsert(data);
 
@@ -341,7 +341,7 @@ TEST_F(PersistenceTest, UpdateOneOfTheCity)
 
     persistence.upsert(data);
 
-    data.cities = std::vector<persistence::City>{updateCity2};
+    data.cities = std::list<persistence::City>{updateCity2};
 
     persistence.upsert(data);
 

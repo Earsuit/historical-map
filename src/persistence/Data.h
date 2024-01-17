@@ -2,13 +2,14 @@
 #define SRC_PERSISTENCE_DATA_H
 
 #include <cereal/archives/binary.hpp>
-#include <cereal/types/vector.hpp>
+#include <cereal/types/list.hpp>
 
 #include <string>
 #include <vector>
 #include <optional>
 #include <sstream>
 #include <cstdint>
+#include <list>
 
 namespace persistence {
 struct Coordinate {
@@ -25,7 +26,7 @@ struct Coordinate {
 
 struct Country {
     std::string name;
-    std::vector<Coordinate> borderContour;
+    std::list<Coordinate> borderContour;
 
     auto operator<=>(const Country&) const = default;
 };
@@ -45,8 +46,8 @@ struct Event {
 
 struct Data {
     int year = 0;
-    std::vector<Country> countries;
-    std::vector<City> cities;
+    std::list<Country> countries;
+    std::list<City> cities;
     std::optional<Event> event;
 
     auto operator<=>(const Data&) const = default;
@@ -77,7 +78,7 @@ struct Stream : public std::stringstream {
 };
 
 template<typename T>
-T serializeContour(const std::vector<Coordinate>& contour)
+T serializeContour(const std::list<Coordinate>& contour)
 {
     T ss;
     {
@@ -91,7 +92,7 @@ T serializeContour(const std::vector<Coordinate>& contour)
 template<typename T>
 auto deserializeContour(T&& ss)
 {
-    std::vector<Coordinate> contour;
+    std::list<Coordinate> contour;
     {
         cereal::BinaryInputArchive iarchive(ss);
         iarchive(contour); // Deserialize data into deserializedBorderContour

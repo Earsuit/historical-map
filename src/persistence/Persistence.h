@@ -56,7 +56,7 @@ public:
             const auto yearId = years.front().id;
 
             auto requestCountriesTask = launchAsync([this, yearId](){
-                std::vector<Country> countries;
+                std::list<Country> countries;
                 for (const auto& row : request<table::Relationships>(RELATIONSHIPS.yearId == yearId)) {
                     const auto countryName = this->request<table::Countries>(COUNTRIES.id == row.countryId, COUNTRIES.name).front().name;
 
@@ -71,7 +71,7 @@ public:
             });
 
             auto requestCitiesTask = launchAsync([this, yearId](){
-                std::vector<City> cities;
+                std::list<City> cities;
                 for (const auto& row : this->request<table::YearCities>(YEAR_CITIES.yearId == yearId, YEAR_CITIES.cityId)) {
                     const auto& cityRows = this->request<table::Cities>(CITIES.id == row.cityId);
                     const auto& city = cityRows.front();
