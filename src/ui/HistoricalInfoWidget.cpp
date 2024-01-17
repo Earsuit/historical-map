@@ -16,14 +16,24 @@ void HistoricalInfoWidget::paint()
     if (yearLock) {
         ImGui::BeginDisabled();
     }
+    // there is no year 0
     ImGui::SliderInt("##", &year, MIN_YEAR, MAX_YEAR, "Year %d", ImGuiSliderFlags_AlwaysClamp);
+    if (year == 0) {
+        year = 1;
+    }
     ImGui::SameLine();
     if (ImGui::Button("-")) {
         year--;
+        if (year == 0) {
+            year = -1;
+        }
     }
     ImGui::SameLine();
     if (ImGui::Button("+")) {
         year++;
+        if (year == 0) {
+            year = 1;
+        }
     }
     if (yearLock) {
         ImGui::EndDisabled();
