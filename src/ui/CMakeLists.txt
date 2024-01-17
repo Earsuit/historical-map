@@ -4,6 +4,7 @@ SET(UI_SRC
     TileSourceWidget.cpp
     LogWidget.cpp
     CountryInfoWidget.cpp
+    HistoricalInfoWidget.cpp
 )
 
 target_sources(HistoricalMap PRIVATE ${UI_SRC})

@@ -7,6 +7,7 @@
 #include "src/ui/TileSourceWidget.h"
 #include "src/ui/LogWidget.h"
 #include "src/ui/MapWidget.h"
+#include "src/ui/HistoricalInfoWidget.h"
 #include "src/logger/StringSink.h"
 
 #include <memory>
@@ -25,6 +26,7 @@ private:
     LogWidget logWidget;
     TileSourceWidget tileSourceWidget;
     MapWidget mapWidget;
+    HistoricalInfoWidget historicalInfo;
 
     void buildDockSpace(ImGuiIO& io);
 };
