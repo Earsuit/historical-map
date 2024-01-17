@@ -41,6 +41,8 @@ void HistoricalInfoWidget::paint()
 
 void HistoricalInfoWidget::historyInfo()
 {
+    selected = std::nullopt;
+
     if (ImGui::Button("Refresh") || cache.year != year) {
         logger->debug("Load data of year {} from database.", year);
         cache = persistence.load(year);
