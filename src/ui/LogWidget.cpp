@@ -65,19 +65,7 @@ void LogWidget::paint()
                 updateLogs();
 
                 for (auto i = start; i != end; i++) {
-                    if (!filterEnable) {
-                        ImGui::TextUnformatted(logs[i].c_str());
-                    } else {
-                        try {
-                            if (std::regex_search(logs[i], std::regex{filter})) {
-                                ImGui::TextUnformatted(logs[i].c_str());
-                            }
-                        }
-                        catch (const std::regex_error& e) {
-                            filterEnable = false;
-                            logger->error("Invalid regex string: {}", e.what());
-                        }
-                    }
+                    ImGui::TextUnformatted(logs[i].c_str());
                 }
             }
 
@@ -97,7 +85,19 @@ void LogWidget::paint()
 void LogWidget::updateLogs()
 {
     for (auto&& newLog : sink->dumpLogs()) {
-        logs[end++] = newLog;
+        if (filterEnable) {
+            try {
+                if (std::regex_search(newLog, std::regex{filter})) {
+                    logs[end++] = newLog;
+                }
+            }
+            catch (const std::regex_error& e) {
+                filterEnable = false;
+                logs[end++] = "Invalid regex string: " + std::string(e.what());
+            }
+        } else {
+            logs[end++] = newLog;
+        }
 
         if (end == start) {
             start++;
