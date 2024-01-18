@@ -53,27 +53,42 @@ void HistoricalInfoWidget::historyInfo()
 {
     selected = std::nullopt;
 
-    if (ImGui::Button("Refresh") || cache.year != year) {
+    if (ImGui::Button("Refresh") || !cache || cache->year != year) {
         logger->debug("Load data of year {} from database.", year);
-        cache = persistence.load(year);
+        
+        remove = {year};
 
         countryInfoWidgets.clear();
 
-        for (auto it = cache.countries.begin(); it != cache.countries.end(); it++) {
-            countryInfoWidgets.emplace_back(it);
+        if (cache = persistence.load(year); cache) {
+            for (auto it = cache->countries.begin(); it != cache->countries.end(); it++) {
+                countryInfoWidgets.emplace_back(it);
+            }
         }
     }
+    ImGui::SameLine();
 
-    ImGui::SeparatorText("Event");
-    if (cache.event) {
-    }
+    if (cache) {
+        if (ImGui::Button("Save")) {
+            logger->debug("Save {} countries, {} cities, {} event", cache->countries.size(), cache->cities.size(), static_cast<bool>(cache->event));
+            logger->debug("Remove {} countries, {} cities, {} event", remove.countries.size(), remove.cities.size(), static_cast<bool>(remove.event));
+            persistence.remove(remove);
+            persistence.update(*cache);
+            // don't clear cache because the user may continue editing
+            remove = {remove.year};
+        }
 
-    ImGui::SeparatorText("Countries");
-    countryInfo();
+        ImGui::SeparatorText("Event");
+        if (cache->event) {
+        }
 
-    ImGui::SeparatorText("Cities");
-    for (auto& city : cache.cities) {
-        if (ImGui::TreeNode(city.name.c_str())) {
+        ImGui::SeparatorText("Countries");
+        countryInfo();
+
+        ImGui::SeparatorText("Cities");
+        for (auto& city : cache->cities) {
+            if (ImGui::TreeNode(city.name.c_str())) {
+            }
         }
     }
 }
@@ -94,8 +109,9 @@ void HistoricalInfoWidget::countryInfo()
             }
             
             if (ImGui::Button("Delete country")) {
-                this->cache.countries.erase(countryInfoWidget.getCountryIterator());
-                this->logger->debug("Delete country {}, current country num in cache: {}", name, this->cache.countries.size());
+                this->remove.countries.emplace_back(*countryInfoWidget.getCountryIterator());
+                this->cache->countries.erase(countryInfoWidget.getCountryIterator());
+                this->logger->debug("Delete country {}, current country num in cache: {}", name, this->cache->countries.size());
                 remove = true;
             }
             ImGui::TreePop();
@@ -108,9 +124,9 @@ void HistoricalInfoWidget::countryInfo()
     ImGui::InputText("Country name", &countryName);
     ImGui::SameLine();
     if (ImGui::Button("Add country") && !countryName.empty()) {
-        cache.countries.emplace_back(countryName, std::list<persistence::Coordinate>{});
-        countryInfoWidgets.emplace_back(--cache.countries.end());
-        logger->debug("Add country {}, current country num in cache: {}", countryName, this->cache.countries.size());
+        cache->countries.emplace_back(countryName, std::list<persistence::Coordinate>{});
+        countryInfoWidgets.emplace_back(--cache->countries.end());
+        logger->debug("Add country {}, current country num in cache: {}", countryName, this->cache->countries.size());
         countryName.clear();
     }
 }

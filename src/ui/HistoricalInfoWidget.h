@@ -16,7 +16,7 @@
 namespace ui {
 constexpr auto HISTORICAL_INFO_WIDGET_NAME = "Historical Info";
 constexpr int QIN_DYNASTY = -221;
-constexpr int DEFAULT_CACHE_YEAR = 0;
+constexpr int DEFAULT_YEAR = 0;
 
 class HistoricalInfoWidget {
 public:
@@ -29,7 +29,8 @@ private:
     persistence::PersistenceManager persistence;
     int year = QIN_DYNASTY;
     bool yearLock = false;
-    persistence::Data cache{DEFAULT_CACHE_YEAR};
+    std::optional<persistence::Data> cache;
+    persistence::Data remove{DEFAULT_YEAR};
     std::optional<persistence::Coordinate> selected;
     std::list<CountryInfoWidget> countryInfoWidgets;
 

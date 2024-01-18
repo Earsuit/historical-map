@@ -14,6 +14,7 @@
 #include <thread>
 #include <atomic>
 #include <memory>
+#include <optional>
 
 namespace persistence {
 class PersistenceManager {
@@ -21,7 +22,7 @@ public:
     PersistenceManager();
     ~PersistenceManager();
 
-    Data load(int year);
+    std::optional<Data> load(int year);
     void remove(const Data data);
     void update(const Data data);
 

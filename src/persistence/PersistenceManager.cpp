@@ -22,7 +22,7 @@ PersistenceManager::~PersistenceManager()
 void PersistenceManager::startWorkerThread()
 {
     runWorkerThread = true;
-    workerThread = std::thread(&PersistenceManager::runWorkerThread, this);
+    workerThread = std::thread(&PersistenceManager::worker, this);
 }
 
 void PersistenceManager::stopWorkerThread()
@@ -48,12 +48,15 @@ void PersistenceManager::worker()
     }
 }
 
-Data PersistenceManager::load(int year)
+std::optional<Data> PersistenceManager::load(int year)
 {
     Data data;
+
+    request(year);
+
     while (loadQueue.try_dequeue(data)){
         logger->debug("Update cache for year {}.", data.year);
-        cache[year] = data;
+        cache[data.year] = data;
     }
 
     if (cache.contains(year)) {
@@ -62,15 +65,14 @@ Data PersistenceManager::load(int year)
     }
 
     logger->debug("No cached data found for year {}.", year);
-
-    request(year);
-
-    return Data{year};
+    
+    return std::nullopt;
 }
 
 void PersistenceManager::remove(const Data data)
 {
     if (!taskQueue.enqueue([this, data = std::move(data)](){
+                                this->logger->debug("Process remove task for year {}.", data.year);
                                 this->persistence.remove(data);
                             })) {
         logger->error("Enqueue remove database year {} task fail.", data.year);
@@ -80,6 +82,7 @@ void PersistenceManager::remove(const Data data)
 void PersistenceManager::update(const Data data)
 {
     if (!taskQueue.enqueue([this, data = std::move(data)](){
+                            this->logger->debug("Process update task for year {}.", data.year);
                             this->persistence.upsert(data);
                         })) {
         logger->error("Enqueue update database year {} task fail.", data.year);
@@ -89,6 +92,7 @@ void PersistenceManager::update(const Data data)
 void PersistenceManager::request(int year)
 {
     if (!taskQueue.enqueue([this, year](){
+                            this->logger->debug("Process load task for year {}.", year);
                             this->loadQueue.emplace(this->persistence.load(year));
                         })) {
         logger->error("Enqueue request database year {} task fail.", year);
