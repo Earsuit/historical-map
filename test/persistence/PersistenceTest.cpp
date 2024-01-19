@@ -4,13 +4,14 @@
 #include "src/persistence/Persistence.h"
 
 #include <gtest/gtest.h>
+#include <cstdio>
 
 namespace {
 using namespace sqlpp::sqlite3;
 
 // https://www.sqlite.org/inmemorydb.html
 // share the same in memory database from two connections
-constexpr auto DATABASE_NAME = "file:memdb1?mode=memory&cache=shared";
+constexpr auto DATABASE_NAME = "PersistenceTestDB";
 
 class PersistenceTest : public ::testing::Test {
 public:
@@ -18,6 +19,11 @@ public:
         persistence{config},
         monitor{config}
     {
+    }
+
+    ~PersistenceTest()
+    {
+        std::remove(DATABASE_NAME);
     }
 
     std::shared_ptr<connection_config> config = std::make_shared<connection_config>(DATABASE_NAME, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,  "", true);
