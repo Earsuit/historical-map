@@ -17,12 +17,6 @@
 #include <vector>
 
 namespace persistence {
-
-template<typename T>
-auto launchAsync(T func) {
-    return std::async(std::launch::async, func);
-};
-
 constexpr auto DEFAULT_CACHE_SIZE = 5;
 
 constexpr const table::Years YEARS;
@@ -55,7 +49,7 @@ public:
         if (const auto& years = request<table::Years>(YEARS.year == year, YEARS.id); !years.empty()) {
             const auto yearId = years.front().id;
 
-            auto requestCountriesTask = launchAsync([this, yearId](){
+            auto requestCountriesTask = std::async(std::launch::async, [this, yearId](){
                 std::list<Country> countries;
                 for (const auto& row : request<table::Relationships>(RELATIONSHIPS.yearId == yearId)) {
                     const auto countryName = this->request<table::Countries>(COUNTRIES.id == row.countryId, COUNTRIES.name).front().name;
@@ -70,7 +64,7 @@ public:
                 return countries;
             });
 
-            auto requestCitiesTask = launchAsync([this, yearId](){
+            auto requestCitiesTask = std::async(std::launch::async, [this, yearId](){
                 std::list<City> cities;
                 for (const auto& row : this->request<table::YearCities>(YEAR_CITIES.yearId == yearId, YEAR_CITIES.cityId)) {
                     const auto& cityRows = this->request<table::Cities>(CITIES.id == row.cityId);
@@ -82,7 +76,7 @@ public:
                 return cities;
             });
 
-            auto requestEventTask = launchAsync([this, yearId]() -> std::optional<Event> {
+            auto requestEventTask = std::async(std::launch::async, [this, yearId]() -> std::optional<Event> {
                 if (const auto& ret = this->request<table::Events>(EVENTS.yearId == yearId, EVENTS.event); !ret.empty()) {
                     return Event{ret.front().event};
                 } else {
@@ -107,7 +101,7 @@ public:
             yearId = insert<table::Years>(YEARS.year = data.year);
         }
 
-        auto upsertCountriesTask = launchAsync([this, yearId, &countries = data.countries](){
+        auto upsertCountriesTask = std::async(std::launch::deferred, [this, yearId, &countries = data.countries](){
             for (const auto& country : countries) {
                 const auto stream = serializeContour<Stream>(country.borderContour);
                 const auto contourHash = std::hash<std::string>{}(stream);
@@ -139,7 +133,7 @@ public:
             }
         });
 
-        auto upsertCitiesTask = launchAsync([this, yearId, &cities = data.cities](){
+        auto upsertCitiesTask = std::async(std::launch::deferred, [this, yearId, &cities = data.cities](){
             for (const auto& city : cities) {
                 const auto cityId = this->upsert<table::Cities>(CITIES.name == city.name, 
                                                                 CITIES.name = city.name, 
@@ -151,7 +145,7 @@ public:
             }
         });
 
-        auto upsertEventTask = launchAsync([this, yearId, &event = data.event](){
+        auto upsertEventTask = std::async(std::launch::deferred, [this, yearId, &event = data.event](){
             if (event) {
                 this->upsert<table::Events>(EVENTS.yearId == yearId, EVENTS.yearId = yearId, EVENTS.event = event->description);
             }
@@ -167,7 +161,7 @@ public:
         if (const auto& years = request<table::Years>(YEARS.year == data.year, YEARS.id); !years.empty()) {
             const auto yearId = years.front().id;
 
-            auto removeCountriesTask = launchAsync([this, yearId, &countries = data.countries](){
+            auto removeCountriesTask = std::async(std::launch::deferred, [this, yearId, &countries = data.countries](){
                 for (const auto& country : countries) {
                     std::optional<uint64_t> countryId;
                     std::optional<uint64_t> borderId;
@@ -204,7 +198,7 @@ public:
                 }
             });
 
-            auto removeCitiesTask = launchAsync([this, yearId, &cities = data.cities](){
+            auto removeCitiesTask = std::async(std::launch::deferred, [this, yearId, &cities = data.cities](){
                 for (const auto& city : cities) {
                     if (const auto& rows = this->request<table::Cities>(CITIES.name == city.name); !rows.empty()) {
                         const auto cityId = rows.front().id;
@@ -269,16 +263,21 @@ private:
     template<typename Table, typename Expression, typename... Assignment>
     uint64_t upsert(Expression&& expression, Assignment&&... assignment)
     {
-        constexpr const Table table;
+        uint64_t id = 0;
         // Here we can't forward the expression otherwise it will be moved inside the sqlpp,
         // and the expression used by the following update will have empty expression
-        const auto& ret = request<Table>(expression);
-        if (ret.empty()) {
-            return insert<Table>(std::forward<Assignment>(assignment)...);
-        } else {
-            update<Table>(std::forward<Expression>(expression), std::forward<Assignment>(assignment)...);
-            return ret.front().id;
+        {
+            // The returned object releases the connection after destruction
+            const auto& ret = request<Table>(expression);
+            if (ret.empty()) {
+                return insert<Table>(std::forward<Assignment>(assignment)...);
+            } else {
+                id = ret.front().id;
+            }
         }
+        
+        update<Table>(std::forward<Expression>(expression), std::forward<Assignment>(assignment)...);
+        return id;
     }
 
     template<typename Table, typename Expression>
