@@ -106,11 +106,21 @@ public:
                 const auto stream = serializeContour<Stream>(country.borderContour);
                 const auto contourHash = std::hash<std::string>{}(stream);
                 const auto countryId = this->upsert<table::Countries>(COUNTRIES.name == country.name, COUNTRIES.name = country.name);
+                bool borderNotExist = false;
+                uint64_t borderId = 0;
 
-                if (const auto& relationshipsRow = this->request<table::Relationships>(RELATIONSHIPS.yearId == yearId && RELATIONSHIPS.countryId == countryId,
-                                                                                       RELATIONSHIPS.borderId);
-                                                                                       relationshipsRow.empty()) {
-                    uint64_t borderId = 0;
+                {
+                    if (const auto& relationshipsRow = this->request<table::Relationships>(RELATIONSHIPS.yearId == yearId && RELATIONSHIPS.countryId == countryId,
+                                                                                           RELATIONSHIPS.borderId);
+                        relationshipsRow.empty()) {
+                        borderNotExist = true;
+                    } else {
+                        borderNotExist = false;
+                        borderId = relationshipsRow.front().borderId;
+                    }
+                }
+
+                if (borderNotExist) {
                     // We don't use upsert for border because update contour is relative slow
                     if (const auto& borderRow = this->request<table::Borders>(BORDERS.hash == contourHash, BORDERS.id); borderRow.empty()) {
                         borderId = this->insert<table::Borders>(BORDERS.hash = contourHash, BORDERS.contour = std::vector<uint8_t>{stream});
@@ -123,9 +133,9 @@ public:
                                                        RELATIONSHIPS.borderId = borderId);
                 } else {
                     // border id exists, check if we need to update
-                    if (contourHash != static_cast<decltype(contourHash)>(this->request<table::Borders>(BORDERS.id == relationshipsRow.front().borderId, 
+                    if (contourHash != static_cast<decltype(contourHash)>(this->request<table::Borders>(BORDERS.id == borderId, 
                                                                                                         BORDERS.hash).front().hash)) {
-                        this->update<table::Borders>(BORDERS.id == relationshipsRow.front().borderId, 
+                        this->update<table::Borders>(BORDERS.id == borderId, 
                                                      BORDERS.hash = contourHash, 
                                                      BORDERS.contour = std::vector<uint8_t>{stream});
                     }
