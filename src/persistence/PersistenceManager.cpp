@@ -52,8 +52,6 @@ std::optional<Data> PersistenceManager::load(int year)
 {
     Data data;
 
-    request(year);
-
     while (loadQueue.try_dequeue(data)){
         logger->debug("Update cache for year {}.", data.year);
         cache[data.year] = data;
@@ -65,6 +63,8 @@ std::optional<Data> PersistenceManager::load(int year)
     }
 
     logger->debug("No cached data found for year {}.", year);
+
+    request(year);
     
     return std::nullopt;
 }
@@ -81,6 +81,9 @@ void PersistenceManager::remove(const Data data)
 
 void PersistenceManager::update(const Data data)
 {
+    // overwrite the cached data
+    cache[data.year] = data;
+
     if (!taskQueue.enqueue([this, data = std::move(data)](){
                             this->logger->debug("Process update task for year {}.", data.year);
                             this->persistence.upsert(data);
