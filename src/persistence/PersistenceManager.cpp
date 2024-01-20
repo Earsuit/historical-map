@@ -4,12 +4,14 @@
 namespace persistence {
 constexpr auto DATABASE_NAME = "HistoricalMapDB";
 constexpr auto QUEUE_SIZE = 128;
+constexpr auto DATA_CACHE_SIZE = 8;
 
 PersistenceManager::PersistenceManager():
     persistence{std::make_shared<sqlpp::sqlite3::connection_config>(DATABASE_NAME, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE)},
     taskQueue{QUEUE_SIZE},
     loadQueue{QUEUE_SIZE},
-    logger{spdlog::get(logger::LOGGER_NAME)}
+    logger{spdlog::get(logger::LOGGER_NAME)},
+    cache{DATA_CACHE_SIZE}
 {
     startWorkerThread();
 }

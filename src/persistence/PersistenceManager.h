@@ -2,6 +2,7 @@
 #define SRC_PERSISTENCE_PERSISTENCE_MANAGER_H
 
 #include "src/persistence/Persistence.h"
+#include "src/persistence/DataCache.h"
 
 #include "sqlpp11/sqlite3/sqlite3.h"
 #include "sqlpp11/sqlite3/connection_config.h"
@@ -31,7 +32,7 @@ private:
     moodycamel::BlockingReaderWriterQueue<std::function<void()>> taskQueue;
     moodycamel::BlockingReaderWriterQueue<Data> loadQueue;
     std::shared_ptr<spdlog::logger> logger;
-    std::map<int, Data> cache;
+    DataCache cache;
     std::atomic_bool runWorkerThread;
     std::thread workerThread;
 
