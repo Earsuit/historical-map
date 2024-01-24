@@ -12,15 +12,19 @@
 #include <queue>
 #include <optional>
 #include <list>
+#include <memory>
 
 namespace ui {
 constexpr auto HISTORICAL_INFO_WIDGET_NAME = "Historical Info";
 constexpr int QIN_DYNASTY = -221;
-constexpr int DEFAULT_YEAR = 0;
 
 class HistoricalInfoWidget {
 public:
-    HistoricalInfoWidget(): logger{spdlog::get(logger::LOGGER_NAME)} {}
+    HistoricalInfoWidget(): 
+        logger{spdlog::get(logger::LOGGER_NAME)}, 
+        remove{std::make_shared<persistence::Data>(QIN_DYNASTY)}
+    {
+    }
 
     void paint();
 
@@ -29,8 +33,8 @@ private:
     persistence::PersistenceManager persistence;
     int year = QIN_DYNASTY;
     bool yearLock = false;
-    std::optional<persistence::Data> cache;
-    persistence::Data remove{DEFAULT_YEAR};
+    std::shared_ptr<persistence::Data> cache;
+    std::shared_ptr<persistence::Data> remove;
     std::optional<persistence::Coordinate> selected;
     std::list<CountryInfoWidget> countryInfoWidgets;
 

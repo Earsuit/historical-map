@@ -23,16 +23,16 @@ public:
     PersistenceManager();
     ~PersistenceManager();
 
-    std::optional<Data> load(int year);
-    void remove(const Data data);
-    void update(const Data data);
+    std::shared_ptr<Data> load(int year);
+    void remove(const std::shared_ptr<Data> data);
+    void update(const std::shared_ptr<Data> data);
 
 private:
     Persistence<sqlpp::sqlite3::connection_pool, sqlpp::sqlite3::connection_config> persistence;
     moodycamel::BlockingReaderWriterQueue<std::function<void()>> taskQueue;
-    moodycamel::BlockingReaderWriterQueue<Data> loadQueue;
+    moodycamel::BlockingReaderWriterQueue<std::shared_ptr<Data>> loadQueue;
     std::shared_ptr<spdlog::logger> logger;
-    DataCache cache;
+    DataCache<std::shared_ptr<Data>> cache;
     std::atomic_bool runWorkerThread;
     std::thread workerThread;
 

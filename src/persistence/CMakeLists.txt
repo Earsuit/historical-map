@@ -24,7 +24,6 @@ add_dependencies(HistoricalMap table_header command_header)
 
 set(PERSISTENCE_SRC
     PersistenceManager.cpp
-    DataCache.cpp
 )
 
 target_sources(HistoricalMap PRIVATE ${PERSISTENCE_SRC})

@@ -56,7 +56,7 @@ void HistoricalInfoWidget::historyInfo()
     if (ImGui::Button("Refresh") || !cache || cache->year != year) {
         logger->debug("Load data of year {} from database.", year);
         
-        remove = {year};
+        remove = std::make_shared<persistence::Data>(year);
 
         countryInfoWidgets.clear();
 
@@ -70,12 +70,13 @@ void HistoricalInfoWidget::historyInfo()
 
     if (cache) {
         if (ImGui::Button("Save")) {
+            logger->debug("Remove {} countries, {} cities, {} event", remove->countries.size(), remove->cities.size(), static_cast<bool>(remove->event));
             logger->debug("Save {} countries, {} cities, {} event", cache->countries.size(), cache->cities.size(), static_cast<bool>(cache->event));
-            logger->debug("Remove {} countries, {} cities, {} event", remove.countries.size(), remove.cities.size(), static_cast<bool>(remove.event));
             persistence.remove(remove);
-            persistence.update(*cache);
+            persistence.update(cache);
+
             // don't clear cache because the user may continue editing
-            remove = {remove.year};
+            remove = std::make_shared<persistence::Data>(remove->year);
         }
 
         ImGui::SeparatorText("Event");
@@ -109,7 +110,7 @@ void HistoricalInfoWidget::countryInfo()
             }
             
             if (ImGui::Button("Delete country")) {
-                this->remove.countries.emplace_back(*countryInfoWidget.getCountryIterator());
+                this->remove->countries.emplace_back(*countryInfoWidget.getCountryIterator());
                 this->cache->countries.erase(countryInfoWidget.getCountryIterator());
                 this->logger->debug("Delete country {}, current country num in cache: {}", name, this->cache->countries.size());
                 remove = true;
