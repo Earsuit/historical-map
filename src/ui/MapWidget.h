@@ -5,6 +5,7 @@
 #include "src/tile/TileLoader.h"
 #include "src/tile/Util.h"
 #include "src/logger/Util.h"
+#include "src/persistence/Data.h"
 
 #include "external/imgui/imgui.h"
 #include "spdlog/spdlog.h"
@@ -21,7 +22,7 @@ class MapWidget {
 public:
     MapWidget(): logger{spdlog::get(logger::LOGGER_NAME)} {}
     void setTileSource(std::shared_ptr<tile::TileSource> tileSource);
-    void paint();
+    void paint(std::shared_ptr<persistence::Data> info);
 
 private:
     std::shared_ptr<spdlog::logger> logger;
@@ -30,8 +31,9 @@ private:
     tile::BoundingBox bbox;
     ImPlotPoint mousePos = {0.0f, 0.0f};
 
-    void renderTile();
+    void renderTile(std::shared_ptr<persistence::Data> info);
     void overlay();
+    void renderHistoricalInfo(std::shared_ptr<persistence::Data> info);
 };
 }
 

@@ -4,6 +4,8 @@
 
 #include <cmath>
 #include <algorithm>
+#include <functional>
+#include <limits>
 
 namespace ui {
 
@@ -19,9 +21,29 @@ constexpr float MIN_LONGITUDE = -180.0f;
 constexpr float MAX_LATITUDE = 85.05112878f;
 constexpr float MIN_LATITUDE = -85.05112878f;
 
-void MapWidget::paint()
+constexpr float DRAG_POINT_SIZE = 2;
+constexpr int LINE_OFFSET = 0;
+
+namespace {
+constexpr float NORMALIZE = 255.0f; 
+constexpr uint8_t MASK = 0xFF; 
+
+ImVec4 computeColor(const std::string& val)
 {
-    renderTile();
+    const auto hash = std::hash<std::string>{}(val);
+
+    float r = static_cast<float>((hash & MASK) / NORMALIZE);
+    float g = static_cast<float>(((hash >> 8) & MASK) / NORMALIZE);
+    float b = static_cast<float>(((hash >> 16) & MASK) / NORMALIZE);
+
+    return ImVec4(r, g, b, 1);
+}
+}
+
+
+void MapWidget::paint(std::shared_ptr<persistence::Data> info)
+{
+    renderTile(info);
     overlay();
 }
 
@@ -30,7 +52,7 @@ void MapWidget::setTileSource(std::shared_ptr<tile::TileSource> tileSource)
     tileLoader.setTileSource(tileSource);
 }
 
-void MapWidget::renderTile()
+void MapWidget::renderTile(std::shared_ptr<persistence::Data> info)
 {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding,  ImVec2(0, 0));
@@ -85,6 +107,10 @@ void MapWidget::renderTile()
             }
         }
 
+        if (info) {
+            renderHistoricalInfo(info);
+        }
+
         ImPlot::EndPlot();
     }
 
@@ -122,6 +148,34 @@ void MapWidget::overlay()
     }
     ImGui::PopStyleColor(2);
     ImGui::End();
+}
+
+void MapWidget::renderHistoricalInfo(std::shared_ptr<persistence::Data> info)
+{
+    int dragPointId = 0;
+    for (auto& country : info->countries) {
+        std::vector<ImVec2> points;
+        const auto color = computeColor(country.name);
+        points.reserve(country.borderContour.size());
+        for (auto& coordinate : country.borderContour) {
+            double x = tile::longitude2X(coordinate.longitude, BBOX_ZOOM_LEVEL);
+            double y = tile::latitude2Y(coordinate.latitude, BBOX_ZOOM_LEVEL);
+            
+            ImPlot::DragPoint(dragPointId++, &x, &y, color, DRAG_POINT_SIZE);
+            logger->debug("Coordinate lon {}, lat {} at [{}, {}] for country {}",
+                           coordinate.longitude,
+                           coordinate.latitude,
+                           x,
+                           y,
+                           country.name);
+            points.emplace_back(x, y);
+            coordinate.latitude = tile::y2Latitude(static_cast<float>(y), BBOX_ZOOM_LEVEL);
+            coordinate.longitude = tile::x2Longitude(static_cast<float>(x), BBOX_ZOOM_LEVEL);
+        }
+
+        ImPlot::SetNextLineStyle(color);
+        ImPlot::PlotLine(country.name.c_str(), &points.data()[0].x, &points.data()[0].y, points.size(), ImPlotLineFlags_Loop, LINE_OFFSET, sizeof(ImVec2));
+    }
 }
 
 }

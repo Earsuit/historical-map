@@ -132,4 +132,9 @@ void HistoricalInfoWidget::countryInfo()
     }
 }
 
+std::shared_ptr<persistence::Data> HistoricalInfoWidget::getInfo()
+{
+    return cache;
+}
+
 }

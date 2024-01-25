@@ -28,6 +28,8 @@ public:
 
     void paint();
 
+    std::shared_ptr<persistence::Data> getInfo();
+
 private:
     std::shared_ptr<spdlog::logger> logger;
     persistence::PersistenceManager persistence;

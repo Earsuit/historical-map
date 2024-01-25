@@ -91,7 +91,7 @@ void HistoricalMap::start()
         historicalInfo.paint();
         tileSourceWidget.paint();
         mapWidget.setTileSource(tileSourceWidget.getTileSource());
-        mapWidget.paint();
+        mapWidget.paint(historicalInfo.getInfo());
         logWidget.paint();
 
         ImGui::Render();
