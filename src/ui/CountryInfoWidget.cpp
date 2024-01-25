@@ -15,8 +15,8 @@ constexpr double STEP_FAST = 0;
 template<typename T>
 void inputFiled(const char* label, T* value)
 {
-    if constexpr (std::is_same_v<T, double>) {
-        ImGui::InputDouble(label, value, STEP, STEP_FAST, "%.2f");
+    if constexpr (std::is_same_v<T, float>) {
+        ImGui::InputFloat(label, value, STEP, STEP_FAST, "%.2f");
     } else {
         ImGui::InputText(label, value);
     }
@@ -68,7 +68,7 @@ void CountryInfoWidget::paint(std::optional<persistence::Coordinate>& selected)
     ImGui::SameLine();
     const auto pressed = ImGui::Button("Add");
     if (!latitude.empty() && !longitude.empty()) {
-        double lat, lon;
+        float lat, lon;
         try {
             lat = std::stod(latitude);
             lon = std::stod(longitude);

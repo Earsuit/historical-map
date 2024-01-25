@@ -70,7 +70,7 @@ public:
                     const auto& cityRows = this->request<table::Cities>(CITIES.id == row.cityId);
                     const auto& city = cityRows.front();
 
-                    cities.emplace_back(city.name, Coordinate{city.latitude, city.longitude});
+                    cities.emplace_back(city.name, Coordinate{static_cast<float>(city.latitude), static_cast<float>(city.longitude)});
                 }
 
                 return cities;

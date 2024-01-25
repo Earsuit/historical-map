@@ -13,8 +13,8 @@
 
 namespace persistence {
 struct Coordinate {
-    double latitude = 0;
-    double longitude = 0;
+    float latitude = 0;
+    float longitude = 0;
 
     auto operator<=>(const Coordinate&) const = default;
 
