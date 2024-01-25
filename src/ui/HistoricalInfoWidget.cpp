@@ -44,6 +44,9 @@ void HistoricalInfoWidget::paint()
 
     if (yearLock) {
         historyInfo();
+    } else {
+        cache.reset();
+        remove = std::make_shared<persistence::Data>(year);
     }
 
     ImGui::End();
