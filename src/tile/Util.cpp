@@ -8,19 +8,19 @@ constexpr int TILE_SIZE = 256;
 constexpr float PI_DEG = 360.0;
 constexpr float HALF_PI_DEG = 180.0;
 
-int longitude2X(float longitude, int zoom)
+float longitude2X(float longitude, int zoom)
 {
     const auto n = 1 << zoom;
 
-    return static_cast<int>(std::floor(n * (longitude + HALF_PI_DEG) / PI_DEG));
+    return n * (longitude + HALF_PI_DEG) / PI_DEG;
 }
 
-int latitude2Y(float latitude, int zoom)
+float latitude2Y(float latitude, int zoom)
 {
     const auto n = 1 << zoom;
 
     latitude = latitude * M_PI / HALF_PI_DEG;
-    return static_cast<int>(std::floor(n * (1 - (std::asinh(std::tan(latitude)) / M_PI)) / 2));
+    return n * (1 - (std::asinh(std::tan(latitude)) / M_PI)) / 2;
 }
 
 float x2Longitude(float x, int zoom)
