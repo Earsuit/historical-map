@@ -6,7 +6,6 @@
 
 #include <vector>
 #include <memory>
-#include <future>
 
 namespace tile {
 
@@ -14,7 +13,7 @@ class TileSource {
 public:
     virtual ~TileSource() = default;
 
-    virtual std::future<std::vector<std::byte>> request(const Coordinate& coord) = 0;
+    virtual std::vector<std::byte> request(const Coordinate& coord) = 0;
 };
 
 }

@@ -14,6 +14,7 @@
 #include <cstddef>
 #include <vector>
 #include <array>
+#include <future>
 
 namespace tile {
 class TileLoader {

@@ -18,7 +18,7 @@ public:
     TileSourceUrl(const std::string& url);
     ~TileSourceUrl() override = default;
 
-    std::future<std::vector<std::byte>> request(const Coordinate& coord) override;
+    std::vector<std::byte> request(const Coordinate& coord) override;
 
     bool setUrl(const std::string& url);
 

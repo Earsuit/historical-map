@@ -23,7 +23,11 @@ void TileLoader::request(const Coordinate& coord)
 
     if (!(futureData.contains(coord) || tiles[coord.z].contains(coord))) {
         logger->debug("Request tile at x={}, y={}, z={}", coord.x, coord.y, coord.z);
-        futureData.emplace(std::make_pair(coord, tileSource->request(coord)));
+        futureData.emplace(
+            std::make_pair(coord, std::async(std::launch::async, [coord, tileSource = this->tileSource](){
+                    return tileSource->request(coord);
+                }))
+        );
     }
 }
 

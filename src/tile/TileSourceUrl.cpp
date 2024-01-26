@@ -62,12 +62,9 @@ TileSourceUrl::TileSourceUrl(const std::string& url):
     setUrl(url);
 }
 
-std::future<std::vector<std::byte>> TileSourceUrl::request(const Coordinate& coord)
+std::vector<std::byte> TileSourceUrl::request(const Coordinate& coord)
 {
-    return std::async(std::launch::async, 
-                                [coord, this](){
-        return requestData(this->makeUrl(coord));
-    });
+    return requestData(makeUrl(coord));
 }
 
 // tile server url format specified by https://www.trailnotes.org/FetchMap/TileServeSource.html
