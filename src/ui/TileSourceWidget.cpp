@@ -15,12 +15,13 @@ constexpr const char* TILE_ENGINES[] = {tile::RASTER_TILE_ENGINE_NAME};
 constexpr auto TRANSPARENT = IM_COL32(0, 0, 0, 0);
 constexpr auto DEFAULT_TILE_ENGINE = TILE_ENGINES[0];
 
-TileSourceWidget::TileSourceWidget() :
+TileSourceWidget::TileSourceWidget(tile::TileLoader& tileLoader):
     logger{spdlog::get(logger::LOGGER_NAME)},
-    tileSource{std::make_shared<tile::TileSourceUrl>(DEFAULT_URL)},
-    tileEngine{tile::TileEngineFactory::createInstance(DEFAULT_TILE_ENGINE)},
+    tileLoader{tileLoader},
     showConfigWidget{[this](){this->showTileSourceUrlConfig();}}
-{ 
+{
+    tileLoader.setTileEngine(tile::TileEngineFactory::createInstance(DEFAULT_TILE_ENGINE));
+    tileLoader.setTileSource(std::make_shared<tile::TileSourceUrl>(DEFAULT_URL));
 }
 
 void TileSourceWidget::paint()
@@ -30,7 +31,7 @@ void TileSourceWidget::paint()
     ImGui::Combo("Source", &sourceIdx, SOURCE_TYPE);
     
     if (ImGui::Combo("Tile Data Processor", &tileEngineIdx, TILE_ENGINES, sizeof(TILE_ENGINES)/sizeof(TILE_ENGINES[0]))) {
-        tileEngine = tile::TileEngineFactory::createInstance(TILE_ENGINES[tileEngineIdx]);
+        tileLoader.setTileEngine(tile::TileEngineFactory::createInstance(TILE_ENGINES[tileEngineIdx]));
     }
 
     ImGui::SeparatorText("Configuration");
@@ -47,25 +48,10 @@ void TileSourceWidget::showTileSourceUrlConfig()
     ImGui::InputText("##url", &url);
     ImGui::SameLine();
     if (ImGui::Button("Set")) {
-        if (auto tileSourceUrl = std::dynamic_pointer_cast<tile::TileSourceUrl>(tileSource); tileSourceUrl) {
-            tileSourceUrl->setUrl(url);
-        } else {
-            tileSource = std::make_shared<tile::TileSourceUrl>(url);
-        }
+        tileLoader.setTileSource(std::make_shared<tile::TileSourceUrl>(url));
     }
     ImGui::PushStyleColor(ImGuiCol_FrameBg, TRANSPARENT);  // Transparent background
     ImGui::InputText("##text", (char*)text, strlen(text) + 1, ImGuiInputTextFlags_ReadOnly);
     ImGui::PopStyleColor(1);
 }
-
-std::shared_ptr<tile::TileSource> TileSourceWidget::getTileSource()
-{
-    return tileSource;
-}
-
-std::shared_ptr<tile::TileEngine> TileSourceWidget::getTileEngine()
-{
-    return tileEngine;
-}
-
 }

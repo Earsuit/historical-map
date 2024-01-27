@@ -27,7 +27,8 @@ static void glfwErrorCallback(int error, const char* description)
 }
 }
 
-HistoricalMap::HistoricalMap()
+HistoricalMap::HistoricalMap():
+    tileSourceWidget{mapWidget.getTileLoader()}
 {
     glfwSetErrorCallback(glfwErrorCallback);
     if (!glfwInit()) {
@@ -90,8 +91,6 @@ void HistoricalMap::start()
 
         historicalInfo.paint();
         tileSourceWidget.paint();
-        mapWidget.setTileSource(tileSourceWidget.getTileSource());
-        mapWidget.setTileEngine(tileSourceWidget.getTileEngine());
         mapWidget.paint(historicalInfo.getInfo());
         logWidget.paint();
 

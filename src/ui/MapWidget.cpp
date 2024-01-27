@@ -47,16 +47,6 @@ void MapWidget::paint(std::shared_ptr<persistence::Data> info)
     overlay();
 }
 
-void MapWidget::setTileSource(std::shared_ptr<tile::TileSource> tileSource)
-{
-    tileLoader.setTileSource(tileSource);
-}
-
-void MapWidget::setTileEngine(std::shared_ptr<tile::TileEngine> tileEngine)
-{
-    tileLoader.setTileEngine(tileEngine);
-}
-
 void MapWidget::renderTile(std::shared_ptr<persistence::Data> info)
 {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
@@ -181,6 +171,11 @@ void MapWidget::renderHistoricalInfo(std::shared_ptr<persistence::Data> info)
         ImPlot::SetNextLineStyle(color);
         ImPlot::PlotLine(country.name.c_str(), &points.data()[0].x, &points.data()[0].y, points.size(), ImPlotLineFlags_Loop, LINE_OFFSET, sizeof(ImVec2));
     }
+}
+
+tile::TileLoader& MapWidget::getTileLoader()
+{
+    return tileLoader;
 }
 
 }
