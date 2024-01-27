@@ -60,6 +60,7 @@ void HistoricalInfoWidget::historyInfo()
         logger->debug("Load data of year {} from database.", year);
         
         remove = std::make_shared<persistence::Data>(year);
+        cache.reset();
 
         countryInfoWidgets.clear();
 

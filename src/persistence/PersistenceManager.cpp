@@ -52,16 +52,16 @@ void PersistenceManager::worker()
 
 std::shared_ptr<Data> PersistenceManager::load(int year)
 {
-    std::shared_ptr<Data> data;
+    Data data;
 
     while (loadQueue.try_dequeue(data)){
-        logger->debug("Update cache for year {}.", data->year);
-        cache[data->year] = data;
+        logger->debug("Update cache for year {}.", data.year);
+        cache[data.year] = data;
     }
 
     if (cache.contains(year)) {
         logger->debug("Load cached data for year {}.", year);
-        return cache[year];
+        return std::make_shared<Data>(cache[year]);
     }
 
     logger->debug("No cached data found for year {}.", year);
@@ -84,7 +84,7 @@ void PersistenceManager::remove(std::shared_ptr<Data> data)
 void PersistenceManager::update(std::shared_ptr<Data> data)
 {
     // overwrite the cached data
-    cache[data->year] = data;
+    cache[data->year] = *data;
 
     if (!taskQueue.enqueue([this, data](){
                             this->logger->debug("Process update task for year {}.", data->year);
@@ -98,7 +98,7 @@ void PersistenceManager::request(int year)
 {
     if (!taskQueue.enqueue([this, year](){
                             this->logger->debug("Process load task for year {}.", year);
-                            this->loadQueue.emplace(std::make_shared<Data>(this->persistence.load(year)));
+                            this->loadQueue.emplace(this->persistence.load(year));
                         })) {
         logger->error("Enqueue request database year {} task fail.", year);
     }

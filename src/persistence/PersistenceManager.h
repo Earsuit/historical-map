@@ -30,9 +30,9 @@ public:
 private:
     Persistence<sqlpp::sqlite3::connection_pool, sqlpp::sqlite3::connection_config> persistence;
     moodycamel::BlockingReaderWriterQueue<std::function<void()>> taskQueue;
-    moodycamel::BlockingReaderWriterQueue<std::shared_ptr<Data>> loadQueue;
+    moodycamel::BlockingReaderWriterQueue<Data> loadQueue;
     std::shared_ptr<spdlog::logger> logger;
-    DataCache<std::shared_ptr<Data>> cache;
+    DataCache<Data> cache;
     std::atomic_bool runWorkerThread;
     std::thread workerThread;
 
