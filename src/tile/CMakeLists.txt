@@ -3,6 +3,8 @@ SET(TILE_SRC
     Util.cpp
     TileSourceUrl.cpp
     TileLoader.cpp
+    RasterTileEngine.cpp
+    TileEngineFactory.cpp
 )
 
 target_sources(HistoricalMap PRIVATE ${TILE_SRC})

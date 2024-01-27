@@ -4,6 +4,7 @@
 #include "src/tile/TileSource.h"
 #include "src/tile/TileLoader.h"
 #include "src/tile/Util.h"
+#include "src/tile/TileEngine.h"
 #include "src/logger/Util.h"
 #include "src/persistence/Data.h"
 
@@ -22,6 +23,7 @@ class MapWidget {
 public:
     MapWidget(): logger{spdlog::get(logger::LOGGER_NAME)} {}
     void setTileSource(std::shared_ptr<tile::TileSource> tileSource);
+    void setTileEngine(std::shared_ptr<tile::TileEngine> tileEngine);
     void paint(std::shared_ptr<persistence::Data> info);
 
 private:

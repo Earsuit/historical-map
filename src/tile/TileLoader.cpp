@@ -21,11 +21,18 @@ void TileLoader::request(const Coordinate& coord)
         return;
     }
 
+    if (!tileEngine) {
+        logger->debug("Tile data processor doesn't have a valid object, abort loading tiles.");
+        return;
+    }
+
     if (!(futureData.contains(coord) || tiles[coord.z].contains(coord))) {
         logger->debug("Request tile at x={}, y={}, z={}", coord.x, coord.y, coord.z);
         futureData.emplace(
-            std::make_pair(coord, std::async(std::launch::async, [coord, tileSource = this->tileSource](){
-                    return tileSource->request(coord);
+            std::make_pair(coord, std::async(std::launch::async, [coord, 
+                                                                  tileSource = this->tileSource,
+                                                                  tileEngine = this->tileEngine](){
+                    return tileEngine->toImage(tileSource->request(coord));
                 }))
         );
     }
@@ -34,12 +41,8 @@ void TileLoader::request(const Coordinate& coord)
 void TileLoader::load(const Coordinate& coord)
 {
     if (futureData.contains(coord) && futureData[coord].wait_for(0s) == std::future_status::ready) {
-        if (auto&& data = futureData[coord].get(); !data.empty()) {
-            logger->debug("Tile at x={}, y={}, z={} is ready", coord.x, coord.y, coord.z);
-            tiles[coord.z].emplace(std::make_pair(coord, std::make_shared<Tile>(coord, std::move(data))));
-        } else {
-            logger->debug("Tile at x={}, y={}, z={} failed to load.", coord.x, coord.y, coord.z);
-        }
+        tiles[coord.z].emplace(std::make_pair(coord, std::make_shared<Tile>(coord, futureData[coord].get())));
+        logger->debug("Tile at x={}, y={}, z={} is ready", coord.x, coord.y, coord.z);
 
         futureData.erase(coord);
     }
@@ -73,11 +76,25 @@ void TileLoader::resourceClean(const Coordinate& coord)
 void TileLoader::setTileSource(std::shared_ptr<TileSource> tileSource)
 {
     if (this->tileSource != tileSource) {
-        tiles = std::array<std::map<Coordinate, std::shared_ptr<Tile>>, MAX_ZOOM_LEVEL>{};
-        futureData.clear();
+        clearCache();
 
         this->tileSource = tileSource;
     }
+}
+
+void TileLoader::setTileEngine(std::shared_ptr<TileEngine> tileEngine)
+{
+    if (this->tileEngine != tileEngine) {
+        clearCache();
+
+        this->tileEngine = tileEngine;
+    }
+}
+
+void TileLoader::clearCache()
+{
+    tiles = std::array<std::map<Coordinate, std::shared_ptr<Tile>>, MAX_ZOOM_LEVEL>{};
+    futureData.clear();
 }
 
 }

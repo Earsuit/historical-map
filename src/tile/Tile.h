@@ -2,6 +2,7 @@
 #define SRC_TILE_TILE_H
 
 #include "src/tile/Util.h"
+#include "src/tile/TileEngine.h"
 
 #include <vector>
 #include <cstddef>
@@ -12,8 +13,8 @@ namespace tile {
 
 class Tile {
 public:
-    Tile(const Coordinate& coord, const std::vector<std::byte>& rawBlob);
-    Tile(const Coordinate& coord, std::vector<std::byte>&& rawBlob);
+    Tile(const Coordinate& coord, const TileEngine::Image& image);
+    Tile(const Coordinate& coord, TileEngine::Image&& image);
 
     void* getTexture();
     const Coordinate getCoordinate() const noexcept;
@@ -22,11 +23,8 @@ public:
 
 private:
     Coordinate coord;
-    int channels;
     GLuint id = 0;
-    GLsizei width = 0;
-    GLsizei height = 0;
-    std::vector<std::byte> rawBlob;
+    TileEngine::Image image;
 
     void glLoad();
 };

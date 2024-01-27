@@ -52,6 +52,11 @@ void MapWidget::setTileSource(std::shared_ptr<tile::TileSource> tileSource)
     tileLoader.setTileSource(tileSource);
 }
 
+void MapWidget::setTileEngine(std::shared_ptr<tile::TileEngine> tileEngine)
+{
+    tileLoader.setTileEngine(tileEngine);
+}
+
 void MapWidget::renderTile(std::shared_ptr<persistence::Data> info)
 {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
