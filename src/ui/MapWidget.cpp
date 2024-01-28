@@ -46,7 +46,7 @@ ImVec4 computeColor(const std::string& val)
 void MapWidget::paint(std::pair<std::shared_ptr<persistence::Data>, std::optional<persistence::Coordinate>> info)
 {
     renderTile(info);
-    overlay();
+    renderOverlay();
 }
 
 void MapWidget::renderTile(std::pair<std::shared_ptr<persistence::Data>, std::optional<persistence::Coordinate>> info)
@@ -112,7 +112,7 @@ void MapWidget::renderTile(std::pair<std::shared_ptr<persistence::Data>, std::op
     ImGui::End();
 }
 
-void MapWidget::overlay()
+void MapWidget::renderOverlay()
 {
     static bool firstTime = true;
     const ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoMove |

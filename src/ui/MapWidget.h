@@ -33,7 +33,7 @@ private:
     ImPlotPoint mousePos = {0.0f, 0.0f};
 
     void renderTile(std::pair<std::shared_ptr<persistence::Data>, std::optional<persistence::Coordinate>> info);
-    void overlay();
+    void renderOverlay();
     void renderHistoricalInfo(std::pair<std::shared_ptr<persistence::Data>, std::optional<persistence::Coordinate>> info);
     ImVec2 renderCoordinate(persistence::Coordinate& coordinate, const ImVec4& color, float size, int id);
 };
