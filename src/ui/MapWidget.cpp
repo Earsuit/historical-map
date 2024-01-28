@@ -58,6 +58,7 @@ void MapWidget::renderTile(std::pair<std::shared_ptr<persistence::Data>, std::op
     
     const auto sizeAvail = ImGui::GetContentRegionAvail();
     if (ImPlot::BeginPlot("##map", ImVec2(sizeAvail.x, sizeAvail.y), ImPlotFlags_NoFrame | ImPlotFlags_Equal)) {
+        ImPlot::SetupLegend(ImPlotLocation_NorthEast, ImPlotLegendFlags_NoButtons);
         ImPlot::SetupAxis(ImAxis_X1, nullptr, AXIS_FLAGS);
         ImPlot::SetupAxis(ImAxis_Y1, nullptr, AXIS_FLAGS | ImPlotAxisFlags_Invert);
         ImPlot::SetupAxisLimitsConstraints(ImAxis_Y1, 0.0, 1.0);
