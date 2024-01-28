@@ -129,6 +129,13 @@ void HistoricalInfoWidget::countryInfo()
     ImGui::InputTextWithHint("##Country name", "Country name", &countryName);
     ImGui::SameLine();
     if (ImGui::Button("Add country") && !countryName.empty()) {
+        for (const auto& country : cache->countries) {
+            if (countryName == country.name) {
+                logger->error("Failed to add a new country {}: country already exists in year {}.", countryName, cache->year);
+                return;
+            }
+        }
+
         cache->countries.emplace_back(countryName, std::list<persistence::Coordinate>{});
         countryInfoWidgets.emplace_back(--cache->countries.end());
         logger->debug("Add country {}, current country num in cache: {}", countryName, this->cache->countries.size());
