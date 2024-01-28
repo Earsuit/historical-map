@@ -21,12 +21,14 @@ constexpr float MIN_LONGITUDE = -180.0f;
 constexpr float MAX_LATITUDE = 85.05112878f;
 constexpr float MIN_LATITUDE = -85.05112878f;
 
-constexpr float DRAG_POINT_SIZE = 2;
+constexpr float POINT_SIZE = 2.0f;
+constexpr float SELECTED_SOINT_SIZE = 4.0f;
 constexpr int LINE_OFFSET = 0;
 
 namespace {
-constexpr float NORMALIZE = 255.0f; 
+constexpr auto NORMALIZE = 255.0f; 
 constexpr uint8_t MASK = 0xFF; 
+constexpr auto DEFAULT_ALPHA = 1.0f;
 
 ImVec4 computeColor(const std::string& val)
 {
@@ -36,18 +38,18 @@ ImVec4 computeColor(const std::string& val)
     float g = static_cast<float>(((hash >> 8) & MASK) / NORMALIZE);
     float b = static_cast<float>(((hash >> 16) & MASK) / NORMALIZE);
 
-    return ImVec4(r, g, b, 1);
+    return ImVec4(r, g, b, DEFAULT_ALPHA);
 }
 }
 
 
-void MapWidget::paint(std::shared_ptr<persistence::Data> info)
+void MapWidget::paint(std::pair<std::shared_ptr<persistence::Data>, std::optional<persistence::Coordinate>> info)
 {
     renderTile(info);
     overlay();
 }
 
-void MapWidget::renderTile(std::shared_ptr<persistence::Data> info)
+void MapWidget::renderTile(std::pair<std::shared_ptr<persistence::Data>, std::optional<persistence::Coordinate>> info)
 {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding,  ImVec2(0, 0));
@@ -102,9 +104,7 @@ void MapWidget::renderTile(std::shared_ptr<persistence::Data> info)
             }
         }
 
-        if (info) {
-            renderHistoricalInfo(info);
-        }
+        renderHistoricalInfo(info);
 
         ImPlot::EndPlot();
     }
@@ -145,32 +145,49 @@ void MapWidget::overlay()
     ImGui::End();
 }
 
-void MapWidget::renderHistoricalInfo(std::shared_ptr<persistence::Data> info)
+void MapWidget::renderHistoricalInfo(std::pair<std::shared_ptr<persistence::Data>, std::optional<persistence::Coordinate>> info)
 {
-    int dragPointId = 0;
-    for (auto& country : info->countries) {
-        std::vector<ImVec2> points;
-        const auto color = computeColor(country.name);
-        points.reserve(country.borderContour.size());
-        for (auto& coordinate : country.borderContour) {
-            double x = tile::longitude2X(coordinate.longitude, BBOX_ZOOM_LEVEL);
-            double y = tile::latitude2Y(coordinate.latitude, BBOX_ZOOM_LEVEL);
-            
-            ImPlot::DragPoint(dragPointId++, &x, &y, color, DRAG_POINT_SIZE);
-            logger->debug("Coordinate lon {}, lat {} at [{}, {}] for country {}",
-                           coordinate.longitude,
-                           coordinate.latitude,
-                           x,
-                           y,
-                           country.name);
-            points.emplace_back(x, y);
-            coordinate.latitude = tile::y2Latitude(static_cast<float>(y), BBOX_ZOOM_LEVEL);
-            coordinate.longitude = tile::x2Longitude(static_cast<float>(x), BBOX_ZOOM_LEVEL);
-        }
+    auto [data, selected] = info;
 
-        ImPlot::SetNextLineStyle(color);
-        ImPlot::PlotLine(country.name.c_str(), &points.data()[0].x, &points.data()[0].y, points.size(), ImPlotLineFlags_Loop, LINE_OFFSET, sizeof(ImVec2));
+    if (data) {
+        int dragPointId = 0;
+        for (auto& country : data->countries) {
+            std::vector<ImVec2> points;
+            const auto color = computeColor(country.name);
+
+            points.reserve(country.borderContour.size());
+            for (auto& coordinate : country.borderContour) {
+                float size = POINT_SIZE;
+
+                if (selected && coordinate == *selected) {
+                    size = SELECTED_SOINT_SIZE;
+                }
+
+                auto [x, y] = renderCoordinate(coordinate, color, size, dragPointId++);
+                points.emplace_back(x, y);
+            }
+
+            ImPlot::SetNextLineStyle(color);
+            ImPlot::PlotLine(country.name.c_str(), &points.data()[0].x, &points.data()[0].y, points.size(), ImPlotLineFlags_Loop, LINE_OFFSET, sizeof(ImVec2));
+        }
     }
+}
+
+ImVec2 MapWidget::renderCoordinate(persistence::Coordinate& coordinate, const ImVec4& color, float size, int id)
+{
+    double x = tile::longitude2X(coordinate.longitude, BBOX_ZOOM_LEVEL);
+    double y = tile::latitude2Y(coordinate.latitude, BBOX_ZOOM_LEVEL);
+    
+    ImPlot::DragPoint(id, &x, &y, color, size);
+    logger->trace("Lon {}, lat {} at [{}, {}]",
+                    coordinate.longitude,
+                    coordinate.latitude,
+                    x,
+                    y);
+    coordinate.latitude = tile::y2Latitude(static_cast<float>(y), BBOX_ZOOM_LEVEL);
+    coordinate.longitude = tile::x2Longitude(static_cast<float>(x), BBOX_ZOOM_LEVEL);
+
+    return {static_cast<float>(x) , static_cast<float>(y)};
 }
 
 tile::TileLoader& MapWidget::getTileLoader()

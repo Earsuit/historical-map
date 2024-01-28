@@ -136,9 +136,9 @@ void HistoricalInfoWidget::countryInfo()
     }
 }
 
-std::shared_ptr<persistence::Data> HistoricalInfoWidget::getInfo()
+std::pair<std::shared_ptr<persistence::Data>, std::optional<persistence::Coordinate>> HistoricalInfoWidget::getInfo()
 {
-    return cache;
+    return {cache, selected};
 }
 
 }

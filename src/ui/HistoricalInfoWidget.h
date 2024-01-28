@@ -13,6 +13,7 @@
 #include <optional>
 #include <list>
 #include <memory>
+#include <utility>
 
 namespace ui {
 constexpr auto HISTORICAL_INFO_WIDGET_NAME = "Historical Info";
@@ -28,7 +29,7 @@ public:
 
     void paint();
 
-    std::shared_ptr<persistence::Data> getInfo();
+    std::pair<std::shared_ptr<persistence::Data>, std::optional<persistence::Coordinate>> getInfo();
 
 private:
     std::shared_ptr<spdlog::logger> logger;

@@ -28,7 +28,7 @@ void LogWidget::paint()
 {
     ImGui::SetNextWindowSize(WINDOW_SIZE, ImGuiCond_FirstUseEver);
     if (ImGui::Begin(LOG_WIDGET_NAME)) {
-        bool clear = ImGui::Button("Clear");
+        bool clear = ImGui::Button((const char*)u8"你好");
         ImGui::SameLine();
         bool copy = ImGui::Button("Copy");
         ImGui::SameLine();

@@ -21,7 +21,7 @@ class MapWidget {
 public:
     MapWidget(): logger{spdlog::get(logger::LOGGER_NAME)} {}
 
-    void paint(std::shared_ptr<persistence::Data> info);
+    void paint(std::pair<std::shared_ptr<persistence::Data>, std::optional<persistence::Coordinate>> info);
 
     tile::TileLoader& getTileLoader();
 
@@ -32,9 +32,10 @@ private:
     tile::BoundingBox bbox;
     ImPlotPoint mousePos = {0.0f, 0.0f};
 
-    void renderTile(std::shared_ptr<persistence::Data> info);
+    void renderTile(std::pair<std::shared_ptr<persistence::Data>, std::optional<persistence::Coordinate>> info);
     void overlay();
-    void renderHistoricalInfo(std::shared_ptr<persistence::Data> info);
+    void renderHistoricalInfo(std::pair<std::shared_ptr<persistence::Data>, std::optional<persistence::Coordinate>> info);
+    ImVec2 renderCoordinate(persistence::Coordinate& coordinate, const ImVec4& color, float size, int id);
 };
 }
 
