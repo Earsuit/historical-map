@@ -32,7 +32,7 @@ private:
     std::shared_ptr<TileSource> tileSource;
     std::shared_ptr<TileEngine> tileEngine;
     std::array<std::map<Coordinate, std::shared_ptr<Tile>>, MAX_ZOOM_LEVEL> tiles;
-    std::map<Coordinate, std::future<tile::TileEngine::Image>> futureData;
+    std::map<Coordinate, std::future<std::optional<tile::TileEngine::Image>>> futureData;
 
     void request(const Coordinate& coord);
     void load(const Coordinate& coord);

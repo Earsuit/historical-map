@@ -1,7 +1,5 @@
 #include "Tile.h"
 
-#include <iostream>
-
 namespace tile {
 Tile::Tile(const Coordinate& coord, const TileEngine::Image& image):
     coord{coord},

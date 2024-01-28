@@ -31,8 +31,13 @@ void TileLoader::request(const Coordinate& coord)
         futureData.emplace(
             std::make_pair(coord, std::async(std::launch::async, [coord, 
                                                                   tileSource = this->tileSource,
-                                                                  tileEngine = this->tileEngine](){
-                    return tileEngine->toImage(tileSource->request(coord));
+                                                                  tileEngine = this->tileEngine]() -> std::optional<tile::TileEngine::Image>
+                {
+                    if (const auto& data = tileSource->request(coord); data.empty()) {
+                        return std::nullopt;
+                    } else {
+                        return tileEngine->toImage(data);
+                    }
                 }))
         );
     }
@@ -41,8 +46,12 @@ void TileLoader::request(const Coordinate& coord)
 void TileLoader::load(const Coordinate& coord)
 {
     if (futureData.contains(coord) && futureData[coord].wait_for(0s) == std::future_status::ready) {
-        tiles[coord.z].emplace(std::make_pair(coord, std::make_shared<Tile>(coord, futureData[coord].get())));
-        logger->debug("Tile at x={}, y={}, z={} is ready", coord.x, coord.y, coord.z);
+        if (auto&& image = futureData[coord].get(); image) {
+            tiles[coord.z].emplace(std::make_pair(coord, std::make_shared<Tile>(coord, std::move(*image))));
+            logger->debug("Tile at x={}, y={}, z={} is ready", coord.x, coord.y, coord.z);
+        } else {
+            logger->debug("Tile at x={}, y={}, z={} failed to load.", coord.x, coord.y, coord.z);
+        }
 
         futureData.erase(coord);
     }
