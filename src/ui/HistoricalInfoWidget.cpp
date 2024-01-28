@@ -126,7 +126,7 @@ void HistoricalInfoWidget::countryInfo()
         return remove;
     });
     ImGui::PushItemWidth(COUNTRY_NAME_INPUT_WIDTH);
-    ImGui::InputText("Country name", &countryName);
+    ImGui::InputTextWithHint("##Country name", "Country name", &countryName);
     ImGui::SameLine();
     if (ImGui::Button("Add country") && !countryName.empty()) {
         cache->countries.emplace_back(countryName, std::list<persistence::Coordinate>{});
