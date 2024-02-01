@@ -28,6 +28,7 @@ static void glfwErrorCallback(int error, const char* description)
 }
 
 HistoricalMap::HistoricalMap():
+    mapWidget{historicalInfo},
     tileSourceWidget{mapWidget.getTileLoader()}
 {
     glfwSetErrorCallback(glfwErrorCallback);

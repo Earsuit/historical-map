@@ -5,6 +5,7 @@
 #include "src/tile/Util.h"
 #include "src/logger/Util.h"
 #include "src/persistence/Data.h"
+#include "src/ui/HistoricalInfoWidget.h"
 
 #include "external/imgui/imgui.h"
 #include "spdlog/spdlog.h"
@@ -19,7 +20,10 @@ constexpr auto MAP_WIDGET_NAME = "Map plot";
 
 class MapWidget {
 public:
-    MapWidget(): logger{spdlog::get(logger::LOGGER_NAME)} {}
+    MapWidget(HistoricalInfoWidget& historicalInfoWidget): 
+        logger{spdlog::get(logger::LOGGER_NAME)},
+        historicalInfoWidget{historicalInfoWidget}
+    {}
 
     void paint(std::pair<std::shared_ptr<persistence::Data>, std::optional<persistence::Coordinate>> info);
 
@@ -27,6 +31,7 @@ public:
 
 private:
     std::shared_ptr<spdlog::logger> logger;
+    HistoricalInfoWidget& historicalInfoWidget;
     tile::TileLoader tileLoader;
     int zoom = 0;
     tile::BoundingBox bbox;

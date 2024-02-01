@@ -24,9 +24,9 @@ public:
 private:
     GLFWwindow* window;
     LogWidget logWidget;
+    HistoricalInfoWidget historicalInfo;
     MapWidget mapWidget;
     TileSourceWidget tileSourceWidget;
-    HistoricalInfoWidget historicalInfo;
 
     void buildDockSpace(ImGuiIO& io);
 };

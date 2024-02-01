@@ -1,6 +1,7 @@
 #include "src/ui/MapWidget.h"
 
 #include "external/imgui/imgui.h"
+#include "external/imgui/misc/cpp/imgui_stdlib.h"
 
 #include <cmath>
 #include <algorithm>
@@ -53,11 +54,11 @@ void MapWidget::renderTile(std::pair<std::shared_ptr<persistence::Data>, std::op
 {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding,  ImVec2(0, 0));
-    ImGui::Begin(MAP_WIDGET_NAME, nullptr,  ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground);
+    ImGui::Begin(MAP_WIDGET_NAME);
     ImGui::PopStyleVar(2);
     
     const auto sizeAvail = ImGui::GetContentRegionAvail();
-    if (ImPlot::BeginPlot("##map", ImVec2(sizeAvail.x, sizeAvail.y), ImPlotFlags_NoFrame | ImPlotFlags_Equal)) {
+    if (ImPlot::BeginPlot("##map", ImVec2(sizeAvail.x, sizeAvail.y), ImPlotFlags_CanvasOnly)) {
         ImPlot::SetupLegend(ImPlotLocation_NorthEast, ImPlotLegendFlags_NoButtons);
         ImPlot::SetupAxis(ImAxis_X1, nullptr, AXIS_FLAGS);
         ImPlot::SetupAxis(ImAxis_Y1, nullptr, AXIS_FLAGS | ImPlotAxisFlags_Invert);
@@ -110,6 +111,17 @@ void MapWidget::renderTile(std::pair<std::shared_ptr<persistence::Data>, std::op
         ImPlot::EndPlot();
     }
 
+    if (ImGui::BeginPopupContextItem("##map")) {
+        static float longitue = 0, latitude = 0;
+        if (ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
+            longitue = tile::x2Longitude(mousePos.x, BBOX_ZOOM_LEVEL);
+            latitude = tile::y2Latitude(mousePos.y, BBOX_ZOOM_LEVEL);
+        }
+
+        historicalInfoWidget.drawRightClickMenu(longitue, latitude);
+        ImGui::EndPopup();
+    }
+
     ImGui::End();
 }
 
@@ -140,7 +152,6 @@ void MapWidget::renderOverlay()
         ImGui::Text("Cursor at: lon %.2f, lat %.2f", std::clamp(tile::x2Longitude(mousePos.x, BBOX_ZOOM_LEVEL), MIN_LONGITUDE, MAX_LONGITUDE), 
                                                      std::clamp(tile::y2Latitude(mousePos.y, BBOX_ZOOM_LEVEL), MIN_LATITUDE, MAX_LATITUDE));
         ImGui::Text("View range: west %.2f, east %.2f, \n\t\t\tnorth %.2f, south %.2f", bbox.west, bbox.east, bbox.north, bbox.south);
-        
     }
     ImGui::PopStyleColor(2);
     ImGui::End();

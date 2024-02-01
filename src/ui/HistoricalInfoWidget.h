@@ -29,6 +29,8 @@ public:
 
     void paint();
 
+    void drawRightClickMenu(float longitude, float latitude);
+
     std::pair<std::shared_ptr<persistence::Data>, std::optional<persistence::Coordinate>> getInfo();
 
 private:

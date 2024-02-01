@@ -148,4 +148,20 @@ std::pair<std::shared_ptr<persistence::Data>, std::optional<persistence::Coordin
     return {cache, selected};
 }
 
+void HistoricalInfoWidget::drawRightClickMenu(float longitude, float latitude)
+{
+    if (ImGui::BeginMenu("Add to"))
+    {
+        if (cache) {
+            for (auto& country : cache->countries) {
+                if (ImGui::MenuItem(country.name.c_str())) {
+                    country.borderContour.emplace_back(latitude, longitude);
+                }
+            }
+        }
+
+        ImGui::EndMenu();
+    }
+}
+
 }
