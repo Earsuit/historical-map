@@ -44,13 +44,13 @@ ImVec4 computeColor(const std::string& val)
 }
 
 
-void MapWidget::paint(std::pair<std::shared_ptr<persistence::Data>, std::optional<persistence::Coordinate>> info)
+void MapWidget::paint()
 {
-    renderTile(info);
+    renderTile();
     renderOverlay();
 }
 
-void MapWidget::renderTile(std::pair<std::shared_ptr<persistence::Data>, std::optional<persistence::Coordinate>> info)
+void MapWidget::renderTile()
 {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding,  ImVec2(0, 0));
@@ -106,7 +106,7 @@ void MapWidget::renderTile(std::pair<std::shared_ptr<persistence::Data>, std::op
             }
         }
 
-        renderHistoricalInfo(info);
+        renderHistoricalInfo();
 
         ImPlot::EndPlot();
     }
@@ -157,9 +157,9 @@ void MapWidget::renderOverlay()
     ImGui::End();
 }
 
-void MapWidget::renderHistoricalInfo(std::pair<std::shared_ptr<persistence::Data>, std::optional<persistence::Coordinate>> info)
+void MapWidget::renderHistoricalInfo()
 {
-    auto [data, selected] = info;
+    auto [data, selected] = historicalInfoWidget.getInfo();
 
     if (data) {
         int dragPointId = 0;
