@@ -190,7 +190,22 @@ void HistoricalInfoWidget::cityInfo()
     ImGui::PushItemWidth(NAME_INPUT_WIDTH);
     ImGui::InputTextWithHint("##City name", "City name", &newCityName);
     ImGui::SameLine();
-    if (ImGui::Button("Add city") && !newCityName.empty()) {
+    ImGui::PushItemWidth(COORDINATE_INPUT_WIDTH);
+    ImGui::InputTextWithHint("##CityLongitude", "Lon", &cityLongitude);
+    ImGui::SameLine();
+    ImGui::PushItemWidth(COORDINATE_INPUT_WIDTH);
+    ImGui::InputTextWithHint("##CityLatitude" ,"Lat", &cityLatitude);
+    if (ImGui::Button("Add city") && !newCityName.empty() && !cityLongitude.empty() && !cityLatitude.empty()) {
+        float lat, lon;
+        try {
+            lat = std::stod(cityLatitude);
+            lon = std::stod(cityLongitude);
+        }
+        catch (const std::exception &exc) {
+            logger->error("Invalid value of new coordinate for city {}.", newCityName);
+            return;
+        }
+
         for (const auto& city : cache->cities) {
             if (newCityName == city.name) {
                 logger->error("Failed to add a new city {}: city already exists in year {}.", newCityName, cache->year);
@@ -198,9 +213,11 @@ void HistoricalInfoWidget::cityInfo()
             }
         }
 
-        cache->cities.emplace_back(newCityName, persistence::Coordinate{});
+        cache->cities.emplace_back(newCityName, persistence::Coordinate{lat, lon});
         logger->debug("Add city {}, current city num in cache: {}", newCityName, this->cache->cities.size());
         newCityName.clear();
+        cityLongitude.clear();
+        cityLatitude.clear();
     }
 }
 

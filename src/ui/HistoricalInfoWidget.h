@@ -43,6 +43,8 @@ private:
     std::optional<persistence::Coordinate> selected;
     std::list<CountryInfoWidget> countryInfoWidgets;
     std::string newCityName;
+    std::string cityLongitude;
+    std::string cityLatitude;
 
     void historyInfo();
     void countryInfo();
