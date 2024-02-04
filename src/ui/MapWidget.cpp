@@ -26,7 +26,7 @@ constexpr float POINT_SIZE = 2.0f;
 constexpr float SELECTED_SOINT_SIZE = 4.0f;
 constexpr int LINE_OFFSET = 0;
 
-namespace {
+constexpr int FILLED_ALPHA = 50;
 constexpr auto NORMALIZE = 255.0f; 
 constexpr uint8_t MASK = 0xFF; 
 constexpr auto DEFAULT_ALPHA = 1.0f;
@@ -41,8 +41,6 @@ ImVec4 computeColor(const std::string& val)
 
     return ImVec4(r, g, b, DEFAULT_ALPHA);
 }
-}
-
 
 void MapWidget::paint()
 {
@@ -176,11 +174,10 @@ void MapWidget::renderHistoricalInfo()
                 }
 
                 auto [x, y] = renderCoordinate(coordinate, color, size, dragPointId++);
-                points.emplace_back(x, y);
+                points.emplace_back(ImPlot::PlotToPixels(ImPlotPoint(x, y)));
             }
 
-            ImPlot::SetNextLineStyle(color);
-            ImPlot::PlotLine(country.name.c_str(), &points.data()[0].x, &points.data()[0].y, points.size(), ImPlotLineFlags_Loop, LINE_OFFSET, sizeof(ImVec2));
+            ImPlot::GetPlotDrawList()->AddConvexPolyFilled(points.data(), points.size(), IM_COL32(color.x * NORMALIZE, color.y * NORMALIZE, color.z * NORMALIZE, FILLED_ALPHA));
         }
     }
 }
