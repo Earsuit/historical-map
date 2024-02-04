@@ -28,7 +28,7 @@ public:
     void update(const std::shared_ptr<Data> data);
 
 private:
-    Persistence<sqlpp::sqlite3::connection_pool, sqlpp::sqlite3::connection_config> persistence;
+    Persistence<sqlpp::sqlite3::connection, sqlpp::sqlite3::connection_config> persistence;
     moodycamel::BlockingReaderWriterQueue<std::function<void()>> taskQueue;
     moodycamel::BlockingReaderWriterQueue<Data> loadQueue;
     std::shared_ptr<spdlog::logger> logger;

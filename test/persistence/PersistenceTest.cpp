@@ -27,7 +27,7 @@ public:
     }
 
     std::shared_ptr<connection_config> config = std::make_shared<connection_config>(DATABASE_NAME, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,  "", true);
-    persistence::Persistence<connection_pool, connection_config> persistence;
+    persistence::Persistence<connection, connection_config> persistence;
     connection monitor;
 };
 
