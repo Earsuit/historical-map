@@ -103,20 +103,19 @@ void HistoricalInfoWidget::countryInfo()
     static std::string countryName;
 
     countryInfoWidgets.remove_if([this](auto& countryInfoWidget){
-        const auto name = countryInfoWidget.getName().c_str();
         bool remove = false;
-        if (ImGui::TreeNode(name)) {
-            ImGui::SeparatorText(name);
+        if (ImGui::TreeNode((countryInfoWidget.getName() + "##country").c_str())) {
+            ImGui::SeparatorText(countryInfoWidget.getName().c_str());
             countryInfoWidget.paint(this->selected);
 
             if (this->selected) {
-                this->logger->trace("Select coordinate lat {}, lon {} for country {}", this->selected->latitude, this->selected->longitude, name);
+                this->logger->trace("Select coordinate lat {}, lon {} for country {}", this->selected->latitude, this->selected->longitude, countryInfoWidget.getName());
             }
             
             if (ImGui::Button("Delete country")) {
                 this->remove->countries.emplace_back(*countryInfoWidget.getCountryIterator());
                 this->cache->countries.erase(countryInfoWidget.getCountryIterator());
-                this->logger->debug("Delete country {}, current country num in cache: {}", name, this->cache->countries.size());
+                this->logger->debug("Delete country {}, current country num in cache: {}", countryInfoWidget.getName(), this->cache->countries.size());
                 remove = true;
             }
             ImGui::TreePop();
@@ -169,7 +168,7 @@ void HistoricalInfoWidget::cityInfo()
     cache->cities.remove_if([this](auto& city){
         bool remove = false;
 
-        if (ImGui::TreeNode(city.name.c_str())) {
+        if (ImGui::TreeNode((city.name + "##city").c_str())) {
             ImGui::PushItemWidth(COORDINATE_INPUT_WIDTH);
             ImGui::InputFloat("longitude", &city.coordinate.longitude, STEP, STEP_FAST, "%.2f");
             ImGui::SameLine();
