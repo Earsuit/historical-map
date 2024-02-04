@@ -23,7 +23,7 @@ constexpr float MAX_LATITUDE = 85.05112878f;
 constexpr float MIN_LATITUDE = -85.05112878f;
 
 constexpr float POINT_SIZE = 2.0f;
-constexpr float SELECTED_SOINT_SIZE = 4.0f;
+constexpr float SELECTED_POINT_SIZE = 4.0f;
 constexpr int LINE_OFFSET = 0;
 constexpr auto ANNOTATION_OFFSET = ImVec2(-15,15);
 
@@ -171,7 +171,7 @@ void MapWidget::renderHistoricalInfo()
                 float size = POINT_SIZE;
 
                 if (selected && coordinate == *selected) {
-                    size = SELECTED_SOINT_SIZE;
+                    size = SELECTED_POINT_SIZE;
                 }
 
                 const auto [x, y] = renderCoordinate(coordinate, color, size, dragPointId++);
@@ -186,7 +186,7 @@ void MapWidget::renderHistoricalInfo()
             float size = POINT_SIZE;
 
             if (selected && city.coordinate == *selected) {
-                size = SELECTED_SOINT_SIZE;
+                size = SELECTED_POINT_SIZE;
             }
 
             const auto [x, y] = renderCoordinate(city.coordinate, color, size, dragPointId++);
