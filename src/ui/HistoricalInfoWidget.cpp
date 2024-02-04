@@ -170,10 +170,10 @@ void HistoricalInfoWidget::cityInfo()
 
         if (ImGui::TreeNode((city.name + "##city").c_str())) {
             ImGui::PushItemWidth(COORDINATE_INPUT_WIDTH);
-            ImGui::InputFloat("longitude", &city.coordinate.longitude, STEP, STEP_FAST, "%.2f");
+            ImGui::InputFloat("latitude", &city.coordinate.latitude, STEP, STEP_FAST, "%.2f");
             ImGui::SameLine();
             ImGui::PushItemWidth(COORDINATE_INPUT_WIDTH);
-            ImGui::InputFloat("latitude", &city.coordinate.latitude, STEP, STEP_FAST, "%.2f");
+            ImGui::InputFloat("longitude", &city.coordinate.longitude, STEP, STEP_FAST, "%.2f");
             if (ImGui::Button("Remove")) {
                 this->remove->cities.emplace_back(city);
                 this->logger->debug("Delete city {}, current city num in cache: {}", city.name, this->cache->cities.size());
@@ -191,10 +191,10 @@ void HistoricalInfoWidget::cityInfo()
     ImGui::InputTextWithHint("##City name", "City name", &newCityName);
     ImGui::SameLine();
     ImGui::PushItemWidth(COORDINATE_INPUT_WIDTH);
-    ImGui::InputTextWithHint("##CityLongitude", "Lon", &cityLongitude);
+    ImGui::InputTextWithHint("##CityLatitude" ,"Lat", &cityLatitude);
     ImGui::SameLine();
     ImGui::PushItemWidth(COORDINATE_INPUT_WIDTH);
-    ImGui::InputTextWithHint("##CityLatitude" ,"Lat", &cityLatitude);
+    ImGui::InputTextWithHint("##CityLongitude", "Lon", &cityLongitude);
     if (ImGui::Button("Add city") && !newCityName.empty() && !cityLongitude.empty() && !cityLatitude.empty()) {
         float lat, lon;
         try {
