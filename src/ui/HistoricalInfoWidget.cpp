@@ -7,7 +7,10 @@ namespace ui {
 constexpr int MIN_YEAR = -3000;
 constexpr int MAX_YEAR = 1911;
 constexpr int SLIDER_WIDTH = 40;
-constexpr int COUNTRY_NAME_INPUT_WIDTH = 100;
+constexpr int COORDINATE_INPUT_WIDTH = 50;
+constexpr int NAME_INPUT_WIDTH = 100;
+constexpr double STEP = 0;
+constexpr double STEP_FAST = 0;
 
 void HistoricalInfoWidget::paint()
 {
@@ -91,10 +94,7 @@ void HistoricalInfoWidget::historyInfo()
         countryInfo();
 
         ImGui::SeparatorText("Cities");
-        for (auto& city : cache->cities) {
-            if (ImGui::TreeNode(city.name.c_str())) {
-            }
-        }
+        cityInfo();
     }
 }
 
@@ -125,7 +125,7 @@ void HistoricalInfoWidget::countryInfo()
 
         return remove;
     });
-    ImGui::PushItemWidth(COUNTRY_NAME_INPUT_WIDTH);
+    ImGui::PushItemWidth(NAME_INPUT_WIDTH);
     ImGui::InputTextWithHint("##Country name", "Country name", &countryName);
     ImGui::SameLine();
     if (ImGui::Button("Add country") && !countryName.empty()) {
@@ -161,6 +161,47 @@ void HistoricalInfoWidget::drawRightClickMenu(float longitude, float latitude)
         }
 
         ImGui::EndMenu();
+    }
+}
+
+void HistoricalInfoWidget::cityInfo()
+{
+    cache->cities.remove_if([this](auto& city){
+        bool remove = false;
+
+        if (ImGui::TreeNode(city.name.c_str())) {
+            ImGui::PushItemWidth(COORDINATE_INPUT_WIDTH);
+            ImGui::InputFloat("longitude", &city.coordinate.longitude, STEP, STEP_FAST, "%.2f");
+            ImGui::SameLine();
+            ImGui::PushItemWidth(COORDINATE_INPUT_WIDTH);
+            ImGui::InputFloat("latitude", &city.coordinate.latitude, STEP, STEP_FAST, "%.2f");
+            if (ImGui::Button("Remove")) {
+                this->remove->cities.emplace_back(city);
+                this->logger->debug("Delete city {}, current city num in cache: {}", city.name, this->cache->cities.size());
+                remove = true;
+            }
+
+            ImGui::TreePop();
+            ImGui::Spacing();
+        }
+        
+        return remove;
+    });
+
+    ImGui::PushItemWidth(NAME_INPUT_WIDTH);
+    ImGui::InputTextWithHint("##City name", "City name", &newCityName);
+    ImGui::SameLine();
+    if (ImGui::Button("Add city") && !newCityName.empty()) {
+        for (const auto& city : cache->cities) {
+            if (newCityName == city.name) {
+                logger->error("Failed to add a new city {}: city already exists in year {}.", newCityName, cache->year);
+                return;
+            }
+        }
+
+        cache->cities.emplace_back(newCityName, persistence::Coordinate{});
+        logger->debug("Add city {}, current city num in cache: {}", newCityName, this->cache->cities.size());
+        newCityName.clear();
     }
 }
 

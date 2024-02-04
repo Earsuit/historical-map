@@ -42,9 +42,11 @@ private:
     std::shared_ptr<persistence::Data> remove;
     std::optional<persistence::Coordinate> selected;
     std::list<CountryInfoWidget> countryInfoWidgets;
+    std::string newCityName;
 
     void historyInfo();
     void countryInfo();
+    void cityInfo();
 };
 
 }
