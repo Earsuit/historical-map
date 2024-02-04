@@ -2,6 +2,7 @@
 
 #include "external/imgui/imgui.h"
 #include "external/imgui/misc/cpp/imgui_stdlib.h"
+#include "external/implot/implot_internal.h"
 
 #include <cmath>
 #include <algorithm>
@@ -24,7 +25,6 @@ constexpr float MIN_LATITUDE = -85.05112878f;
 
 constexpr float POINT_SIZE = 2.0f;
 constexpr float SELECTED_POINT_SIZE = 4.0f;
-constexpr int LINE_OFFSET = 0;
 constexpr auto ANNOTATION_OFFSET = ImVec2(-15,15);
 
 constexpr int FILLED_ALPHA = 50;
@@ -57,7 +57,7 @@ void MapWidget::renderTile()
     ImGui::PopStyleVar(2);
     
     const auto sizeAvail = ImGui::GetContentRegionAvail();
-    if (ImPlot::BeginPlot("##map", ImVec2(sizeAvail.x, sizeAvail.y), ImPlotFlags_CanvasOnly)) {
+    if (ImPlot::BeginPlot("##map", ImVec2(sizeAvail.x, sizeAvail.y), (ImPlotFlags_CanvasOnly ^ ImPlotFlags_NoLegend) | ImPlotFlags_Equal)) {
         ImPlot::SetupLegend(ImPlotLocation_NorthEast, ImPlotLegendFlags_NoButtons);
         ImPlot::SetupAxis(ImAxis_X1, nullptr, AXIS_FLAGS);
         ImPlot::SetupAxis(ImAxis_Y1, nullptr, AXIS_FLAGS | ImPlotAxisFlags_Invert);
@@ -178,7 +178,11 @@ void MapWidget::renderHistoricalInfo()
                 points.emplace_back(ImPlot::PlotToPixels(ImPlotPoint(x, y)));
             }
 
-            ImPlot::GetPlotDrawList()->AddConvexPolyFilled(points.data(), points.size(), IM_COL32(color.x * NORMALIZE, color.y * NORMALIZE, color.z * NORMALIZE, FILLED_ALPHA));
+            ImPlot::SetNextFillStyle(color);
+            if (ImPlot::BeginItem(country.name.c_str(), 0, ImPlotCol_Fill)){
+                ImPlot::GetPlotDrawList()->AddConvexPolyFilled(points.data(), points.size(), IM_COL32(color.x * NORMALIZE, color.y * NORMALIZE, color.z * NORMALIZE, FILLED_ALPHA));
+                ImPlot::EndItem();
+            }
         }
 
         for (auto& city : data->cities) {
