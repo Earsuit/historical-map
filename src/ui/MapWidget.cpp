@@ -187,14 +187,15 @@ ImVec2 MapWidget::renderCoordinate(persistence::Coordinate& coordinate, const Im
     double x = tile::longitude2X(coordinate.longitude, BBOX_ZOOM_LEVEL);
     double y = tile::latitude2Y(coordinate.latitude, BBOX_ZOOM_LEVEL);
     
-    ImPlot::DragPoint(id, &x, &y, color, size);
-    logger->trace("Lon {}, lat {} at [{}, {}]",
+    if (ImPlot::DragPoint(id, &x, &y, color, size)) {
+        logger->trace("Lon {}, lat {} at [{}, {}]",
                     coordinate.longitude,
                     coordinate.latitude,
                     x,
                     y);
-    coordinate.latitude = tile::y2Latitude(static_cast<float>(y), BBOX_ZOOM_LEVEL);
-    coordinate.longitude = tile::x2Longitude(static_cast<float>(x), BBOX_ZOOM_LEVEL);
+        coordinate.latitude = tile::y2Latitude(static_cast<float>(y), BBOX_ZOOM_LEVEL);
+        coordinate.longitude = tile::x2Longitude(static_cast<float>(x), BBOX_ZOOM_LEVEL);
+    }
 
     return {static_cast<float>(x) , static_cast<float>(y)};
 }
