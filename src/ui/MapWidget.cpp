@@ -25,6 +25,7 @@ constexpr float MIN_LATITUDE = -85.05112878f;
 constexpr float POINT_SIZE = 2.0f;
 constexpr float SELECTED_SOINT_SIZE = 4.0f;
 constexpr int LINE_OFFSET = 0;
+constexpr auto ANNOTATION_OFFSET = ImVec2(-15,15);
 
 constexpr int FILLED_ALPHA = 50;
 constexpr auto NORMALIZE = 255.0f; 
@@ -173,31 +174,44 @@ void MapWidget::renderHistoricalInfo()
                     size = SELECTED_SOINT_SIZE;
                 }
 
-                auto [x, y] = renderCoordinate(coordinate, color, size, dragPointId++);
+                const auto [x, y] = renderCoordinate(coordinate, color, size, dragPointId++);
                 points.emplace_back(ImPlot::PlotToPixels(ImPlotPoint(x, y)));
             }
 
             ImPlot::GetPlotDrawList()->AddConvexPolyFilled(points.data(), points.size(), IM_COL32(color.x * NORMALIZE, color.y * NORMALIZE, color.z * NORMALIZE, FILLED_ALPHA));
         }
+
+        for (auto& city : data->cities) {
+            const auto color = computeColor(city.name);
+            float size = POINT_SIZE;
+
+            if (selected && city.coordinate == *selected) {
+                size = SELECTED_SOINT_SIZE;
+            }
+
+            const auto [x, y] = renderCoordinate(city.coordinate, color, size, dragPointId++);
+            ImPlot::Annotation(x, y, color, ANNOTATION_OFFSET, true, "%s", city.name.c_str());
+        }
     }
 }
 
-ImVec2 MapWidget::renderCoordinate(persistence::Coordinate& coordinate, const ImVec4& color, float size, int id)
+std::pair<double, double> MapWidget::renderCoordinate(persistence::Coordinate& coordinate, const ImVec4& color, float size, int id)
 {
     double x = tile::longitude2X(coordinate.longitude, BBOX_ZOOM_LEVEL);
     double y = tile::latitude2Y(coordinate.latitude, BBOX_ZOOM_LEVEL);
     
     if (ImPlot::DragPoint(id, &x, &y, color, size)) {
-        logger->trace("Lon {}, lat {} at [{}, {}]",
-                    coordinate.longitude,
-                    coordinate.latitude,
-                    x,
-                    y);
         coordinate.latitude = tile::y2Latitude(static_cast<float>(y), BBOX_ZOOM_LEVEL);
         coordinate.longitude = tile::x2Longitude(static_cast<float>(x), BBOX_ZOOM_LEVEL);
     }
 
-    return {static_cast<float>(x) , static_cast<float>(y)};
+    logger->trace("Lon {}, lat {} at [{}, {}]",
+                  coordinate.longitude,
+                  coordinate.latitude,
+                  x,
+                  y);
+
+    return {x, y};
 }
 
 tile::TileLoader& MapWidget::getTileLoader()

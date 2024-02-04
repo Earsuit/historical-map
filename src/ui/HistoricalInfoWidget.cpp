@@ -167,17 +167,24 @@ void HistoricalInfoWidget::cityInfo()
 {
     cache->cities.remove_if([this](auto& city){
         bool remove = false;
+        bool hovered = false;
 
         if (ImGui::TreeNode((city.name + "##city").c_str())) {
             ImGui::PushItemWidth(COORDINATE_INPUT_WIDTH);
             ImGui::InputFloat("latitude", &city.coordinate.latitude, STEP, STEP_FAST, "%.2f");
+            hovered |= ImGui::IsItemHovered();
             ImGui::SameLine();
             ImGui::PushItemWidth(COORDINATE_INPUT_WIDTH);
             ImGui::InputFloat("longitude", &city.coordinate.longitude, STEP, STEP_FAST, "%.2f");
+            hovered |= ImGui::IsItemHovered();
             if (ImGui::Button("Remove")) {
                 this->remove->cities.emplace_back(city);
                 this->logger->debug("Delete city {}, current city num in cache: {}", city.name, this->cache->cities.size());
                 remove = true;
+            }
+
+            if (hovered) {
+                this->selected = city.coordinate;
             }
 
             ImGui::TreePop();

@@ -40,7 +40,7 @@ private:
     void renderTile();
     void renderOverlay();
     void renderHistoricalInfo();
-    ImVec2 renderCoordinate(persistence::Coordinate& coordinate, const ImVec4& color, float size, int id);
+    std::pair<double, double> renderCoordinate(persistence::Coordinate& coordinate, const ImVec4& color, float size, int id);
 };
 }
 
