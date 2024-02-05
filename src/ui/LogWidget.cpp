@@ -10,7 +10,7 @@ namespace ui {
 
 constexpr ImVec2 WINDOW_SIZE{800, 200};
 constexpr ImVec2 INHERIT_PARENT_SIZE{0,0};
-constexpr ImVec2 IMEM_SPACING{0,0};
+constexpr ImVec2 ITEM_SPACING{0,0};
 constexpr float Y_BOTTOM = 1.0;
 constexpr const char* LOG_LEVEL[] = {"TRACE", "DEBUG", "INFO", "WARN", "ERROR", "CRITICAL", "OFF"};
 constexpr int LEVEL_COMBO_WIDTH = 100;
@@ -57,7 +57,7 @@ void LogWidget::paint()
                 ImGui::LogToClipboard();
             } 
 
-            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, IMEM_SPACING);
+            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ITEM_SPACING);
 
             if (clear) {
                 logger->flush();
