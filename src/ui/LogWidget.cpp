@@ -14,6 +14,7 @@ constexpr ImVec2 IMEM_SPACING{0,0};
 constexpr float Y_BOTTOM = 1.0;
 constexpr const char* LOG_LEVEL[] = {"TRACE", "DEBUG", "INFO", "WARN", "ERROR", "CRITICAL", "OFF"};
 constexpr int LEVEL_COMBO_WIDTH = 100;
+constexpr auto TRANSPARENT = IM_COL32(0, 0, 0, 0);
 
 LogWidget::LogWidget() :
     sink{std::make_shared<logger::StringSink>()},
@@ -63,10 +64,12 @@ void LogWidget::paint()
                 start = end = 0;
             } else {
                 updateLogs();
-
+                
+                ImGui::PushStyleColor(ImGuiCol_FrameBg, TRANSPARENT);  // Transparent background
                 for (auto i = start; i != end; i++) {
-                    ImGui::TextUnformatted(logs[i].c_str());
+                    ImGui::InputText(("##" + std::to_string(i)).c_str(), &logs[i], ImGuiInputTextFlags_ReadOnly);
                 }
+                ImGui::PopStyleColor(1);
             }
 
             ImGui::PopStyleVar();
