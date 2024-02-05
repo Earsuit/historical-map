@@ -3,6 +3,7 @@
 #include "external/imgui/imgui.h"
 #include "external/imgui/misc/cpp/imgui_stdlib.h"
 #include "external/implot/implot_internal.h"
+#include "mapbox/polylabel.hpp"
 
 #include <cmath>
 #include <algorithm>
@@ -25,7 +26,9 @@ constexpr float MIN_LATITUDE = -85.05112878f;
 
 constexpr float POINT_SIZE = 2.0f;
 constexpr float SELECTED_POINT_SIZE = 4.0f;
-constexpr auto ANNOTATION_OFFSET = ImVec2(-15,15);
+constexpr auto CITY_ANNOTATION_OFFSET = ImVec2(-15, 15);
+constexpr auto COUNTRY_ANNOTATION_OFFSET = ImVec2(0, 0);
+constexpr auto VISUAL_CENTER_PERCISION = 1.0;
 
 constexpr int FILLED_ALPHA = 50;
 constexpr auto NORMALIZE = 255.0f; 
@@ -163,6 +166,7 @@ void MapWidget::renderHistoricalInfo()
         int dragPointId = 0;
         for (auto& country : data->countries) {
             std::vector<ImVec2> points;
+            mapbox::geometry::polygon<double> polygon{mapbox::geometry::linear_ring<double>{}};
             const auto color = computeColor(country.name);
 
             points.reserve(country.borderContour.size());
@@ -174,9 +178,12 @@ void MapWidget::renderHistoricalInfo()
                 }
 
                 const auto [x, y] = renderCoordinate(coordinate, color, size, dragPointId++);
+                polygon.back().emplace_back(x, y);
                 points.emplace_back(ImPlot::PlotToPixels(ImPlotPoint(x, y)));
             }
 
+            const auto visualCenter = mapbox::polylabel(polygon, VISUAL_CENTER_PERCISION);
+            ImPlot::Annotation(visualCenter.x, visualCenter.y, color, COUNTRY_ANNOTATION_OFFSET, false, "%s", country.name.c_str());
             ImPlot::SetNextFillStyle(color);
             if (ImPlot::BeginItem(country.name.c_str(), 0, ImPlotCol_Fill)){
                 ImPlot::GetPlotDrawList()->AddConvexPolyFilled(points.data(), points.size(), IM_COL32(color.x * NORMALIZE, color.y * NORMALIZE, color.z * NORMALIZE, FILLED_ALPHA));
@@ -193,7 +200,7 @@ void MapWidget::renderHistoricalInfo()
             }
 
             const auto [x, y] = renderCoordinate(city.coordinate, color, size, dragPointId++);
-            ImPlot::Annotation(x, y, color, ANNOTATION_OFFSET, true, "%s", city.name.c_str());
+            ImPlot::Annotation(x, y, color, CITY_ANNOTATION_OFFSET, true, "%s", city.name.c_str());
         }
     }
 }

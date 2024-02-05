@@ -16,3 +16,12 @@
 [submodule "external/readerwriterqueue"]
 	path = external/readerwriterqueue
 	url = git@github.com:cameron314/readerwriterqueue.git
+[submodule "external/polylabel"]
+	path = external/polylabel
+	url = git@github.com:mapbox/polylabel.git
+[submodule "external/geometry"]
+	path = external/geometry
+	url = git@github.com:mapbox/geometry.hpp.git
+[submodule "external/variant"]
+	path = external/variant
+	url = git@github.com:mapbox/variant.git
