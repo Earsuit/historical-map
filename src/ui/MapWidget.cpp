@@ -55,9 +55,8 @@ void MapWidget::renderTile()
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding,  ImVec2(0, 0));
     ImGui::Begin(MAP_WIDGET_NAME);
     ImGui::PopStyleVar(2);
-    
-    const auto sizeAvail = ImGui::GetContentRegionAvail();
-    if (ImPlot::BeginPlot("##map", ImVec2(sizeAvail.x, sizeAvail.y), (ImPlotFlags_CanvasOnly ^ ImPlotFlags_NoLegend) | ImPlotFlags_Equal)) {
+
+    if (ImPlot::BeginPlot("##map", ImGui::GetContentRegionAvail(), (ImPlotFlags_CanvasOnly ^ ImPlotFlags_NoLegend) | ImPlotFlags_Equal)) {
         ImPlot::SetupLegend(ImPlotLocation_NorthEast, ImPlotLegendFlags_NoButtons);
         ImPlot::SetupAxis(ImAxis_X1, nullptr, AXIS_FLAGS);
         ImPlot::SetupAxis(ImAxis_Y1, nullptr, AXIS_FLAGS | ImPlotAxisFlags_Invert);
