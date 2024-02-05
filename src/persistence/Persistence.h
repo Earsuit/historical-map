@@ -21,7 +21,7 @@ constexpr const table::Countries COUNTRIES;
 constexpr const table::Borders BORDERS;
 constexpr const table::YearCities YEAR_CITIES;
 constexpr const table::Cities CITIES;
-constexpr const table::Events EVENTS;
+constexpr const table::Notes NOTES;
 
 template<typename Connection, typename Config>
 class Persistence {
@@ -60,8 +60,8 @@ public:
                 data.cities.emplace_back(city.name, Coordinate{static_cast<float>(city.latitude), static_cast<float>(city.longitude)});
             }
 
-            if (const auto& ret = request<table::Events>(EVENTS.yearId == yearId, EVENTS.event); !ret.empty()) {
-                data.event = Event{ret.front().event};
+            if (const auto& ret = request<table::Notes>(NOTES.yearId == yearId, NOTES.text); !ret.empty()) {
+                data.note = Note{ret.front().text};
             }
         }
 
@@ -127,8 +127,8 @@ public:
                                       YEAR_CITIES.yearId = yearId, YEAR_CITIES.cityId = cityId);
         }
 
-        if (data.event) {
-            upsert<table::Events>(EVENTS.yearId == yearId, EVENTS.yearId = yearId, EVENTS.event = data.event->description);
+        if (data.note) {
+            upsert<table::Notes>(NOTES.yearId == yearId, NOTES.yearId = yearId, NOTES.text = data.note->text);
         }
     }
 
@@ -185,8 +185,8 @@ public:
                 }
             }
             
-            if (data.event) {
-                remove<table::Events>(EVENTS.event == data.event->description && EVENTS.yearId == yearId);
+            if (data.note) {
+                remove<table::Notes>(NOTES.text == data.note->text && NOTES.yearId == yearId);
             }
         }
     }

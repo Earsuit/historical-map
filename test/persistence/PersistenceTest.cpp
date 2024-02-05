@@ -389,8 +389,8 @@ TEST_F(PersistenceTest, RemoveOneCity)
 TEST_F(PersistenceTest, InsertEvent)
 {
     int year = 1900;
-    const persistence::Event event{"Test"};
-    const persistence::Data data{year, {}, {}, event};
+    const persistence::Note note{"Test"};
+    const persistence::Data data{year, {}, {}, note};
 
     persistence.upsert(data);
 
@@ -400,13 +400,13 @@ TEST_F(PersistenceTest, InsertEvent)
 TEST_F(PersistenceTest, UpdateEvent)
 {
     int year = 1900;
-    persistence::Event event{"Test"};
-    persistence::Data data{year, {}, {}, event};
+    persistence::Note note{"Test"};
+    persistence::Data data{year, {}, {}, note};
 
     persistence.upsert(data);
 
-    event.description = "Update";
-    data.event = event;
+    note.text = "Update";
+    data.note = note;
 
     persistence.upsert(data);
 
@@ -416,9 +416,9 @@ TEST_F(PersistenceTest, UpdateEvent)
 TEST_F(PersistenceTest, RemoveEvent)
 {
     int year = 1900;
-    const persistence::Event event{"Test"};
-    const persistence::Data data{year, {}, {}, event};
-    const persistence::Data remove{year, {}, {}, event};
+    const persistence::Note note{"Test"};
+    const persistence::Data data{year, {}, {}, note};
+    const persistence::Data remove{year, {}, {}, note};
 
     persistence.upsert(data);
     persistence.remove(remove);
@@ -429,12 +429,12 @@ TEST_F(PersistenceTest, RemoveEvent)
 TEST_F(PersistenceTest, InsertAllTogether)
 {
     int year = 1900;
-    const persistence::Event event{"Test"};
+    const persistence::Note note{"Test"};
     const persistence::Country country1{"Country1", {persistence::Coordinate{1,2}, persistence::Coordinate{3,4}}};
     const persistence::Country country2{"Country2", {persistence::Coordinate{5,6}, persistence::Coordinate{7,8}}};
     const persistence::City city1{"One", {1,2}};
     const persistence::City city2{"Two", {3,4}};
-    persistence::Data data{year, {country1, country2}, {city1, city2}, event};
+    persistence::Data data{year, {country1, country2}, {city1, city2}, note};
 
     persistence.upsert(data);
 

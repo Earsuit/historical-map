@@ -77,8 +77,8 @@ void HistoricalInfoWidget::historyInfo()
 
     if (cache) {
         if (ImGui::Button("Save")) {
-            logger->debug("Remove {} countries, {} cities, {} event", remove->countries.size(), remove->cities.size(), static_cast<bool>(remove->event));
-            logger->debug("Save {} countries, {} cities, {} event", cache->countries.size(), cache->cities.size(), static_cast<bool>(cache->event));
+            logger->debug("Remove {} countries, {} cities, {} event", remove->countries.size(), remove->cities.size(), static_cast<bool>(remove->note));
+            logger->debug("Save {} countries, {} cities, {} event", cache->countries.size(), cache->cities.size(), static_cast<bool>(cache->note));
             persistence.remove(remove);
             persistence.update(cache);
 
@@ -87,7 +87,7 @@ void HistoricalInfoWidget::historyInfo()
         }
 
         ImGui::SeparatorText("Event");
-        if (cache->event) {
+        if (cache->note) {
         }
 
         ImGui::SeparatorText("Countries");

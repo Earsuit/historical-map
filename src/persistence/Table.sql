@@ -23,10 +23,10 @@ CREATE TABLE IF NOT EXISTS cities (
     longitude real NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS events (
+CREATE TABLE IF NOT EXISTS notes (
     id INTEGER PRIMARY KEY,
     year_id INTEGER NOT NULL,
-    event TEXT NOT NULL,
+    text TEXT NOT NULL,
     FOREIGN KEY (year_id) REFERENCES years(id) ON DELETE CASCADE
 );
 

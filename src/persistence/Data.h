@@ -38,17 +38,17 @@ struct City {
     auto operator<=>(const City&) const = default;
 };
 
-struct Event {
-    std::string description;
+struct Note {
+    std::string text;
 
-    auto operator<=>(const Event&) const = default;
+    auto operator<=>(const Note&) const = default;
 };
 
 struct Data {
     int year = 0;
     std::list<Country> countries;
     std::list<City> cities;
-    std::optional<Event> event;
+    std::optional<Note> note;
 
     auto operator<=>(const Data&) const = default;
 };
