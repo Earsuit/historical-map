@@ -25,19 +25,21 @@ void HistoricalInfoWidget::paint()
         year = 1;
     }
     ImGui::SameLine();
-    if (ImGui::Button("-")) {
+    ImGui::PushButtonRepeat(true);
+    if (ImGui::ArrowButton("##left", ImGuiDir_Left)) {
         year--;
         if (year == 0) {
             year = -1;
         }
     }
     ImGui::SameLine();
-    if (ImGui::Button("+")) {
+    if (ImGui::ArrowButton("##right", ImGuiDir_Right)) {
         year++;
         if (year == 0) {
             year = 1;
         }
     }
+    ImGui::PopButtonRepeat();
     if (yearLock) {
         ImGui::EndDisabled();
     }
