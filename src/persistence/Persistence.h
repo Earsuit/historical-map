@@ -13,6 +13,7 @@
 #include <utility>
 #include <tuple>
 #include <vector>
+#include <optional>
 
 namespace persistence {
 constexpr const table::Years YEARS;
@@ -61,7 +62,7 @@ public:
             }
 
             if (const auto& ret = request<table::Notes>(NOTES.yearId == yearId, NOTES.text); !ret.empty()) {
-                data.note = Note{ret.front().text};
+                data.note.text = ret.front().text;
             }
         }
 
@@ -127,8 +128,8 @@ public:
                                       YEAR_CITIES.yearId = yearId, YEAR_CITIES.cityId = cityId);
         }
 
-        if (data.note) {
-            upsert<table::Notes>(NOTES.yearId == yearId, NOTES.yearId = yearId, NOTES.text = data.note->text);
+        if (!data.note.text.empty()) {
+            upsert<table::Notes>(NOTES.yearId == yearId, NOTES.yearId = yearId, NOTES.text = data.note.text);
         }
     }
 
@@ -185,8 +186,8 @@ public:
                 }
             }
             
-            if (data.note) {
-                remove<table::Notes>(NOTES.text == data.note->text && NOTES.yearId == yearId);
+            if (!data.note.text.empty()) {
+                remove<table::Notes>(NOTES.text == data.note.text && NOTES.yearId == yearId);
             }
         }
     }

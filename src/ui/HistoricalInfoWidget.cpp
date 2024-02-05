@@ -77,8 +77,8 @@ void HistoricalInfoWidget::historyInfo()
 
     if (cache) {
         if (ImGui::Button("Save")) {
-            logger->debug("Remove {} countries, {} cities, {} event", remove->countries.size(), remove->cities.size(), static_cast<bool>(remove->note));
-            logger->debug("Save {} countries, {} cities, {} event", cache->countries.size(), cache->cities.size(), static_cast<bool>(cache->note));
+            logger->debug("Remove {} countries, {} cities, {} event", remove->countries.size(), remove->cities.size(), remove->note.text);
+            logger->debug("Save {} countries, {} cities, {} event", cache->countries.size(), cache->cities.size(), cache->note.text);
             persistence.remove(remove);
             persistence.update(cache);
 
@@ -86,15 +86,14 @@ void HistoricalInfoWidget::historyInfo()
             remove = std::make_shared<persistence::Data>(remove->year);
         }
 
-        ImGui::SeparatorText("Event");
-        if (cache->note) {
-        }
-
         ImGui::SeparatorText("Countries");
         countryInfo();
 
         ImGui::SeparatorText("Cities");
         cityInfo();
+
+        ImGui::SeparatorText("Note");
+        displayNote();
     }
 }
 
@@ -226,6 +225,15 @@ void HistoricalInfoWidget::cityInfo()
         cityLongitude.clear();
         cityLatitude.clear();
     }
+}
+
+void HistoricalInfoWidget::displayNote()
+{
+    if (ImGui::Button("Clear")) {
+        cache->note.text.clear();
+    }
+
+    ImGui::InputTextMultiline("##note", &cache->note.text, ImGui::GetContentRegionAvail(), ImGuiInputTextFlags_AllowTabInput);
 }
 
 }

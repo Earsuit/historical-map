@@ -6,7 +6,6 @@
 
 #include <string>
 #include <vector>
-#include <optional>
 #include <sstream>
 #include <cstdint>
 #include <list>
@@ -48,7 +47,7 @@ struct Data {
     int year = 0;
     std::list<Country> countries;
     std::list<City> cities;
-    std::optional<Note> note;
+    Note note;
 
     auto operator<=>(const Data&) const = default;
 };

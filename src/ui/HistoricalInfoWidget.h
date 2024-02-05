@@ -49,6 +49,7 @@ private:
     void historyInfo();
     void countryInfo();
     void cityInfo();
+    void displayNote();
 };
 
 }
