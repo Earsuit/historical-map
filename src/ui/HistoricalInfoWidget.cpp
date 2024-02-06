@@ -164,6 +164,7 @@ void HistoricalInfoWidget::cityInfo()
             ImGui::SameLine();
             ImGui::InputFloat("longitude", &city.coordinate.longitude, STEP, STEP_FAST, "%.2f");
             hovered |= ImGui::IsItemHovered();
+            ImGui::SameLine();
             if (ImGui::Button("Remove")) {
                 this->remove->cities.emplace_back(city);
                 this->logger->debug("Delete city {}, current city num in cache: {}", city.name, this->cache->cities.size());

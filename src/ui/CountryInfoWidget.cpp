@@ -34,10 +34,10 @@ void CountryInfoWidget::paint(std::optional<persistence::Coordinate>& selected)
 
                                                     // create ID scope so we can reuse labels
                                                     ImGui::PushID(&coordinate);
-                                                    inputFiled("Latitude", &coordinate.latitude);
+                                                    inputFiled("latitude", &coordinate.latitude);
                                                     hovered |= ImGui::IsItemHovered();
                                                     ImGui::SameLine();
-                                                    inputFiled("Longitude", &coordinate.longitude);
+                                                    inputFiled("longitude", &coordinate.longitude);
                                                     hovered |= ImGui::IsItemHovered();
                                                     ImGui::SameLine();
 
