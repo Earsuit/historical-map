@@ -66,9 +66,11 @@ void LogWidget::paint()
                 updateLogs();
                 
                 ImGui::PushStyleColor(ImGuiCol_FrameBg, TRANSPARENT);  // Transparent background
+                ImGui::PushItemWidth(-FLT_MIN);
                 for (auto i = start; i != end; i++) {
                     ImGui::InputText(("##" + std::to_string(i)).c_str(), &logs[i], ImGuiInputTextFlags_ReadOnly);
                 }
+                ImGui::PopItemWidth();
                 ImGui::PopStyleColor(1);
             }
 
