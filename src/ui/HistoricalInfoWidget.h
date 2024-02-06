@@ -37,7 +37,6 @@ private:
     std::shared_ptr<spdlog::logger> logger;
     persistence::PersistenceManager persistence;
     int year = QIN_DYNASTY;
-    bool yearLock = false;
     std::shared_ptr<persistence::Data> cache;
     std::shared_ptr<persistence::Data> remove;
     std::optional<persistence::Coordinate> selected;

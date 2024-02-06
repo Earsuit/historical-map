@@ -15,10 +15,7 @@ constexpr double STEP_FAST = 0;
 void HistoricalInfoWidget::paint()
 {
     ImGui::Begin(HISTORICAL_INFO_WIDGET_NAME, nullptr,  ImGuiWindowFlags_NoTitleBar);
-    
-    if (yearLock) {
-        ImGui::BeginDisabled();
-    }
+
     // there is no year 0
     ImGui::SliderInt("##", &year, MIN_YEAR, MAX_YEAR, "Year %d", ImGuiSliderFlags_AlwaysClamp);
     if (year == 0) {
@@ -40,19 +37,8 @@ void HistoricalInfoWidget::paint()
         }
     }
     ImGui::PopButtonRepeat();
-    if (yearLock) {
-        ImGui::EndDisabled();
-    }
 
-    ImGui::SameLine();
-    ImGui::Checkbox("Lock", &yearLock);
-
-    if (yearLock) {
-        historyInfo();
-    } else {
-        cache.reset();
-        remove = std::make_shared<persistence::Data>(year);
-    }
+    historyInfo();
 
     ImGui::End();
 }
