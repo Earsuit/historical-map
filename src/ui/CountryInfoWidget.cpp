@@ -27,17 +27,16 @@ void CountryInfoWidget::paint(std::optional<persistence::Coordinate>& selected)
 {
     bool hovered = false;
 
+    ImGui::PushItemWidth(COORDINATE_INPUT_WIDTH);
     country.borderContour.erase(std::remove_if(country.borderContour.begin(), country.borderContour.end(), [&selected, this](auto& coordinate){
                                                     bool hovered = false;
                                                     bool remove = false;
 
                                                     // create ID scope so we can reuse labels
                                                     ImGui::PushID(&coordinate);
-                                                    ImGui::PushItemWidth(COORDINATE_INPUT_WIDTH);
                                                     inputFiled("Latitude", &coordinate.latitude);
                                                     hovered |= ImGui::IsItemHovered();
                                                     ImGui::SameLine();
-                                                    ImGui::PushItemWidth(COORDINATE_INPUT_WIDTH);
                                                     inputFiled("Longitude", &coordinate.longitude);
                                                     hovered |= ImGui::IsItemHovered();
                                                     ImGui::SameLine();
@@ -58,15 +57,15 @@ void CountryInfoWidget::paint(std::optional<persistence::Coordinate>& selected)
                                 country.borderContour.end());
 
     // input filed for new coordinate
-    ImGui::PushItemWidth(COORDINATE_INPUT_WIDTH);
     inputFiled("Latitude", &latitude);
     hovered |= ImGui::IsItemHovered();
     ImGui::SameLine();
-    ImGui::PushItemWidth(COORDINATE_INPUT_WIDTH);
     inputFiled("Longitude", &longitude);
     hovered |= ImGui::IsItemHovered();
     ImGui::SameLine();
     const auto pressed = ImGui::Button("Add");
+    ImGui::PopItemWidth();
+
     if (!latitude.empty() && !longitude.empty()) {
         float lat, lon;
         try {

@@ -113,6 +113,7 @@ void HistoricalInfoWidget::countryInfo()
     });
     ImGui::PushItemWidth(NAME_INPUT_WIDTH);
     ImGui::InputTextWithHint("##Country name", "Country name", &countryName);
+    ImGui::PopItemWidth();
     ImGui::SameLine();
     if (ImGui::Button("Add country") && !countryName.empty()) {
         for (const auto& country : cache->countries) {
@@ -152,16 +153,15 @@ void HistoricalInfoWidget::drawRightClickMenu(float longitude, float latitude)
 
 void HistoricalInfoWidget::cityInfo()
 {
+    ImGui::PushItemWidth(COORDINATE_INPUT_WIDTH);
     cache->cities.remove_if([this](auto& city){
         bool remove = false;
         bool hovered = false;
 
         if (ImGui::TreeNode((city.name + "##city").c_str())) {
-            ImGui::PushItemWidth(COORDINATE_INPUT_WIDTH);
             ImGui::InputFloat("latitude", &city.coordinate.latitude, STEP, STEP_FAST, "%.2f");
             hovered |= ImGui::IsItemHovered();
             ImGui::SameLine();
-            ImGui::PushItemWidth(COORDINATE_INPUT_WIDTH);
             ImGui::InputFloat("longitude", &city.coordinate.longitude, STEP, STEP_FAST, "%.2f");
             hovered |= ImGui::IsItemHovered();
             if (ImGui::Button("Remove")) {
@@ -180,15 +180,18 @@ void HistoricalInfoWidget::cityInfo()
         
         return remove;
     });
+    ImGui::PopItemWidth();
 
     ImGui::PushItemWidth(NAME_INPUT_WIDTH);
     ImGui::InputTextWithHint("##City name", "City name", &newCityName);
+    ImGui::PopItemWidth();
+
     ImGui::SameLine();
     ImGui::PushItemWidth(COORDINATE_INPUT_WIDTH);
     ImGui::InputTextWithHint("##CityLatitude" ,"Lat", &cityLatitude);
     ImGui::SameLine();
-    ImGui::PushItemWidth(COORDINATE_INPUT_WIDTH);
     ImGui::InputTextWithHint("##CityLongitude", "Lon", &cityLongitude);
+    ImGui::PopItemWidth();
     if (ImGui::Button("Add city") && !newCityName.empty() && !cityLongitude.empty() && !cityLatitude.empty()) {
         float lat, lon;
         try {
