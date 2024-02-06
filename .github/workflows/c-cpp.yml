@@ -1,0 +1,53 @@
+name: C/C++ CI
+
+env:
+  ARTIFACT_NAME: artifact
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+    - name: "install dependencies"
+      run: sudo apt-get install libgl1-mesa-dev libglew-dev libglfw3-dev libcurl4-openssl-dev -y
+    - name: "create build dir"
+      run: mkdir build
+    - name: "run cmake"
+      run:
+        cmake .. -DGTEST_ENABLE=ON
+      working-directory:
+        build/
+    - name: "run make" 
+      run: make -j
+      working-directory:
+        build/
+    - name: "Upload artifact"
+      uses: actions/upload-artifact@v4
+      with:
+        path: build/
+
+  test:
+    needs: build
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: "Download artifact"
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{env.ARTIFACT_NAME}}
+        path: build
+    - name: "test"
+      run: |
+        chmod a+x test/persistence/PersistenceTest
+        make test
+      working-directory:
+        build/
