@@ -29,6 +29,7 @@ constexpr float SELECTED_POINT_SIZE = 4.0f;
 constexpr auto CITY_ANNOTATION_OFFSET = ImVec2(-15, 15);
 constexpr auto COUNTRY_ANNOTATION_OFFSET = ImVec2(0, 0);
 constexpr auto VISUAL_CENTER_PERCISION = 1.0;
+constexpr auto MINIMAL_POINTS_OF_POLYGON = 3;
 
 constexpr int FILLED_ALPHA = 50;
 constexpr auto NORMALIZE = 255.0f; 
@@ -182,12 +183,14 @@ void MapWidget::renderHistoricalInfo()
                 points.emplace_back(ImPlot::PlotToPixels(ImPlotPoint(x, y)));
             }
 
-            const auto visualCenter = mapbox::polylabel(polygon, VISUAL_CENTER_PERCISION);
-            ImPlot::Annotation(visualCenter.x, visualCenter.y, color, COUNTRY_ANNOTATION_OFFSET, false, "%s", country.name.c_str());
-            ImPlot::SetNextFillStyle(color);
-            if (ImPlot::BeginItem(country.name.c_str(), ImPlotItemFlags_None, ImPlotCol_Fill)){
-                ImPlot::GetPlotDrawList()->AddConvexPolyFilled(points.data(), points.size(), IM_COL32(color.x * NORMALIZE, color.y * NORMALIZE, color.z * NORMALIZE, FILLED_ALPHA));
-                ImPlot::EndItem();
+            if (country.borderContour.size() >= MINIMAL_POINTS_OF_POLYGON) {
+                const auto visualCenter = mapbox::polylabel(polygon, VISUAL_CENTER_PERCISION);
+                ImPlot::Annotation(visualCenter.x, visualCenter.y, color, COUNTRY_ANNOTATION_OFFSET, false, "%s", country.name.c_str());
+                ImPlot::SetNextFillStyle(color);
+                if (ImPlot::BeginItem(country.name.c_str(), ImPlotItemFlags_None, ImPlotCol_Fill)){
+                    ImPlot::GetPlotDrawList()->AddConvexPolyFilled(points.data(), points.size(), IM_COL32(color.x * NORMALIZE, color.y * NORMALIZE, color.z * NORMALIZE, FILLED_ALPHA));
+                    ImPlot::EndItem();
+                }
             }
         }
 
