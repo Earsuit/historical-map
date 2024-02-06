@@ -185,7 +185,7 @@ void MapWidget::renderHistoricalInfo()
             const auto visualCenter = mapbox::polylabel(polygon, VISUAL_CENTER_PERCISION);
             ImPlot::Annotation(visualCenter.x, visualCenter.y, color, COUNTRY_ANNOTATION_OFFSET, false, "%s", country.name.c_str());
             ImPlot::SetNextFillStyle(color);
-            if (ImPlot::BeginItem(country.name.c_str(), 0, ImPlotCol_Fill)){
+            if (ImPlot::BeginItem(country.name.c_str(), ImPlotItemFlags_None, ImPlotCol_Fill)){
                 ImPlot::GetPlotDrawList()->AddConvexPolyFilled(points.data(), points.size(), IM_COL32(color.x * NORMALIZE, color.y * NORMALIZE, color.z * NORMALIZE, FILLED_ALPHA));
                 ImPlot::EndItem();
             }
