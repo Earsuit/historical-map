@@ -1,4 +1,5 @@
 #include "src/ui/HistoricalInfoWidget.h"
+#include "src/ui/Util.h"
 
 #include "external/imgui/imgui.h"
 #include "external/imgui/misc/cpp/imgui_stdlib.h"
@@ -73,6 +74,9 @@ void HistoricalInfoWidget::historyInfo()
             ImGui::OpenPopup(POPUP_WINDOW_NAME);
         }
         savePopupWindow();
+
+        ImGui::SameLine();
+        helpMarker("Right click \"Save\" button to save for several years.");
 
         ImGui::SeparatorText("Countries");
         countryInfo();
