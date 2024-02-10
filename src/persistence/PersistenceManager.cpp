@@ -57,6 +57,9 @@ std::shared_ptr<Data> PersistenceManager::load(int year)
     while (loadQueue.try_dequeue(data)){
         logger->debug("Update cache for year {}.", data.year);
         cache[data.year] = data;
+        // We don't put this in the request task because it runs on another thread,
+        // otherwise we need a lock
+        requested.erase(data.year); 
     }
 
     if (cache.contains(year)) {
@@ -66,8 +69,12 @@ std::shared_ptr<Data> PersistenceManager::load(int year)
 
     logger->debug("No cached data found for year {}.", year);
 
-    request(year);
-    
+    if (!requested.contains(year)) {
+        if (request(year)) {
+            requested.insert(year);
+        }
+    }
+
     return nullptr;
 }
 
@@ -94,14 +101,23 @@ void PersistenceManager::update(std::shared_ptr<Data> data)
     }
 }
 
-void PersistenceManager::request(int year)
+bool PersistenceManager::request(int year)
 {
     if (!taskQueue.enqueue([this, year](){
                             this->logger->debug("Process load task for year {}.", year);
                             this->loadQueue.emplace(this->persistence.load(year));
                         })) {
         logger->error("Enqueue request database year {} task fail.", year);
+
+        return false;
     }
+
+    return true;
+}
+
+size_t PersistenceManager::getWorkLoad()
+{
+    return taskQueue.size_approx();
 }
 
 }

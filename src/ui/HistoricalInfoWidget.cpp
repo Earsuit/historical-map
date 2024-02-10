@@ -40,6 +40,10 @@ void HistoricalInfoWidget::paint()
     }
     ImGui::PopButtonRepeat();
 
+    if (persistence.getWorkLoad() != 0) {
+        displaySaveProgress();
+    }
+
     historyInfo();
 
     ImGui::End();
@@ -262,6 +266,8 @@ void HistoricalInfoWidget::saveInfoRange(int startYear, int endYear)
 
     // don't clear cache because the user may continue editing
     remove = std::make_shared<persistence::Data>(year);
+
+    totalWorkLoad = static_cast<float>(persistence.getWorkLoad());
 }
 
 void HistoricalInfoWidget::savePopupWindow()
@@ -280,6 +286,17 @@ void HistoricalInfoWidget::savePopupWindow()
         }
         
         ImGui::EndPopup();
+    }
+}
+
+void HistoricalInfoWidget::displaySaveProgress()
+{
+    const auto left = persistence.getWorkLoad();
+    ImGui::ProgressBar((totalWorkLoad - left) / totalWorkLoad, ImVec2(0.f, 0.f));
+    logger->trace("Total workload {}, current left {}", totalWorkLoad, left);
+
+    if (persistence.getWorkLoad() == 0) {
+        totalWorkLoad  = 0;
     }
 }
 

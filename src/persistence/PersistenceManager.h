@@ -10,7 +10,7 @@
 #include "spdlog/spdlog.h"
 
 #include <future>
-#include <map>
+#include <set>
 #include <functional>
 #include <thread>
 #include <atomic>
@@ -27,16 +27,19 @@ public:
     void remove(const std::shared_ptr<Data> data);
     void update(const std::shared_ptr<Data> data);
 
+    size_t getWorkLoad();
+
 private:
     Persistence<sqlpp::sqlite3::connection, sqlpp::sqlite3::connection_config> persistence;
     moodycamel::BlockingReaderWriterQueue<std::function<void()>> taskQueue;
     moodycamel::BlockingReaderWriterQueue<Data> loadQueue;
     std::shared_ptr<spdlog::logger> logger;
     DataCache<Data> cache;
+    std::set<int> requested;
     std::atomic_bool runWorkerThread;
     std::thread workerThread;
 
-    void request(int year);
+    bool request(int year);
     void worker();
     void startWorkerThread();
     void stopWorkerThread();
