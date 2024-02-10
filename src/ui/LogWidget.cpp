@@ -5,7 +5,7 @@
 #include "external/imgui/misc/cpp/imgui_stdlib.h"
 
 #include <regex>
-#include <iostream>
+
 namespace ui {
 
 constexpr ImVec2 WINDOW_SIZE{800, 200};
