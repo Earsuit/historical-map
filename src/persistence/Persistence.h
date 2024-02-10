@@ -98,7 +98,7 @@ public:
                                                     RELATIONSHIPS.countryId = countryId,
                                                     RELATIONSHIPS.borderId = borderId);
             } else {
-                // border id exists, check if we need to update
+                // The same country in this year already exists, check if the border need to be updated
                 borderId = relationshipsRows.front().borderId;
                 if (contourHash != static_cast<decltype(contourHash)>(request<table::Borders>(BORDERS.id == borderId, 
                                                                                               BORDERS.hash).front().hash)) {
@@ -106,10 +106,16 @@ public:
                                                                                       RELATIONSHIPS.id != relationshipsRows.front().id,
                                                                                       RELATIONSHIPS.borderId);
                                                                                       boardUsedByOthers.empty()) {
-                        // This border is not used on other places, we can update it directly
-                        update<table::Borders>(BORDERS.id == borderId, 
-                                               BORDERS.hash = contourHash, 
-                                               BORDERS.contour = std::vector<uint8_t>{stream});
+                        // The existing contour is not used on other places, delete it first
+                        remove<table::Borders>(BORDERS.id == borderId);
+                        // then create a new one
+                        borderId = upsert<table::Borders>(BORDERS.hash == contourHash, 
+                                                          BORDERS.hash = contourHash, 
+                                                          BORDERS.contour = std::vector<uint8_t>{stream});
+                        // and insert to the relationship table because the previous relationship is deleted due to ON DELETE CASCADE
+                        insert<table::Relationships>(RELATIONSHIPS.borderId = borderId, 
+                                                     RELATIONSHIPS.yearId = yearId,
+                                                     RELATIONSHIPS.countryId = countryId);
                     } else {
                         // This border is used on other places, we can't update it because it will affect the countries use it
                         // We create a new one instead if this border doesn't exist

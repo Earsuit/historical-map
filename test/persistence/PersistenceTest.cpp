@@ -311,6 +311,32 @@ TEST_F(PersistenceTest, UpdateBorderForMultipleYearsUsedByMultipleYears)
     EXPECT_EQ(persistence.load(1903), expectedYear4);
 }
 
+TEST_F(PersistenceTest, UpdateBorderMultipleTimes)
+{
+    persistence::Country country{"One", {persistence::Coordinate{1,2}, persistence::Coordinate{3,4}}};
+    persistence::Country update{"One", {persistence::Coordinate{1,2}, persistence::Coordinate{3,4}, persistence::Coordinate{5,6}}};
+    const persistence::Data expectedYear1{1900, {country}};
+    const persistence::Data expectedYear2{1901, {country}};
+    const persistence::Data expectedYear3{1902, {country}};
+    const persistence::Data expectedYear4{1903, {country}};
+
+    persistence.upsert(persistence::Data{1900, {country}});
+    persistence.upsert(persistence::Data{1901, {country}});
+    persistence.upsert(persistence::Data{1902, {country}});
+    persistence.upsert(persistence::Data{1903, {country}});
+
+    persistence.upsert(persistence::Data{1900, {update}});
+    persistence.upsert(persistence::Data{1901, {update}});
+
+    persistence.upsert(persistence::Data{1900, {country}});
+    persistence.upsert(persistence::Data{1901, {country}});
+
+    EXPECT_EQ(persistence.load(1900), expectedYear1);
+    EXPECT_EQ(persistence.load(1901), expectedYear2);
+    EXPECT_EQ(persistence.load(1902), expectedYear3);
+    EXPECT_EQ(persistence.load(1903), expectedYear4);
+}
+
 TEST_F(PersistenceTest, UpdateBorderUsedByMultipleCountries)
 {
     int year = 1900;
