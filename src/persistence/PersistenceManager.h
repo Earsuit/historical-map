@@ -35,7 +35,7 @@ private:
     moodycamel::BlockingReaderWriterQueue<Data> loadQueue;
     std::shared_ptr<spdlog::logger> logger;
     DataCache<Data> cache;
-    std::set<int> requested;
+    std::set<int> requesting;
     std::atomic_bool runWorkerThread;
     std::thread workerThread;
 

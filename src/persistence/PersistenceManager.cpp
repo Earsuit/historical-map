@@ -59,7 +59,7 @@ std::shared_ptr<Data> PersistenceManager::load(int year)
         cache[data.year] = data;
         // We don't put this in the request task because it runs on another thread,
         // otherwise we need a lock
-        requested.erase(data.year); 
+        requesting.erase(data.year); 
     }
 
     if (cache.contains(year)) {
@@ -69,9 +69,9 @@ std::shared_ptr<Data> PersistenceManager::load(int year)
 
     logger->debug("No cached data found for year {}.", year);
 
-    if (!requested.contains(year)) {
+    if (!requesting.contains(year)) {
         if (request(year)) {
-            requested.insert(year);
+            requesting.insert(year);
         }
     }
 
