@@ -44,11 +44,16 @@ private:
     std::string newCityName;
     std::string cityLongitude;
     std::string cityLatitude;
+    int startYear = year;
+    int endYear = year;
 
     void historyInfo();
     void countryInfo();
     void cityInfo();
     void displayNote();
+    void saveInfo(int year);
+    void saveInfoRange(int startYear, int endYear);
+    void savePopupWindow();
 };
 
 }

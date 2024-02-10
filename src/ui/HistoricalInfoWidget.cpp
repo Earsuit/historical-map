@@ -11,6 +11,7 @@ constexpr int COORDINATE_INPUT_WIDTH = 50;
 constexpr int NAME_INPUT_WIDTH = 100;
 constexpr double STEP = 0;
 constexpr double STEP_FAST = 0;
+constexpr auto POPUP_WINDOW_NAME = "Save for years";
 
 void HistoricalInfoWidget::paint()
 {
@@ -65,14 +66,13 @@ void HistoricalInfoWidget::historyInfo()
 
     if (cache) {
         if (ImGui::Button("Save")) {
-            logger->debug("Remove {} countries, {} cities, {} event", remove->countries.size(), remove->cities.size(), remove->note.text);
-            logger->debug("Save {} countries, {} cities, {} event", cache->countries.size(), cache->cities.size(), cache->note.text);
-            persistence.remove(remove);
-            persistence.update(cache);
-
-            // don't clear cache because the user may continue editing
-            remove = std::make_shared<persistence::Data>(remove->year);
+            saveInfoRange(cache->year, cache->year);
         }
+
+        if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
+            ImGui::OpenPopup(POPUP_WINDOW_NAME);
+        }
+        savePopupWindow();
 
         ImGui::SeparatorText("Countries");
         countryInfo();
@@ -226,6 +226,57 @@ void HistoricalInfoWidget::displayNote()
     }
 
     ImGui::InputTextMultiline("##note", &cache->note.text, ImGui::GetContentRegionAvail(), ImGuiInputTextFlags_AllowTabInput);
+}
+
+void HistoricalInfoWidget::saveInfo(int saveForYear)
+{
+    std::shared_ptr<persistence::Data> toUpdate;
+    std::shared_ptr<persistence::Data> toRemove;
+
+    if (saveForYear == year) {
+        toUpdate = cache;
+        toRemove = remove;
+    } else {
+        toUpdate = std::make_shared<persistence::Data>(*cache);
+        toRemove = std::make_shared<persistence::Data>(*remove);
+
+        toUpdate->year = saveForYear;
+        toRemove->year = saveForYear;
+    }
+
+    logger->debug("Remove {} countries, {} cities, {} event for year {}", toRemove->countries.size(), toRemove->cities.size(), toRemove->note.text, saveForYear);
+    logger->debug("Save {} countries, {} cities, {} event for year {}", toUpdate->countries.size(), toUpdate->cities.size(), toUpdate->note.text, saveForYear);
+    persistence.remove(toRemove);
+    persistence.update(toUpdate);
+}
+
+void HistoricalInfoWidget::saveInfoRange(int startYear, int endYear)
+{
+    for (int y = startYear; y <= endYear; y++) {
+        saveInfo(y);
+    }
+
+    // don't clear cache because the user may continue editing
+    remove = std::make_shared<persistence::Data>(year);
+}
+
+void HistoricalInfoWidget::savePopupWindow()
+{
+    if (ImGui::BeginPopup(POPUP_WINDOW_NAME)) {
+        ImGui::SeparatorText(POPUP_WINDOW_NAME);
+        ImGui::InputInt("Start", &startYear);
+        ImGui::InputInt("End", &endYear);
+        
+        if (ImGui::Button("Save##ForYears")) {
+            if ((startYear <= year || endYear >= year) && startYear <= endYear) {
+                saveInfoRange(startYear, endYear);
+            } else {
+                logger->error("Year range must contain current year {}", year);
+            }
+        }
+        
+        ImGui::EndPopup();
+    }
 }
 
 }
