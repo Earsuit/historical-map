@@ -48,6 +48,6 @@ jobs:
     - name: "test"
       run: |
         chmod a+x test/persistence/PersistenceTest
-        make test
+        ctest -j8
       working-directory:
         build/

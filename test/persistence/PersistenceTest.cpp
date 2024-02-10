@@ -11,7 +11,7 @@ using namespace sqlpp::sqlite3;
 
 // https://www.sqlite.org/inmemorydb.html
 // share the same in memory database from two connections
-constexpr auto DATABASE_NAME = "PersistenceTestDB";
+constexpr auto DATABASE_NAME = "file:memdb1?mode=memory&cache=shared";
 
 class PersistenceTest : public ::testing::Test {
 public:
@@ -268,6 +268,61 @@ TEST_F(PersistenceTest, RemoveAllCountries)
         count++;
     }
     EXPECT_EQ(count, 0);
+}
+
+TEST_F(PersistenceTest, UpdateBorderUsedByMultipleYears)
+{
+    int year1 = 1900;
+    int year2 = 1901;
+    persistence::Country country{"One", {persistence::Coordinate{1,2}, persistence::Coordinate{3,4}}};
+    persistence::Country update{"One", {persistence::Coordinate{1,2}, persistence::Coordinate{3,4}, persistence::Coordinate{5,6}}};
+    const persistence::Data expectedYear1{year1, {update}};
+    const persistence::Data expectedYear2{year2, {country}};
+
+    persistence.upsert(persistence::Data{year1, {country}});
+    persistence.upsert(persistence::Data{year2, {country}});
+
+    persistence.upsert(persistence::Data{year1, {update}});
+
+    EXPECT_EQ(persistence.load(year1), expectedYear1);
+    EXPECT_EQ(persistence.load(year2), expectedYear2);
+}
+
+TEST_F(PersistenceTest, UpdateBorderForMultipleYearsUsedByMultipleYears)
+{
+    persistence::Country country{"One", {persistence::Coordinate{1,2}, persistence::Coordinate{3,4}}};
+    persistence::Country update{"One", {persistence::Coordinate{1,2}, persistence::Coordinate{3,4}, persistence::Coordinate{5,6}}};
+    const persistence::Data expectedYear1{1900, {update}};
+    const persistence::Data expectedYear2{1901, {update}};
+    const persistence::Data expectedYear3{1902, {country}};
+    const persistence::Data expectedYear4{1903, {country}};
+
+    persistence.upsert(persistence::Data{1900, {country}});
+    persistence.upsert(persistence::Data{1901, {country}});
+    persistence.upsert(persistence::Data{1902, {country}});
+    persistence.upsert(persistence::Data{1903, {country}});
+
+    persistence.upsert(persistence::Data{1900, {update}});
+    persistence.upsert(persistence::Data{1901, {update}});
+
+    EXPECT_EQ(persistence.load(1900), expectedYear1);
+    EXPECT_EQ(persistence.load(1901), expectedYear2);
+    EXPECT_EQ(persistence.load(1902), expectedYear3);
+    EXPECT_EQ(persistence.load(1903), expectedYear4);
+}
+
+TEST_F(PersistenceTest, UpdateBorderUsedByMultipleCountries)
+{
+    int year = 1900;
+    persistence::Country country1{"One", {persistence::Coordinate{1,2}, persistence::Coordinate{3,4}}};
+    persistence::Country country2{"Two", {persistence::Coordinate{1,2}, persistence::Coordinate{3,4}}};
+    persistence::Country update{"Two", {persistence::Coordinate{1,2}, persistence::Coordinate{3,4}, persistence::Coordinate{5,6}}};
+    const persistence::Data expectedYear{year, {country1, update}};
+
+    persistence.upsert(persistence::Data{year, {country1, country2}});
+    persistence.upsert(persistence::Data{year, {update}});
+
+    EXPECT_EQ(persistence.load(year), expectedYear);
 }
 
 TEST_F(PersistenceTest, InsertOneCity)

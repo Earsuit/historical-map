@@ -82,21 +82,11 @@ public:
             const auto stream = serializeContour<Stream>(country.borderContour);
             const auto contourHash = std::hash<std::string>{}(stream);
             const auto countryId = upsert<table::Countries>(COUNTRIES.name == country.name, COUNTRIES.name = country.name);
-            bool borderNotExist = false;
             uint64_t borderId = 0;
 
-            {
-                if (const auto& relationshipsRow = request<table::Relationships>(RELATIONSHIPS.yearId == yearId && RELATIONSHIPS.countryId == countryId,
-                                                                                 RELATIONSHIPS.borderId);
-                    relationshipsRow.empty()) {
-                    borderNotExist = true;
-                } else {
-                    borderNotExist = false;
-                    borderId = relationshipsRow.front().borderId;
-                }
-            }
-
-            if (borderNotExist) {
+            if (const auto& relationshipsRows = request<table::Relationships>(RELATIONSHIPS.yearId == yearId && RELATIONSHIPS.countryId == countryId,
+                                                                              RELATIONSHIPS.borderId, RELATIONSHIPS.id);
+                                                                              relationshipsRows.empty()) {
                 // We don't use upsert for border because update contour is relative slow
                 if (const auto& borderRow = request<table::Borders>(BORDERS.hash == contourHash, BORDERS.id); borderRow.empty()) {
                     borderId = insert<table::Borders>(BORDERS.hash = contourHash, BORDERS.contour = std::vector<uint8_t>{stream});
@@ -105,15 +95,30 @@ public:
                 }
 
                 insert<table::Relationships>(RELATIONSHIPS.yearId = yearId,
-                                             RELATIONSHIPS.countryId = countryId,
-                                             RELATIONSHIPS.borderId = borderId);
+                                                    RELATIONSHIPS.countryId = countryId,
+                                                    RELATIONSHIPS.borderId = borderId);
             } else {
                 // border id exists, check if we need to update
+                borderId = relationshipsRows.front().borderId;
                 if (contourHash != static_cast<decltype(contourHash)>(request<table::Borders>(BORDERS.id == borderId, 
                                                                                               BORDERS.hash).front().hash)) {
-                    update<table::Borders>(BORDERS.id == borderId, 
-                                           BORDERS.hash = contourHash, 
-                                           BORDERS.contour = std::vector<uint8_t>{stream});
+                    if (const auto& boardUsedByOthers = request<table::Relationships>(RELATIONSHIPS.borderId == borderId && 
+                                                                                      RELATIONSHIPS.id != relationshipsRows.front().id,
+                                                                                      RELATIONSHIPS.borderId);
+                                                                                      boardUsedByOthers.empty()) {
+                        // This border is not used on other places, we can update it directly
+                        update<table::Borders>(BORDERS.id == borderId, 
+                                               BORDERS.hash = contourHash, 
+                                               BORDERS.contour = std::vector<uint8_t>{stream});
+                    } else {
+                        // This border is used on other places, we can't update it because it will affect the countries use it
+                        // We create a new one instead if this border doesn't exist
+                        borderId = upsert<table::Borders>(BORDERS.hash == contourHash, 
+                                                          BORDERS.hash = contourHash, 
+                                                          BORDERS.contour = std::vector<uint8_t>{stream});
+                        update<table::Relationships>(RELATIONSHIPS.id == relationshipsRows.front().id,
+                                                     RELATIONSHIPS.borderId = borderId);
+                    }
                 }
             }
         }
