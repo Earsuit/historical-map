@@ -40,6 +40,9 @@ void HistoricalInfoWidget::paint()
     }
     ImGui::PopButtonRepeat();
 
+    ImGui::SameLine();
+    helpMarker("Ctrl + click to maually set the year");
+
     if (persistence.getWorkLoad() != 0) {
         displaySaveProgress();
     }
