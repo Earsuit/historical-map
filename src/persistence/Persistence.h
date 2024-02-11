@@ -17,7 +17,7 @@
 
 namespace persistence {
 constexpr const table::Years YEARS;
-constexpr const table::Relationships RELATIONSHIPS;
+constexpr const table::YearCountries YEAR_COUNTRIES;
 constexpr const table::Countries COUNTRIES;
 constexpr const table::Borders BORDERS;
 constexpr const table::YearCities YEAR_CITIES;
@@ -45,7 +45,7 @@ public:
         if (const auto& years = request<table::Years>(YEARS.year == year, YEARS.id); !years.empty()) {
             const auto yearId = years.front().id;
 
-            for (const auto& row : request<table::Relationships>(RELATIONSHIPS.yearId == yearId)) {
+            for (const auto& row : request<table::YearCountries>(YEAR_COUNTRIES.yearId == yearId)) {
                 const auto countryName = request<table::Countries>(COUNTRIES.id == row.countryId, COUNTRIES.name).front().name;
 
                 const auto& borderRows = request<table::Borders>(BORDERS.id == row.borderId, BORDERS.contour);
@@ -85,8 +85,8 @@ public:
             const auto countryId = upsert<table::Countries>(COUNTRIES.name == country.name, COUNTRIES.name = country.name);
             uint64_t borderId = 0;
 
-            if (const auto& relationshipsRows = request<table::Relationships>(RELATIONSHIPS.yearId == yearId && RELATIONSHIPS.countryId == countryId,
-                                                                              RELATIONSHIPS.borderId, RELATIONSHIPS.id);
+            if (const auto& relationshipsRows = request<table::YearCountries>(YEAR_COUNTRIES.yearId == yearId && YEAR_COUNTRIES.countryId == countryId,
+                                                                              YEAR_COUNTRIES.borderId, YEAR_COUNTRIES.id);
                                                                               relationshipsRows.empty()) {
                 // We don't use upsert for border because update contour is relative slow
                 if (const auto& borderRow = request<table::Borders>(BORDERS.hash == contourHash, BORDERS.id); borderRow.empty()) {
@@ -95,17 +95,17 @@ public:
                     borderId = borderRow.front().id;
                 }
 
-                insert<table::Relationships>(RELATIONSHIPS.yearId = yearId,
-                                                    RELATIONSHIPS.countryId = countryId,
-                                                    RELATIONSHIPS.borderId = borderId);
+                insert<table::YearCountries>(YEAR_COUNTRIES.yearId = yearId,
+                                                    YEAR_COUNTRIES.countryId = countryId,
+                                                    YEAR_COUNTRIES.borderId = borderId);
             } else {
                 // The same country in this year already exists, check if the border need to be updated
                 borderId = relationshipsRows.front().borderId;
                 if (contourHash != static_cast<decltype(contourHash)>(request<table::Borders>(BORDERS.id == borderId, 
                                                                                               BORDERS.hash).front().hash)) {
-                    if (const auto& boardUsedByOthers = request<table::Relationships>(RELATIONSHIPS.borderId == borderId && 
-                                                                                      RELATIONSHIPS.id != relationshipsRows.front().id,
-                                                                                      RELATIONSHIPS.borderId);
+                    if (const auto& boardUsedByOthers = request<table::YearCountries>(YEAR_COUNTRIES.borderId == borderId && 
+                                                                                      YEAR_COUNTRIES.id != relationshipsRows.front().id,
+                                                                                      YEAR_COUNTRIES.borderId);
                                                                                       boardUsedByOthers.empty()) {
                         // The existing contour is not used on other places, delete it first
                         remove<table::Borders>(BORDERS.id == borderId);
@@ -114,17 +114,17 @@ public:
                                                           BORDERS.hash = contourHash, 
                                                           BORDERS.contour = std::vector<uint8_t>{stream});
                         // and insert to the relationship table because the previous relationship is deleted due to ON DELETE CASCADE
-                        insert<table::Relationships>(RELATIONSHIPS.borderId = borderId, 
-                                                     RELATIONSHIPS.yearId = yearId,
-                                                     RELATIONSHIPS.countryId = countryId);
+                        insert<table::YearCountries>(YEAR_COUNTRIES.borderId = borderId, 
+                                                     YEAR_COUNTRIES.yearId = yearId,
+                                                     YEAR_COUNTRIES.countryId = countryId);
                     } else {
                         // This border is used on other places, we can't update it because it will affect the countries use it
                         // We create a new one instead if this border doesn't exist
                         borderId = upsert<table::Borders>(BORDERS.hash == contourHash, 
                                                           BORDERS.hash = contourHash, 
                                                           BORDERS.contour = std::vector<uint8_t>{stream});
-                        update<table::Relationships>(RELATIONSHIPS.id == relationshipsRows.front().id,
-                                                     RELATIONSHIPS.borderId = borderId);
+                        update<table::YearCountries>(YEAR_COUNTRIES.id == relationshipsRows.front().id,
+                                                     YEAR_COUNTRIES.borderId = borderId);
                     }
                 }
             }
@@ -188,20 +188,20 @@ public:
                 }
 
                 if (countryId && borderId) {
-                    remove<table::Relationships>(RELATIONSHIPS.yearId == yearId &&
-                                                 RELATIONSHIPS.countryId == *countryId &&
-                                                 RELATIONSHIPS.borderId == *borderId);
+                    remove<table::YearCountries>(YEAR_COUNTRIES.yearId == yearId &&
+                                                 YEAR_COUNTRIES.countryId == *countryId &&
+                                                 YEAR_COUNTRIES.borderId == *borderId);
                 }
 
                 if (countryId) {
-                    if (const auto& rows = request<table::Relationships>(RELATIONSHIPS.countryId == *countryId, RELATIONSHIPS.id); rows.empty()) {
+                    if (const auto& rows = request<table::YearCountries>(YEAR_COUNTRIES.countryId == *countryId, YEAR_COUNTRIES.id); rows.empty()) {
                         // we don't have any record of this country in the relationships table, so we can safely remove it from the countries table
                         remove<table::Countries>(COUNTRIES.id == *countryId);
                     }
                 }
                 
                 if (borderId) {
-                    if (const auto& rows = request<table::Relationships>(RELATIONSHIPS.borderId == *borderId, RELATIONSHIPS.id); rows.empty()) {
+                    if (const auto& rows = request<table::YearCountries>(YEAR_COUNTRIES.borderId == *borderId, YEAR_COUNTRIES.id); rows.empty()) {
                         // we don't have any record of this border in the relationships table, so we can safely remove it from the borders table
                         remove<table::Borders>(BORDERS.id == *borderId);
                     }

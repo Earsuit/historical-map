@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS relationships (
+CREATE TABLE IF NOT EXISTS yearCountries (
     id INTEGER PRIMARY KEY,
     year_id INTEGER NOT NULL,
     country_id INTEGER NOT NULL,
