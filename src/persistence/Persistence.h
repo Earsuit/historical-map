@@ -23,6 +23,7 @@ constexpr const table::Borders BORDERS;
 constexpr const table::YearCities YEAR_CITIES;
 constexpr const table::Cities CITIES;
 constexpr const table::Notes NOTES;
+constexpr const table::YearNotes YEAR_NOTES;
 
 template<typename Connection, typename Config>
 class Persistence {
@@ -61,8 +62,8 @@ public:
                 data.cities.emplace_back(city.name, Coordinate{static_cast<float>(city.latitude), static_cast<float>(city.longitude)});
             }
 
-            if (const auto& ret = request<table::Notes>(NOTES.yearId == yearId, NOTES.text); !ret.empty()) {
-                data.note.text = ret.front().text;
+            if (const auto& ret = request<table::YearNotes>(YEAR_NOTES.yearId == yearId, YEAR_NOTES.noteId); !ret.empty()) {
+                data.note.text = request<table::Notes>(NOTES.id == ret.front().noteId, NOTES.text).front().text;
             }
         }
 
@@ -139,8 +140,31 @@ public:
                                       YEAR_CITIES.yearId = yearId, YEAR_CITIES.cityId = cityId);
         }
 
-        if (!data.note.text.empty()) {
-            upsert<table::Notes>(NOTES.yearId == yearId, NOTES.yearId = yearId, NOTES.text = data.note.text);
+        // note
+        const auto hashedText = std::hash<std::string>{}(data.note.text);
+        // first search if the text exists
+        int noteId = 0;
+        if (const auto& notesRows = request<table::Notes>(NOTES.hash == hashedText, NOTES.id); notesRows.empty()) {
+            // no same text found, insert it
+            noteId = insert<table::Notes>(NOTES.hash = hashedText, NOTES.text = data.note.text);
+        } else {
+            // same text found, use its id
+            noteId = notesRows.front().id;
+        }
+
+        if (const auto& yearNotesRows = request<table::YearNotes>(YEAR_NOTES.yearId == yearId, YEAR_NOTES.noteId); yearNotesRows.empty()) {
+            // This year doesn't have note, 
+            insert<table::YearNotes>(YEAR_NOTES.yearId = yearId, YEAR_NOTES.noteId = noteId);
+        } else {
+            // This year already has note, check if it is the same
+            const size_t noteIdFromTable = yearNotesRows.front().noteId;
+            if (noteId != noteIdFromTable) {
+                update<table::YearNotes>(YEAR_NOTES.yearId == yearId, YEAR_NOTES.noteId = noteId);
+                if (const auto& ret = request<table::YearNotes>(YEAR_NOTES.noteId == noteIdFromTable); ret.empty()) {
+                    // the noteId is not used in other years, we are safe to delete the old one after update the noteId in the yearNotes table
+                    remove<table::Notes>(NOTES.id == noteIdFromTable);
+                }
+            }
         }
     }
 
@@ -197,8 +221,17 @@ public:
                 }
             }
             
-            if (!data.note.text.empty()) {
-                remove<table::Notes>(NOTES.text == data.note.text && NOTES.yearId == yearId);
+            // note
+            const auto hashedText = std::hash<std::string>{}(data.note.text);
+            if (const auto& notesRows = request<table::Notes>(NOTES.hash == hashedText, NOTES.id); !notesRows.empty()) {
+                const auto noteId = notesRows.front().id;
+
+                remove<table::YearNotes>(YEAR_NOTES.noteId == noteId && YEAR_NOTES.yearId == yearId);
+
+                if (const auto& yearNotesRows = request<table::YearNotes>(YEAR_NOTES.noteId == noteId && YEAR_NOTES.yearId != yearId); yearNotesRows.empty()) {
+                    // this note is not used in other years, it is safe to delete it
+                    remove<table::Notes>(NOTES.hash == hashedText);
+                }
             }
         }
     }

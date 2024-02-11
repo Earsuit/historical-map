@@ -494,6 +494,23 @@ TEST_F(PersistenceTest, UpdateEvent)
     EXPECT_EQ(persistence.load(year), data);
 }
 
+TEST_F(PersistenceTest, UpdateEventExistsInTwoYears)
+{
+    persistence::Note note{"Test"};
+    persistence::Data data1{1900, {}, {}, note};
+    persistence::Data data2{1901, {}, {}, note};
+
+    persistence.upsert(data1);
+    persistence.upsert(data2);
+
+    data1.note.text = "Update";
+
+    persistence.upsert(data1);
+
+    EXPECT_EQ(persistence.load(1900), data1);
+    EXPECT_EQ(persistence.load(1901), data2);
+}
+
 TEST_F(PersistenceTest, RemoveEvent)
 {
     int year = 1900;
@@ -505,6 +522,22 @@ TEST_F(PersistenceTest, RemoveEvent)
     persistence.remove(remove);
 
     EXPECT_EQ(persistence.load(year), persistence::Data{year});
+}
+
+TEST_F(PersistenceTest, RemoveEventExistsInTwoYears)
+{
+    persistence::Note note{"Test"};
+    persistence::Data data1{1900, {}, {}, note};
+    persistence::Data data2{1901, {}, {}, note};
+    persistence::Data expect{1900};
+
+    persistence.upsert(data1);
+    persistence.upsert(data2);
+
+    persistence.remove(data1);
+
+    EXPECT_EQ(persistence.load(1900), expect);
+    EXPECT_EQ(persistence.load(1901), data2);
 }
 
 TEST_F(PersistenceTest, InsertAllTogether)
