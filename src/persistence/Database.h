@@ -26,9 +26,9 @@ constexpr const table::Notes NOTES;
 constexpr const table::YearNotes YEAR_NOTES;
 
 template<typename Connection, typename Config>
-class Persistence {
+class Database {
 public:
-    Persistence(std::shared_ptr<Config> config) :
+    Database(std::shared_ptr<Config> config) :
         conn{config}
     {
         // initialize the database if necessary

@@ -43,7 +43,7 @@ void HistoricalInfoWidget::paint()
     ImGui::SameLine();
     helpMarker("Ctrl + click to maually set the year");
 
-    if (persistence.getWorkLoad() != 0) {
+    if (database.getWorkLoad() != 0) {
         displaySaveProgress();
     }
 
@@ -64,7 +64,7 @@ void HistoricalInfoWidget::historyInfo()
 
         countryInfoWidgets.clear();
 
-        if (cache = persistence.load(year); cache) {
+        if (cache = database.load(year); cache) {
             for (auto it = cache->countries.begin(); it != cache->countries.end(); it++) {
                 countryInfoWidgets.emplace_back(it);
             }
@@ -257,8 +257,8 @@ void HistoricalInfoWidget::saveInfo(int saveForYear)
 
     logger->debug("Remove {} countries, {} cities, {} event for year {}", toRemove->countries.size(), toRemove->cities.size(), toRemove->note.text, saveForYear);
     logger->debug("Save {} countries, {} cities, {} event for year {}", toUpdate->countries.size(), toUpdate->cities.size(), toUpdate->note.text, saveForYear);
-    persistence.remove(toRemove);
-    persistence.update(toUpdate);
+    database.remove(toRemove);
+    database.update(toUpdate);
 }
 
 void HistoricalInfoWidget::saveInfoRange(int startYear, int endYear)
@@ -270,7 +270,7 @@ void HistoricalInfoWidget::saveInfoRange(int startYear, int endYear)
     // don't clear cache because the user may continue editing
     remove = std::make_shared<persistence::Data>(year);
 
-    totalWorkLoad = static_cast<float>(persistence.getWorkLoad());
+    totalWorkLoad = static_cast<float>(database.getWorkLoad());
 }
 
 void HistoricalInfoWidget::savePopupWindow()
@@ -294,11 +294,11 @@ void HistoricalInfoWidget::savePopupWindow()
 
 void HistoricalInfoWidget::displaySaveProgress()
 {
-    const auto left = persistence.getWorkLoad();
+    const auto left = database.getWorkLoad();
     ImGui::ProgressBar((totalWorkLoad - left) / totalWorkLoad, ImVec2(0.f, 0.f));
     logger->trace("Total workload {}, current left {}", totalWorkLoad, left);
 
-    if (persistence.getWorkLoad() == 0) {
+    if (database.getWorkLoad() == 0) {
         totalWorkLoad  = 0;
     }
 }

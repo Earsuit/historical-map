@@ -1,4 +1,4 @@
-#include "src/persistence/PersistenceManager.h"
+#include "src/persistence/DatabaseManager.h"
 #include "src/logger/Util.h"
 
 namespace persistence {
@@ -6,8 +6,8 @@ constexpr auto DATABASE_NAME = "HistoricalMapDB";
 constexpr auto QUEUE_SIZE = 128;
 constexpr auto DATA_CACHE_SIZE = 8;
 
-PersistenceManager::PersistenceManager():
-    persistence{std::make_shared<sqlpp::sqlite3::connection_config>(DATABASE_NAME, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE)},
+DatabaseManager::DatabaseManager():
+    database{std::make_shared<sqlpp::sqlite3::connection_config>(DATABASE_NAME, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE)},
     taskQueue{QUEUE_SIZE},
     loadQueue{QUEUE_SIZE},
     logger{spdlog::get(logger::LOGGER_NAME)},
@@ -16,18 +16,18 @@ PersistenceManager::PersistenceManager():
     startWorkerThread();
 }
 
-PersistenceManager::~PersistenceManager()
+DatabaseManager::~DatabaseManager()
 {
     stopWorkerThread();
 }
 
-void PersistenceManager::startWorkerThread()
+void DatabaseManager::startWorkerThread()
 {
     runWorkerThread = true;
-    workerThread = std::thread(&PersistenceManager::worker, this);
+    workerThread = std::thread(&DatabaseManager::worker, this);
 }
 
-void PersistenceManager::stopWorkerThread()
+void DatabaseManager::stopWorkerThread()
 {
     runWorkerThread = false;
 
@@ -39,7 +39,7 @@ void PersistenceManager::stopWorkerThread()
     }
 }
 
-void PersistenceManager::worker()
+void DatabaseManager::worker()
 {
     while (runWorkerThread) {
         std::function<void()> task; 
@@ -50,7 +50,7 @@ void PersistenceManager::worker()
     }
 }
 
-std::shared_ptr<Data> PersistenceManager::load(int year)
+std::shared_ptr<Data> DatabaseManager::load(int year)
 {
     Data data;
 
@@ -78,34 +78,34 @@ std::shared_ptr<Data> PersistenceManager::load(int year)
     return nullptr;
 }
 
-void PersistenceManager::remove(std::shared_ptr<Data> data)
+void DatabaseManager::remove(std::shared_ptr<Data> data)
 {
     if (!taskQueue.enqueue([this, data](){
                                 this->logger->debug("Process remove task for year {}.", data->year);
-                                this->persistence.remove(*data);
+                                this->database.remove(*data);
                             })) {
         logger->error("Enqueue remove database year {} task fail.", data->year);
     }
 }
 
-void PersistenceManager::update(std::shared_ptr<Data> data)
+void DatabaseManager::update(std::shared_ptr<Data> data)
 {
     // overwrite the cached data
     cache[data->year] = *data;
 
     if (!taskQueue.enqueue([this, data](){
                             this->logger->debug("Process update task for year {}.", data->year);
-                            this->persistence.upsert(*data);
+                            this->database.upsert(*data);
                         })) {
         logger->error("Enqueue update database year {} task fail.", data->year);
     }
 }
 
-bool PersistenceManager::request(int year)
+bool DatabaseManager::request(int year)
 {
     if (!taskQueue.enqueue([this, year](){
                             this->logger->debug("Process load task for year {}.", year);
-                            this->loadQueue.emplace(this->persistence.load(year));
+                            this->loadQueue.emplace(this->database.load(year));
                         })) {
         logger->error("Enqueue request database year {} task fail.", year);
 
@@ -115,7 +115,7 @@ bool PersistenceManager::request(int year)
     return true;
 }
 
-size_t PersistenceManager::getWorkLoad()
+size_t DatabaseManager::getWorkLoad()
 {
     return taskQueue.size_approx();
 }

@@ -24,7 +24,7 @@ add_custom_target(command_header DEPENDS ${SQL_COMMANDS_HEADER})
 add_dependencies(HistoricalMap command_header table_header)
 
 set(PERSISTENCE_SRC
-  PersistenceManager.cpp
+  DatabaseManager.cpp
 )
 
 target_sources(HistoricalMap PRIVATE ${PERSISTENCE_SRC})

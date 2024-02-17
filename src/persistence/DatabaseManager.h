@@ -1,7 +1,7 @@
-#ifndef SRC_PERSISTENCE_PERSISTENCE_MANAGER_H
-#define SRC_PERSISTENCE_PERSISTENCE_MANAGER_H
+#ifndef SRC_PERSISTENCE_DATABASEMANAGER
+#define SRC_PERSISTENCE_DATABASEMANAGER
 
-#include "src/persistence/Persistence.h"
+#include "src/persistence/Database.h"
 #include "src/persistence/DataCache.h"
 
 #include "sqlpp11/sqlite3/sqlite3.h"
@@ -18,10 +18,10 @@
 #include <optional>
 
 namespace persistence {
-class PersistenceManager {
+class DatabaseManager {
 public:
-    PersistenceManager();
-    ~PersistenceManager();
+    DatabaseManager();
+    ~DatabaseManager();
 
     std::shared_ptr<Data> load(int year);
     void remove(const std::shared_ptr<Data> data);
@@ -30,7 +30,7 @@ public:
     size_t getWorkLoad();
 
 private:
-    Persistence<sqlpp::sqlite3::connection, sqlpp::sqlite3::connection_config> persistence;
+    Database<sqlpp::sqlite3::connection, sqlpp::sqlite3::connection_config> database;
     moodycamel::BlockingReaderWriterQueue<std::function<void()>> taskQueue;
     moodycamel::BlockingReaderWriterQueue<Data> loadQueue;
     std::shared_ptr<spdlog::logger> logger;
@@ -46,4 +46,4 @@ private:
 };
 }
 
-#endif
+#endif /* SRC_PERSISTENCE_DATABASEMANAGER */

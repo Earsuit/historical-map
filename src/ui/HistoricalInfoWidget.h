@@ -1,7 +1,7 @@
 #ifndef SRC_UI_HISTORICAL_INFO_WIDGET_H
 #define SRC_UI_HISTORICAL_INFO_WIDGET_H
 
-#include "src/persistence/PersistenceManager.h"
+#include "src/persistence/DatabaseManager.h"
 #include "src/persistence/Data.h"
 #include "src/logger/Util.h"
 #include "src/ui/CountryInfoWidget.h"
@@ -35,7 +35,7 @@ public:
 
 private:
     std::shared_ptr<spdlog::logger> logger;
-    persistence::PersistenceManager persistence;
+    persistence::DatabaseManager database;
     int year = QIN_DYNASTY;
     std::shared_ptr<persistence::Data> cache;
     std::shared_ptr<persistence::Data> remove;
