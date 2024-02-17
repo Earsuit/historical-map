@@ -32,9 +32,9 @@ public:
 private:
     Database<sqlpp::sqlite3::connection, sqlpp::sqlite3::connection_config> database;
     moodycamel::BlockingReaderWriterQueue<std::function<void()>> taskQueue;
-    moodycamel::BlockingReaderWriterQueue<Data> loadQueue;
+    moodycamel::BlockingReaderWriterQueue<std::shared_ptr<Data>> loadQueue;
     std::shared_ptr<spdlog::logger> logger;
-    DataCache<Data> cache;
+    DataCache<std::shared_ptr<Data>> cache;
     std::set<int> requesting;
     std::atomic_bool runWorkerThread;
     std::thread workerThread;

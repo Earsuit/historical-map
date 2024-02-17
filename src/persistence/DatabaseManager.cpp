@@ -52,19 +52,19 @@ void DatabaseManager::worker()
 
 std::shared_ptr<Data> DatabaseManager::load(int year)
 {
-    Data data;
+    std::shared_ptr<Data> data;
 
     while (loadQueue.try_dequeue(data)){
-        logger->debug("Update cache for year {}.", data.year);
-        cache[data.year] = data;
+        logger->debug("Update cache for year {}.", data->year);
+        cache[data->year] = data;
         // We don't put this in the request task because it runs on another thread,
         // otherwise we need a lock
-        requesting.erase(data.year); 
+        requesting.erase(data->year); 
     }
 
     if (cache.contains(year)) {
         logger->debug("Load cached data for year {}.", year);
-        return std::make_shared<Data>(cache[year]);
+        return cache[year];
     }
 
     logger->debug("No cached data found for year {}.", year);
@@ -91,7 +91,7 @@ void DatabaseManager::remove(std::shared_ptr<Data> data)
 void DatabaseManager::update(std::shared_ptr<Data> data)
 {
     // overwrite the cached data
-    cache[data->year] = *data;
+    cache[data->year] = data;
 
     if (!taskQueue.enqueue([this, data](){
                             this->logger->debug("Process update task for year {}.", data->year);
@@ -105,7 +105,7 @@ bool DatabaseManager::request(int year)
 {
     if (!taskQueue.enqueue([this, year](){
                             this->logger->debug("Process load task for year {}.", year);
-                            this->loadQueue.emplace(this->database.load(year));
+                            this->loadQueue.emplace(std::make_shared<Data>(this->database.load(year)));
                         })) {
         logger->error("Enqueue request database year {} task fail.", year);
 
