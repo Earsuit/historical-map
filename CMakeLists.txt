@@ -49,6 +49,7 @@ include_directories(external/variant/include)
 include_directories(external/geometry/include)
 include_directories(external/polylabel/include)
 include_directories(external/json/include)
+include_directories(external/expected/include)
 include_directories(${CMAKE_BINARY_DIR}) # For generated headers
 include_directories(${sqlpp11_SOURCE_DIR}/include)
 include_directories(${date_SOURCE_DIR}/include) # dependency of sqlpp11
