@@ -1,0 +1,89 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "title": "Historical Info",
+    "description": "Describe the json shcema for storing historical info",
+    "properties": {
+        "author": {
+            "type": "string",
+            "description": "The author of this json"
+        },
+        "date": {
+            "type": "string",
+            "description": "Date of creation of this json file"
+        },
+        "historical_info": {
+            "type": "array",
+            "description": "Contains a list of map from year to historical info",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "year": {
+                        "type": "integer"
+                    },
+                    "countries": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "name": {
+                                    "type": "string",
+                                    "description": "Name of the country"
+                                },
+                                "contour": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "latitude": {
+                                                "type": "number"
+                                            },
+                                            "longitude": {
+                                                "type": "number"
+                                            }
+                                        },
+                                        "required": ["latitude", "longitude"]
+                                    },
+                                    "minItems": 1,
+                                    "uniqueItems": true
+                                }
+                            },
+                            "required": ["name", "contour"]
+                        }
+                    },
+                    "cities": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "name": {
+                                    "type": "string",
+                                    "description": "Name of the city"
+                                },
+                                "coordinate": {
+                                    "type": "object",
+                                    "properties": {
+                                        "latitude": {
+                                            "type": "number"
+                                        },
+                                        "longitude": {
+                                            "type": "number"
+                                        }
+                                    },
+                                    "required": ["latitude", "longitude"] 
+                                }
+                            },
+                            "required": ["name", "coordinate"]
+                        }
+                    },
+                    "note": {
+                        "type": "string"
+                    }
+                },
+                "required": ["year", "countries", "cities", "note"]
+            },
+            "minItems": 1
+        }
+    },
+    "required": ["date", "historical_info"]
+}
