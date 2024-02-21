@@ -77,7 +77,12 @@
                         }
                     },
                     "note": {
-                        "type": "string"
+                        "type": "object",
+                        "properties": {
+                            "text": {
+                                "type": "string"
+                            }
+                        }
                     }
                 },
                 "required": ["year", "countries", "cities", "note"]

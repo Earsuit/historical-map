@@ -33,19 +33,15 @@ void from_json(const nlohmann::json& j, City& c) {
     j.at("coordinate").get_to(c.coordinate);
 }
 
-void to_json(nlohmann::json& j, const Note& n) {
-    j = nlohmann::json{{"note", n.text}};
+void to_json(nlohmann::json& j, const Note& n) {    j = nlohmann::json{{"text", n.text}};
 }
 
 void from_json(const nlohmann::json& j, Note& n) {
-    j.at("note").get_to(n.text);
+    j.at("text").get_to(n.text);
 }
 
 void to_json(nlohmann::json& j, const Data& d) {
-    j = nlohmann::json{{"year", d.year}};
-    j = nlohmann::json{{"countries", d.countries}};
-    j = nlohmann::json{{"cities", d.cities}};
-    j = nlohmann::json{{"note", d.note}};
+    j = nlohmann::json{{"year", d.year}, {"countries", d.countries}, {"cities", d.cities}, {"note", d.note}};
 }
 
 void from_json(const nlohmann::json& j, Data& d) {
@@ -62,8 +58,8 @@ tl::expected<std::unique_ptr<JsonFileHandler>, Error> JsonFileHandler::create(co
             if (std::filesystem::exists(file)) {
                 return tl::unexpected(Error::FILE_EXISTS);
             }
-
-            return std::unique_ptr<JsonFileHandler>(new JsonFileHandler{std::fstream{file, std::ios::out}, mode});
+        case Mode::OverWrite:
+            return std::unique_ptr<JsonFileHandler>(new JsonFileHandler{std::fstream{file, std::ios::out | std::ios::trunc}, mode});
             break;
         case Mode::Read:
             if (!std::filesystem::exists(file)) {
@@ -72,24 +68,23 @@ tl::expected<std::unique_ptr<JsonFileHandler>, Error> JsonFileHandler::create(co
 
             return std::unique_ptr<JsonFileHandler>(new JsonFileHandler{std::fstream{file, std::ios::in}, mode});
             break;
-        case Mode::OverWrite:
-            return std::unique_ptr<JsonFileHandler>(new JsonFileHandler{std::fstream{file, std::ios::out | std::ios::trunc}, mode});
-            break;
         default:
             return tl::unexpected(Error::INVALID_MODE);
     }
 }
 
-JsonFileHandler::JsonFileHandler(std::fstream&& stream, Mode mode):
-    stream{std::move(stream)},
-    mode{mode}
+JsonFileHandler::JsonFileHandler(std::fstream&& s, Mode mode):
+    mode{mode},
+    stream{std::move(s)}
 {
     if (mode == Mode::Read) {
         const auto json = nlohmann::json::parse(stream);
 
         for (const auto& info : json["historical_info"]) {
-            auto data = std::make_shared<Data>(info.template get<Data>());
+            infos.insert(info.template get<Data>());
         }
+
+        it = infos.cbegin();
     }
 }
 
@@ -108,30 +103,33 @@ JsonFileHandler::~JsonFileHandler()
         json["date"] = std::ctime(&date);
         json["historical_info"] = {};
 
-        for (const auto& [year, info] : cache) {
-            json["historical_info"].emplace_back(*info);
+        for (const auto& info : infos) {
+            json["historical_info"].emplace_back(info);
         }
 
-        stream << json << std::endl;
+        stream << std::setw(4) << json << std::endl;
     }
 }
-
-std::shared_ptr<Data> JsonFileHandler::load(int year)
+ 
+void JsonFileHandler::add(Data info)
 {
-    if (cache.contains(year)) {
-        return cache[year];
+    infos.insert(info);
+}
+
+void JsonFileHandler::add(Data&& info)
+{
+    infos.insert(std::move(info));
+}
+
+std::optional<Data> JsonFileHandler::next()
+{
+    if (mode == Mode::Read && it != infos.cend()) {
+        auto info = *it;
+        it++;
+        return info;
     } else {
-        return nullptr;
+        return std::nullopt;
     }
 }
 
-void JsonFileHandler::add(Data data)
-{
-    cache[data.year] = std::make_shared<Data>(data);
-}
-
-void JsonFileHandler::add(Data&& data)
-{
-    cache[data.year] = std::make_shared<Data>(std::move(data));
-}
 }
