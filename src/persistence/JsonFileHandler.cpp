@@ -6,6 +6,8 @@
 #include <chrono>
 
 namespace persistence {
+constexpr auto PRETTIFY_JSON = 4;
+
 void to_json(nlohmann::json& j, const Coordinate& c) {
     j = nlohmann::json{{"latitude", c.latitude}, {"longitude", c.longitude}};
 }
@@ -107,7 +109,7 @@ JsonFileHandler::~JsonFileHandler()
             json["historical_info"].emplace_back(info);
         }
 
-        stream << std::setw(4) << json << std::endl;
+        stream << std::setw(PRETTIFY_JSON) << json << std::endl;
     }
 }
  
