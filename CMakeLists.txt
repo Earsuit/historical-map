@@ -54,24 +54,23 @@ include_directories(${CMAKE_BINARY_DIR}) # For generated headers
 include_directories(${sqlpp11_SOURCE_DIR}/include)
 include_directories(${date_SOURCE_DIR}/include) # dependency of sqlpp11
 
-
 SET(IMGUI_SRC 
-    external/imgui/imgui.cpp
-    external/imgui/imgui_draw.cpp
-    external/imgui/imgui_tables.cpp
-    external/imgui/imgui_widgets.cpp
-    external/imgui/backends/imgui_impl_glfw.cpp
-    external/imgui/backends/imgui_impl_opengl3.cpp
-    external/imgui/misc/cpp/imgui_stdlib.cpp
+    ${CMAKE_SOURCE_DIR}/external/imgui/imgui.cpp
+    ${CMAKE_SOURCE_DIR}/external/imgui/imgui_draw.cpp
+    ${CMAKE_SOURCE_DIR}/external/imgui/imgui_tables.cpp
+    ${CMAKE_SOURCE_DIR}/external/imgui/imgui_widgets.cpp
+    ${CMAKE_SOURCE_DIR}/external/imgui/backends/imgui_impl_glfw.cpp
+    ${CMAKE_SOURCE_DIR}/external/imgui/backends/imgui_impl_opengl3.cpp
+    ${CMAKE_SOURCE_DIR}/external/imgui/misc/cpp/imgui_stdlib.cpp
 )
 
 SET(IMPLOT_SRC
-    external/implot/implot.cpp
-    external/implot/implot_items.cpp
+    ${CMAKE_SOURCE_DIR}/external/implot/implot.cpp
+    ${CMAKE_SOURCE_DIR}/external/implot/implot_items.cpp
 )
 
-add_executable(HistoricalMap main.cpp ${IMGUI_SRC} ${IMPLOT_SRC} ${STB_SRC})
-target_link_libraries(HistoricalMap PRIVATE OpenGL::GL glfw GLEW::GLEW Threads::Threads CURL::libcurl sqlpp11::sqlite3 ${CMAKE_DL_LIBS})
+add_executable(HistoricalMap main.cpp)
+target_link_libraries(HistoricalMap PRIVATE libui libtile libpersistence liblogger)
 
 add_subdirectory(src)
 add_subdirectory(test)

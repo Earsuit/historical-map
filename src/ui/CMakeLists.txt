@@ -8,4 +8,5 @@ SET(UI_SRC
     Util.cpp
 )
 
-target_sources(HistoricalMap PRIVATE ${UI_SRC})
+add_library(libui STATIC ${UI_SRC} ${IMGUI_SRC} ${IMPLOT_SRC})
+target_link_libraries(libui PRIVATE OpenGL::GL glfw GLEW::GLEW ${CMAKE_DL_LIBS})

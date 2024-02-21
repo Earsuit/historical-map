@@ -7,4 +7,5 @@ SET(TILE_SRC
     TileEngineFactory.cpp
 )
 
-target_sources(HistoricalMap PRIVATE ${TILE_SRC})
+add_library(libtile STATIC ${TILE_SRC})
+target_link_libraries(libtile PRIVATE CURL::libcurl)

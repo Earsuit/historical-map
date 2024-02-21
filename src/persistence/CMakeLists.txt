@@ -21,11 +21,11 @@ add_custom_command(
 add_custom_target(table_header DEPENDS ${TABLE_HEADER}.h)
 add_custom_target(command_header DEPENDS ${SQL_COMMANDS_HEADER})
 
-add_dependencies(HistoricalMap command_header table_header)
-
 set(PERSISTENCE_SRC
   DatabaseManager.cpp
   JsonFileHandler.cpp
 )
 
-target_sources(HistoricalMap PRIVATE ${PERSISTENCE_SRC})
+add_library(libpersistence STATIC ${PERSISTENCE_SRC})
+target_link_libraries(libpersistence PRIVATE sqlpp11::sqlite3 Threads::Threads)
+add_dependencies(libpersistence command_header table_header)

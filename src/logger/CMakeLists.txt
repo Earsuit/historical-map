@@ -2,4 +2,4 @@ SET(LOGGER_SRC
     StringSink.cpp
 )
 
-target_sources(HistoricalMap PRIVATE ${LOGGER_SRC})
+add_library(liblogger STATIC ${LOGGER_SRC})
