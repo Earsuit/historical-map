@@ -25,6 +25,7 @@ add_dependencies(HistoricalMap command_header table_header)
 
 set(PERSISTENCE_SRC
   DatabaseManager.cpp
+  JsonFileHandler.cpp
 )
 
 target_sources(HistoricalMap PRIVATE ${PERSISTENCE_SRC})
