@@ -3,6 +3,7 @@
 
 #include "src/persistence/Data.h"
 
+#include "spdlog/spdlog.h"
 #include "tl/expected.hpp"
 
 #include <set>
@@ -50,6 +51,7 @@ private:
     std::fstream stream;
     std::set<Data, DataCompare> infos;
     std::string author;
+    std::shared_ptr<spdlog::logger> logger;
 };
 }
 

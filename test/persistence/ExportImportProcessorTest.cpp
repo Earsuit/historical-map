@@ -1,25 +1,35 @@
 #include "src/persistence/ExportImportProcessor.h"
 #include "src/persistence/Data.h"
+#include "src/logger/Util.h"
 
+#include "spdlog/sinks/ostream_sink.h"
 #include "nlohmann/json.hpp"
 
 #include <gtest/gtest.h>
 #include <cstdio>
+#include <sstream>
 
 namespace {
 constexpr auto FILE_NAME = "jsonFileHandlerTest.json";
 
 class ExportImportProcessorTest : public ::testing::Test {
 public:
-    ExportImportProcessorTest()
+    ExportImportProcessorTest():
+        logger{std::make_shared<spdlog::logger>(logger::LOGGER_NAME, std::make_shared<spdlog::sinks::ostream_sink_mt>(stream))}
     {
         std::remove(FILE_NAME);
+
+        spdlog::initialize_logger(logger);
+        logger->set_pattern("%v");
     }
 
     ~ExportImportProcessorTest()
     {
         std::remove(FILE_NAME);
     }
+
+    std::ostringstream  stream;
+    std::shared_ptr<spdlog::logger> logger;
 };
 
 TEST_F(ExportImportProcessorTest, ExportAndImport)
@@ -210,7 +220,18 @@ TEST_F(ExportImportProcessorTest, ReadFileNotExists)
     EXPECT_FALSE(ret);
 
     EXPECT_EQ(ret.error(), persistence::Error::FILE_NOT_EXISTS);
-
 }
+
+TEST_F(ExportImportProcessorTest, IncorrectJsonFormat)
+{
+    if (auto handler = persistence::ExportImportProcessor::create("incorrectJson.json", persistence::Mode::Read); handler) {
+        EXPECT_EQ("Failed to import file: [json.exception.out_of_range.403] key 'cities' not found\n", stream.str());
+
+        EXPECT_TRUE(handler.value()->empty());
+    } else {
+        EXPECT_TRUE(false); 
+    }
+}
+
 
 }

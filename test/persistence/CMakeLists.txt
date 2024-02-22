@@ -3,5 +3,5 @@ target_link_libraries(DatabaseTest PRIVATE libpersistence GTest::gtest_main)
 gtest_discover_tests(DatabaseTest)
 
 add_executable(ExportImportProcessorTest ExportImportProcessorTest.cpp)
-target_link_libraries(ExportImportProcessorTest PRIVATE libpersistence GTest::gtest_main)
+target_link_libraries(ExportImportProcessorTest PRIVATE libpersistence liblogger GTest::gtest_main)
 gtest_discover_tests(ExportImportProcessorTest)

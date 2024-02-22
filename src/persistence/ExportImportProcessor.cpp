@@ -1,4 +1,5 @@
 #include "src/persistence/ExportImportProcessor.h"
+#include "src/logger/Util.h"
 
 #include "nlohmann/json.hpp"
 
@@ -77,13 +78,19 @@ tl::expected<std::unique_ptr<ExportImportProcessor>, Error> ExportImportProcesso
 
 ExportImportProcessor::ExportImportProcessor(std::fstream&& s, Mode mode):
     mode{mode},
-    stream{std::move(s)}
+    stream{std::move(s)},
+    logger{spdlog::get(logger::LOGGER_NAME)}
 {
     if (mode == Mode::Read) {
-        const auto json = nlohmann::json::parse(stream);
+        try {
+            const auto json = nlohmann::json::parse(stream);
 
-        for (const auto& info : json["historical_info"]) {
-            infos.insert(info.template get<Data>());
+            for (const auto& info : json["historical_info"]) {
+                infos.insert(info.template get<Data>());
+            }
+        }
+        catch (const nlohmann::json::exception& e) {
+            logger->error("Failed to import file: {}", e.what());
         }
     }
 }
