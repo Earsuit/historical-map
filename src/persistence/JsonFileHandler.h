@@ -8,7 +8,6 @@
 #include <set>
 #include <memory>
 #include <fstream>
-#include <optional>
 
 namespace persistence {
 enum class Mode {
@@ -38,9 +37,11 @@ public:
     ~JsonFileHandler();
 
     void setAuthor(const std::string& author);
-    std::optional<Data> next();
-    void add(Data data);
-    void add(Data&& data);
+    const Data& front();
+    void pop();
+    bool empty();
+    void insert(Data data);
+    void insert(Data&& data);
 
 private:
     JsonFileHandler(std::fstream&& stream, Mode mode);
@@ -49,7 +50,6 @@ private:
     std::fstream stream;
     std::set<Data, DataCompare> infos;
     std::string author;
-    decltype(infos.cbegin()) it;
 };
 }
 

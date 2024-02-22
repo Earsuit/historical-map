@@ -126,7 +126,7 @@ TEST_F(JsonFileHandlerTest, ExportAndImport)
     if (auto handler = persistence::JsonFileHandler::create(FILE_NAME, persistence::Mode::Write); handler) {
         handler.value()->setAuthor("Test");
         for (const auto& info : infos) {
-            handler.value()->add(info);
+            handler.value()->insert(info);
         }
     } else {
         EXPECT_TRUE(false); 
@@ -135,8 +135,9 @@ TEST_F(JsonFileHandlerTest, ExportAndImport)
     std::vector<persistence::Data> readback;
 
     if (auto handler = persistence::JsonFileHandler::create(FILE_NAME, persistence::Mode::Read); handler) {
-        for (auto info = handler.value()->next(); info; info = handler.value()->next()) {
-            readback.emplace_back(*info);
+        while (!handler.value()->empty()) {
+            readback.emplace_back(handler.value()->front());
+            handler.value()->pop();
         }
     } else {
         EXPECT_TRUE(false); 
@@ -157,7 +158,7 @@ TEST_F(JsonFileHandlerTest, NextOutputYearAssendingOrder)
 
     if (auto handler = persistence::JsonFileHandler::create(FILE_NAME, persistence::Mode::Write); handler) {
         for (const auto& info : infos) {
-            handler.value()->add(info);
+            handler.value()->insert(info);
         }
     } else {
         EXPECT_TRUE(false); 
@@ -165,8 +166,9 @@ TEST_F(JsonFileHandlerTest, NextOutputYearAssendingOrder)
 
     if (auto handler = persistence::JsonFileHandler::create(FILE_NAME, persistence::Mode::Read); handler) {
         int i = 0;
-        for (auto info = handler.value()->next(); info; info = handler.value()->next()) {
-            EXPECT_EQ(expected[i++], info->year);
+        while (!handler.value()->empty()) {
+            EXPECT_EQ(expected[i++], handler.value()->front().year);
+            handler.value()->pop();
         }
 
         EXPECT_EQ(i, expected.size());

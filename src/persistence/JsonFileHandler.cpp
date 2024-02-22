@@ -85,8 +85,6 @@ JsonFileHandler::JsonFileHandler(std::fstream&& s, Mode mode):
         for (const auto& info : json["historical_info"]) {
             infos.insert(info.template get<Data>());
         }
-
-        it = infos.cbegin();
     }
 }
 
@@ -113,25 +111,28 @@ JsonFileHandler::~JsonFileHandler()
     }
 }
  
-void JsonFileHandler::add(Data info)
+void JsonFileHandler::insert(Data info)
 {
-    infos.insert(info);
+    infos.emplace(std::move(info));
 }
 
-void JsonFileHandler::add(Data&& info)
+void JsonFileHandler::insert(Data&& info)
 {
-    infos.insert(std::move(info));
+    infos.emplace(std::move(info));
 }
 
-std::optional<Data> JsonFileHandler::next()
+const Data& JsonFileHandler::front()
 {
-    if (mode == Mode::Read && it != infos.cend()) {
-        auto info = *it;
-        it++;
-        return info;
-    } else {
-        return std::nullopt;
-    }
+    return *infos.begin();
 }
 
+void JsonFileHandler::pop()
+{
+    infos.erase(infos.begin());
+}
+
+bool JsonFileHandler::empty()
+{
+    return infos.empty();
+}
 }
