@@ -30,11 +30,11 @@ struct DataCompare
     }
 };
 
-class JsonFileHandler {
+class ExportImportProcessor {
 public:
-    static tl::expected<std::unique_ptr<JsonFileHandler>, Error> create(const std::string& file, Mode mode);
+    static tl::expected<std::unique_ptr<ExportImportProcessor>, Error> create(const std::string& file, Mode mode);
 
-    ~JsonFileHandler();
+    ~ExportImportProcessor();
 
     void setAuthor(const std::string& author);
     const Data& front();
@@ -44,7 +44,7 @@ public:
     void insert(Data&& data);
 
 private:
-    JsonFileHandler(std::fstream&& stream, Mode mode);
+    ExportImportProcessor(std::fstream&& stream, Mode mode);
 
     Mode mode;
     std::fstream stream;

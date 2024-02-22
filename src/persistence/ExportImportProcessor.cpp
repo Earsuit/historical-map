@@ -1,4 +1,4 @@
-#include "src/persistence/JsonFileHandler.h"
+#include "src/persistence/ExportImportProcessor.h"
 
 #include "nlohmann/json.hpp"
 
@@ -53,7 +53,7 @@ void from_json(const nlohmann::json& j, Data& d) {
     j.at("note").get_to(d.note);
 }
 
-tl::expected<std::unique_ptr<JsonFileHandler>, Error> JsonFileHandler::create(const std::string& file, Mode mode)
+tl::expected<std::unique_ptr<ExportImportProcessor>, Error> ExportImportProcessor::create(const std::string& file, Mode mode)
 {
     switch (mode) {
         case Mode::Write:
@@ -61,21 +61,21 @@ tl::expected<std::unique_ptr<JsonFileHandler>, Error> JsonFileHandler::create(co
                 return tl::unexpected(Error::FILE_EXISTS);
             }
         case Mode::OverWrite:
-            return std::unique_ptr<JsonFileHandler>(new JsonFileHandler{std::fstream{file, std::ios::out | std::ios::trunc}, mode});
+            return std::unique_ptr<ExportImportProcessor>(new ExportImportProcessor{std::fstream{file, std::ios::out | std::ios::trunc}, mode});
             break;
         case Mode::Read:
             if (!std::filesystem::exists(file)) {
                 return tl::unexpected(Error::FILE_NOT_EXISTS);
             }
 
-            return std::unique_ptr<JsonFileHandler>(new JsonFileHandler{std::fstream{file, std::ios::in}, mode});
+            return std::unique_ptr<ExportImportProcessor>(new ExportImportProcessor{std::fstream{file, std::ios::in}, mode});
             break;
         default:
             return tl::unexpected(Error::INVALID_MODE);
     }
 }
 
-JsonFileHandler::JsonFileHandler(std::fstream&& s, Mode mode):
+ExportImportProcessor::ExportImportProcessor(std::fstream&& s, Mode mode):
     mode{mode},
     stream{std::move(s)}
 {
@@ -88,12 +88,12 @@ JsonFileHandler::JsonFileHandler(std::fstream&& s, Mode mode):
     }
 }
 
-void JsonFileHandler::setAuthor(const std::string& author)
+void ExportImportProcessor::setAuthor(const std::string& author)
 {
     this->author = author;
 }
 
-JsonFileHandler::~JsonFileHandler()
+ExportImportProcessor::~ExportImportProcessor()
 {
     if (mode != Mode::Read) {
         nlohmann::json json;
@@ -111,27 +111,27 @@ JsonFileHandler::~JsonFileHandler()
     }
 }
  
-void JsonFileHandler::insert(Data info)
+void ExportImportProcessor::insert(Data info)
 {
     infos.emplace(std::move(info));
 }
 
-void JsonFileHandler::insert(Data&& info)
+void ExportImportProcessor::insert(Data&& info)
 {
     infos.emplace(std::move(info));
 }
 
-const Data& JsonFileHandler::front()
+const Data& ExportImportProcessor::front()
 {
     return *infos.begin();
 }
 
-void JsonFileHandler::pop()
+void ExportImportProcessor::pop()
 {
     infos.erase(infos.begin());
 }
 
-bool JsonFileHandler::empty()
+bool ExportImportProcessor::empty()
 {
     return infos.empty();
 }

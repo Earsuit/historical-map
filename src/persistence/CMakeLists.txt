@@ -23,7 +23,7 @@ add_custom_target(command_header DEPENDS ${SQL_COMMANDS_HEADER})
 
 set(PERSISTENCE_SRC
   DatabaseManager.cpp
-  JsonFileHandler.cpp
+  ExportImportProcessor.cpp
 )
 
 add_library(libpersistence STATIC ${PERSISTENCE_SRC})

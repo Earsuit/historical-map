@@ -1,4 +1,4 @@
-#include "src/persistence/JsonFileHandler.h"
+#include "src/persistence/ExportImportProcessor.h"
 #include "src/persistence/Data.h"
 
 #include "nlohmann/json.hpp"
@@ -9,20 +9,20 @@
 namespace {
 constexpr auto FILE_NAME = "jsonFileHandlerTest.json";
 
-class JsonFileHandlerTest : public ::testing::Test {
+class ExportImportProcessorTest : public ::testing::Test {
 public:
-    JsonFileHandlerTest()
+    ExportImportProcessorTest()
     {
         std::remove(FILE_NAME);
     }
 
-    ~JsonFileHandlerTest()
+    ~ExportImportProcessorTest()
     {
         std::remove(FILE_NAME);
     }
 };
 
-TEST_F(JsonFileHandlerTest, ExportAndImport)
+TEST_F(ExportImportProcessorTest, ExportAndImport)
 {
     const std::vector<persistence::Data> infos{
         persistence::Data{
@@ -123,7 +123,7 @@ TEST_F(JsonFileHandlerTest, ExportAndImport)
         },
     };
 
-    if (auto handler = persistence::JsonFileHandler::create(FILE_NAME, persistence::Mode::Write); handler) {
+    if (auto handler = persistence::ExportImportProcessor::create(FILE_NAME, persistence::Mode::Write); handler) {
         handler.value()->setAuthor("Test");
         for (const auto& info : infos) {
             handler.value()->insert(info);
@@ -134,7 +134,7 @@ TEST_F(JsonFileHandlerTest, ExportAndImport)
 
     std::vector<persistence::Data> readback;
 
-    if (auto handler = persistence::JsonFileHandler::create(FILE_NAME, persistence::Mode::Read); handler) {
+    if (auto handler = persistence::ExportImportProcessor::create(FILE_NAME, persistence::Mode::Read); handler) {
         while (!handler.value()->empty()) {
             readback.emplace_back(handler.value()->front());
             handler.value()->pop();
@@ -146,7 +146,7 @@ TEST_F(JsonFileHandlerTest, ExportAndImport)
     EXPECT_EQ(readback, infos);
 }
 
-TEST_F(JsonFileHandlerTest, NextOutputYearAssendingOrder)
+TEST_F(ExportImportProcessorTest, NextOutputYearAssendingOrder)
 {
     const std::vector<persistence::Data> infos{
         {100}, {10}, {-200}, {-300}, {1}, {2}
@@ -156,7 +156,7 @@ TEST_F(JsonFileHandlerTest, NextOutputYearAssendingOrder)
         -300, -200, 1, 2, 10, 100
     };
 
-    if (auto handler = persistence::JsonFileHandler::create(FILE_NAME, persistence::Mode::Write); handler) {
+    if (auto handler = persistence::ExportImportProcessor::create(FILE_NAME, persistence::Mode::Write); handler) {
         for (const auto& info : infos) {
             handler.value()->insert(info);
         }
@@ -164,7 +164,7 @@ TEST_F(JsonFileHandlerTest, NextOutputYearAssendingOrder)
         EXPECT_TRUE(false); 
     }
 
-    if (auto handler = persistence::JsonFileHandler::create(FILE_NAME, persistence::Mode::Read); handler) {
+    if (auto handler = persistence::ExportImportProcessor::create(FILE_NAME, persistence::Mode::Read); handler) {
         int i = 0;
         while (!handler.value()->empty()) {
             EXPECT_EQ(expected[i++], handler.value()->front().year);
@@ -177,35 +177,35 @@ TEST_F(JsonFileHandlerTest, NextOutputYearAssendingOrder)
     }
 }
 
-TEST_F(JsonFileHandlerTest, WriteFileExists)
+TEST_F(ExportImportProcessorTest, WriteFileExists)
 {
-    persistence::JsonFileHandler::create(FILE_NAME, persistence::Mode::Write);
+    persistence::ExportImportProcessor::create(FILE_NAME, persistence::Mode::Write);
     
-    const auto handler = persistence::JsonFileHandler::create(FILE_NAME, persistence::Mode::Write);
+    const auto handler = persistence::ExportImportProcessor::create(FILE_NAME, persistence::Mode::Write);
 
     EXPECT_FALSE(handler);
 
     EXPECT_EQ(handler.error(), persistence::Error::FILE_EXISTS);
 }
 
-TEST_F(JsonFileHandlerTest, OverWrite)
+TEST_F(ExportImportProcessorTest, OverWrite)
 {
-    persistence::JsonFileHandler::create(FILE_NAME, persistence::Mode::Write);
+    persistence::ExportImportProcessor::create(FILE_NAME, persistence::Mode::Write);
     
-    const auto ret = persistence::JsonFileHandler::create(FILE_NAME, persistence::Mode::Write);
+    const auto ret = persistence::ExportImportProcessor::create(FILE_NAME, persistence::Mode::Write);
 
     EXPECT_FALSE(ret);
 
     EXPECT_EQ(ret.error(), persistence::Error::FILE_EXISTS);
 
-    const auto handler = persistence::JsonFileHandler::create(FILE_NAME, persistence::Mode::OverWrite);
+    const auto handler = persistence::ExportImportProcessor::create(FILE_NAME, persistence::Mode::OverWrite);
 
     EXPECT_TRUE(handler);
 }
 
-TEST_F(JsonFileHandlerTest, ReadFileNotExists)
+TEST_F(ExportImportProcessorTest, ReadFileNotExists)
 {
-    const auto ret = persistence::JsonFileHandler::create("FILE_NAME", persistence::Mode::Read);
+    const auto ret = persistence::ExportImportProcessor::create("FILE_NAME", persistence::Mode::Read);
 
     EXPECT_FALSE(ret);
 
