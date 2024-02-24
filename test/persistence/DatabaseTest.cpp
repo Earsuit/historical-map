@@ -21,11 +21,6 @@ public:
     {
     }
 
-    ~DatabaseTest()
-    {
-        std::remove(DATABASE_NAME);
-    }
-
     std::shared_ptr<connection_config> config = std::make_shared<connection_config>(DATABASE_NAME, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,  "", true);
     persistence::Database<connection, connection_config> database;
     connection monitor;
