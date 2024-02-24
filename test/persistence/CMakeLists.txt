@@ -2,6 +2,8 @@ add_executable(DatabaseTest DatabaseTest.cpp)
 target_link_libraries(DatabaseTest PRIVATE libpersistence GTest::gtest_main)
 gtest_discover_tests(DatabaseTest)
 
+configure_file(incorrectJson.json ${CMAKE_CURRENT_BINARY_DIR}/incorrectJson.json COPYONLY)
+
 add_executable(ExportImportProcessorTest ExportImportProcessorTest.cpp)
 target_link_libraries(ExportImportProcessorTest PRIVATE libpersistence liblogger GTest::gtest_main)
 gtest_discover_tests(ExportImportProcessorTest)

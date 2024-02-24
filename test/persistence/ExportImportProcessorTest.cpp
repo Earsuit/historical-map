@@ -25,7 +25,7 @@ public:
 
     ~ExportImportProcessorTest()
     {
-        std::remove(FILE_NAME);
+        // std::remove(FILE_NAME);
     }
 
     std::ostringstream  stream;
@@ -133,26 +133,28 @@ TEST_F(ExportImportProcessorTest, ExportAndImport)
         },
     };
 
-    if (auto handler = persistence::ExportImportProcessor::create(FILE_NAME, persistence::Mode::Write); handler) {
+    if (auto handler = persistence::ExportImportProcessor::template create<persistence::Mode::Write>(FILE_NAME); handler) {
         handler.value()->setAuthor("Test");
         for (const auto& info : infos) {
             handler.value()->insert(info);
         }
     } else {
-        EXPECT_TRUE(false); 
+        EXPECT_TRUE(false);
     }
 
+    EXPECT_EQ("", stream.str());
     std::vector<persistence::Data> readback;
 
-    if (auto handler = persistence::ExportImportProcessor::create(FILE_NAME, persistence::Mode::Read); handler) {
+    if (auto handler = persistence::ExportImportProcessor::template create<persistence::Mode::Read>(FILE_NAME); handler) {
         while (!handler.value()->empty()) {
             readback.emplace_back(handler.value()->front());
             handler.value()->pop();
         }
     } else {
-        EXPECT_TRUE(false); 
+        EXPECT_TRUE(false);
     }
 
+    EXPECT_EQ("", stream.str());
     EXPECT_EQ(readback, infos);
 }
 
@@ -166,7 +168,7 @@ TEST_F(ExportImportProcessorTest, NextOutputYearAssendingOrder)
         -300, -200, 1, 2, 10, 100
     };
 
-    if (auto handler = persistence::ExportImportProcessor::create(FILE_NAME, persistence::Mode::Write); handler) {
+    if (auto handler = persistence::ExportImportProcessor::template create<persistence::Mode::Write>(FILE_NAME); handler) {
         for (const auto& info : infos) {
             handler.value()->insert(info);
         }
@@ -174,7 +176,7 @@ TEST_F(ExportImportProcessorTest, NextOutputYearAssendingOrder)
         EXPECT_TRUE(false); 
     }
 
-    if (auto handler = persistence::ExportImportProcessor::create(FILE_NAME, persistence::Mode::Read); handler) {
+    if (auto handler = persistence::ExportImportProcessor::template create<persistence::Mode::Read>(FILE_NAME); handler) {
         int i = 0;
         while (!handler.value()->empty()) {
             EXPECT_EQ(expected[i++], handler.value()->front().year);
@@ -189,9 +191,9 @@ TEST_F(ExportImportProcessorTest, NextOutputYearAssendingOrder)
 
 TEST_F(ExportImportProcessorTest, WriteFileExists)
 {
-    persistence::ExportImportProcessor::create(FILE_NAME, persistence::Mode::Write);
+    persistence::ExportImportProcessor::template create<persistence::Mode::Write>(FILE_NAME);
     
-    const auto handler = persistence::ExportImportProcessor::create(FILE_NAME, persistence::Mode::Write);
+    const auto handler = persistence::ExportImportProcessor::template create<persistence::Mode::Write>(FILE_NAME);
 
     EXPECT_FALSE(handler);
 
@@ -200,22 +202,22 @@ TEST_F(ExportImportProcessorTest, WriteFileExists)
 
 TEST_F(ExportImportProcessorTest, OverWrite)
 {
-    persistence::ExportImportProcessor::create(FILE_NAME, persistence::Mode::Write);
+    persistence::ExportImportProcessor::template create<persistence::Mode::Write>(FILE_NAME);
     
-    const auto ret = persistence::ExportImportProcessor::create(FILE_NAME, persistence::Mode::Write);
+    const auto ret = persistence::ExportImportProcessor::template create<persistence::Mode::Write>(FILE_NAME);
 
     EXPECT_FALSE(ret);
 
     EXPECT_EQ(ret.error(), persistence::Error::FILE_EXISTS);
 
-    const auto handler = persistence::ExportImportProcessor::create(FILE_NAME, persistence::Mode::OverWrite);
+    const auto handler = persistence::ExportImportProcessor::template create<persistence::Mode::OverWrite>(FILE_NAME);
 
     EXPECT_TRUE(handler);
 }
 
 TEST_F(ExportImportProcessorTest, ReadFileNotExists)
 {
-    const auto ret = persistence::ExportImportProcessor::create("FILE_NAME", persistence::Mode::Read);
+    const auto ret = persistence::ExportImportProcessor::template create<persistence::Mode::Read>("FILE_NAME");
 
     EXPECT_FALSE(ret);
 
@@ -224,7 +226,7 @@ TEST_F(ExportImportProcessorTest, ReadFileNotExists)
 
 TEST_F(ExportImportProcessorTest, IncorrectJsonFormat)
 {
-    if (auto handler = persistence::ExportImportProcessor::create("incorrectJson.json", persistence::Mode::Read); handler) {
+    if (auto handler = persistence::ExportImportProcessor::template create<persistence::Mode::Read>("incorrectJson.json"); handler) {
         EXPECT_EQ("Failed to import file: [json.exception.out_of_range.403] key 'cities' not found\n", stream.str());
 
         EXPECT_TRUE(handler.value()->empty());
@@ -232,6 +234,4 @@ TEST_F(ExportImportProcessorTest, IncorrectJsonFormat)
         EXPECT_TRUE(false); 
     }
 }
-
-
 }
