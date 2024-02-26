@@ -53,7 +53,7 @@ void from_json(const nlohmann::json& j, Data& d) {
     j.at("note").get_to(d.note);
 }
 
-void JsonExporter::insert(Data info)
+void JsonExporter::insert(const Data& info)
 {
     infos.emplace(std::move(info));
 }

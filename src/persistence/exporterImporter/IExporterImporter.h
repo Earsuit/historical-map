@@ -26,7 +26,7 @@ protected:
 
 class IExporter: public IExporterImporter {
 public:
-    virtual void insert(Data info) = 0;
+    virtual void insert(const Data& info) = 0;
     virtual void insert(Data&& info) = 0;
     virtual tl::expected<void, Error> writeToFile(const std::string& file, bool overwrite) = 0;
 };

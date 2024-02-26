@@ -12,7 +12,7 @@ namespace persistence {
 class JsonExporter: public IExporter {
 public:
     tl::expected<void, Error> writeToFile(const std::string& file, bool overwrite) override;
-    void insert(Data info) override;
+    void insert(const Data& info) override;
     void insert(Data&& info) override;
 
 private:
