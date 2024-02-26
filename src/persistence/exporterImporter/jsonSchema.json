@@ -4,14 +4,6 @@
     "title": "Historical Info",
     "description": "Describe the json shcema for storing historical info",
     "properties": {
-        "author": {
-            "type": "string",
-            "description": "The author of this json"
-        },
-        "date": {
-            "type": "string",
-            "description": "Date of creation of this json file"
-        },
         "historical_info": {
             "type": "array",
             "description": "Contains a list of map from year to historical info",
@@ -90,5 +82,5 @@
             "minItems": 1
         }
     },
-    "required": ["date", "historical_info"]
+    "required": ["historical_info"]
 }
