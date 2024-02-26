@@ -9,6 +9,7 @@
 #include <string>
 #include <map>
 #include <functional>
+#include <vector>
 
 namespace persistence {
 class ExporterImporterFactory {
@@ -43,6 +44,16 @@ public:
     static ExporterImporterFactory& getInstance() {
         static ExporterImporterFactory factory{};
         return factory;
+    }
+
+    std::vector<std::string> supportedFormat()
+    {
+        std::vector<std::string> formats;
+        for (const auto& [format, builder] : importers) {
+            formats.emplace_back(format);
+        }
+
+        return formats;
     }
 
 private:
