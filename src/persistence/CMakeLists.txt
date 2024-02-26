@@ -29,6 +29,7 @@ set(PERSISTENCE_SRC
   exporterImporter/JsonExporterImporter.cpp
   exporterImporter/JsonExporterImporter.h
   exporterImporter/Util.h
+  exporterImporter/ExporterImporterRegistration.cpp
 )
 
 add_library(libpersistence STATIC ${PERSISTENCE_SRC})

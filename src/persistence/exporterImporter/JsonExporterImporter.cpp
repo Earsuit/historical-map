@@ -139,8 +139,6 @@ tl::expected<void, Error> JsonImporter::openFile(const std::string& file)
 
     return SUCCESS;
 }
-
-static ExporterImporterRegistrar<JsonImporter, JsonExporter> jsonExporterImporterRegistrar{"JSON"};
 }
 
 
