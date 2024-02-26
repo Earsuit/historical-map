@@ -1,38 +1,32 @@
-#include "src/persistence/ExportImportProcessor.h"
+#include "src/persistence/exporterImporter/ExporterImporterFactory.h"
+#include "src/persistence/exporterImporter/JsonExporterImporter.h"
 #include "src/persistence/Data.h"
-#include "src/logger/Util.h"
 
-#include "spdlog/sinks/ostream_sink.h"
 #include "nlohmann/json.hpp"
 
 #include <gtest/gtest.h>
 #include <cstdio>
+#include <string>
 #include <sstream>
 
 namespace {
 constexpr auto FILE_NAME = "jsonFileHandlerTest.json";
+constexpr auto FORMAT = "JSON";
 
-class ExportImportProcessorTest : public ::testing::Test {
+class JsonExporterImporterTest : public ::testing::Test {
 public:
-    ExportImportProcessorTest():
-        logger{std::make_shared<spdlog::logger>(logger::LOGGER_NAME, std::make_shared<spdlog::sinks::ostream_sink_mt>(stream))}
+    JsonExporterImporterTest()
     {
         std::remove(FILE_NAME);
-
-        spdlog::initialize_logger(logger);
-        logger->set_pattern("%v");
     }
 
-    ~ExportImportProcessorTest()
+    ~JsonExporterImporterTest()
     {
-        // std::remove(FILE_NAME);
+        std::remove(FILE_NAME);
     }
-
-    std::ostringstream  stream;
-    std::shared_ptr<spdlog::logger> logger;
 };
 
-TEST_F(ExportImportProcessorTest, ExportAndImport)
+TEST_F(JsonExporterImporterTest, ExportAndImport)
 {
     const std::vector<persistence::Data> infos{
         persistence::Data{
@@ -133,32 +127,32 @@ TEST_F(ExportImportProcessorTest, ExportAndImport)
         },
     };
 
-    if (auto handler = persistence::ExportImportProcessor::template create<persistence::Mode::Write>(FILE_NAME); handler) {
-        handler.value()->setAuthor("Test");
+    if (auto exporter = persistence::ExporterImporterFactory::getInstance().createExporter(FORMAT); exporter) {
         for (const auto& info : infos) {
-            handler.value()->insert(info);
+            exporter.value()->insert(info);
         }
+
+        EXPECT_TRUE(exporter.value()->writeToFile(FILE_NAME, false));
     } else {
         EXPECT_TRUE(false);
     }
 
-    EXPECT_EQ("", stream.str());
     std::vector<persistence::Data> readback;
 
-    if (auto handler = persistence::ExportImportProcessor::template create<persistence::Mode::Read>(FILE_NAME); handler) {
-        while (!handler.value()->empty()) {
-            readback.emplace_back(handler.value()->front());
-            handler.value()->pop();
+    if (auto importer = persistence::ExporterImporterFactory::getInstance().createImporter(FORMAT); importer) {
+        importer.value()->loadFromFile(FILE_NAME);
+        while (!importer.value()->empty()) {
+            readback.emplace_back(importer.value()->front());
+            importer.value()->pop();
         }
     } else {
         EXPECT_TRUE(false);
     }
 
-    EXPECT_EQ("", stream.str());
     EXPECT_EQ(readback, infos);
 }
 
-TEST_F(ExportImportProcessorTest, NextOutputYearAssendingOrder)
+TEST_F(JsonExporterImporterTest, NextOutputYearAscendingOrder)
 {
     const std::vector<persistence::Data> infos{
         {100}, {10}, {-200}, {-300}, {1}, {2}
@@ -168,19 +162,22 @@ TEST_F(ExportImportProcessorTest, NextOutputYearAssendingOrder)
         -300, -200, 1, 2, 10, 100
     };
 
-    if (auto handler = persistence::ExportImportProcessor::template create<persistence::Mode::Write>(FILE_NAME); handler) {
+    if (auto exporter = persistence::ExporterImporterFactory::getInstance().createExporter(FORMAT); exporter) {
         for (const auto& info : infos) {
-            handler.value()->insert(info);
+            exporter.value()->insert(info);
         }
+
+        EXPECT_TRUE(exporter.value()->writeToFile(FILE_NAME, false));
     } else {
         EXPECT_TRUE(false); 
     }
 
-    if (auto handler = persistence::ExportImportProcessor::template create<persistence::Mode::Read>(FILE_NAME); handler) {
+    if (auto importer = persistence::ExporterImporterFactory::getInstance().createImporter(FORMAT); importer) {
+        importer.value()->loadFromFile(FILE_NAME);
         int i = 0;
-        while (!handler.value()->empty()) {
-            EXPECT_EQ(expected[i++], handler.value()->front().year);
-            handler.value()->pop();
+        while (!importer.value()->empty()) {
+            EXPECT_EQ(expected[i++], importer.value()->front().year);
+            importer.value()->pop();
         }
 
         EXPECT_EQ(i, expected.size());
@@ -189,47 +186,59 @@ TEST_F(ExportImportProcessorTest, NextOutputYearAssendingOrder)
     }
 }
 
-TEST_F(ExportImportProcessorTest, WriteFileExists)
+TEST_F(JsonExporterImporterTest, WriteFileExists)
 {
-    persistence::ExportImportProcessor::template create<persistence::Mode::Write>(FILE_NAME);
-    
-    const auto handler = persistence::ExportImportProcessor::template create<persistence::Mode::Write>(FILE_NAME);
+    if (auto exporter = persistence::ExporterImporterFactory::getInstance().createExporter(FORMAT); exporter) {
+        EXPECT_TRUE(exporter.value()->writeToFile(FILE_NAME, false));
 
-    EXPECT_FALSE(handler);
+        auto ret = exporter.value()->writeToFile(FILE_NAME, false);
+        EXPECT_FALSE(ret);
 
-    EXPECT_EQ(handler.error(), persistence::Error::FILE_EXISTS);
+        EXPECT_EQ(ret.error().code, persistence::ErrorCode::FILE_EXISTS);
+    } else {
+        EXPECT_TRUE(false); 
+    }
 }
 
-TEST_F(ExportImportProcessorTest, OverWrite)
+TEST_F(JsonExporterImporterTest, OverWrite)
 {
-    persistence::ExportImportProcessor::template create<persistence::Mode::Write>(FILE_NAME);
-    
-    const auto ret = persistence::ExportImportProcessor::template create<persistence::Mode::Write>(FILE_NAME);
+    if (auto exporter = persistence::ExporterImporterFactory::getInstance().createExporter(FORMAT); exporter) {
+        EXPECT_TRUE(exporter.value()->writeToFile(FILE_NAME, false));
 
-    EXPECT_FALSE(ret);
+        auto ret = exporter.value()->writeToFile(FILE_NAME, false);
+        EXPECT_FALSE(ret);
 
-    EXPECT_EQ(ret.error(), persistence::Error::FILE_EXISTS);
+        EXPECT_EQ(ret.error().code, persistence::ErrorCode::FILE_EXISTS);
 
-    const auto handler = persistence::ExportImportProcessor::template create<persistence::Mode::OverWrite>(FILE_NAME);
-
-    EXPECT_TRUE(handler);
+        EXPECT_TRUE(exporter.value()->writeToFile(FILE_NAME, true));
+    } else {
+        EXPECT_TRUE(false); 
+    }
 }
 
-TEST_F(ExportImportProcessorTest, ReadFileNotExists)
+TEST_F(JsonExporterImporterTest, ReadFileNotExists)
 {
-    const auto ret = persistence::ExportImportProcessor::template create<persistence::Mode::Read>("FILE_NAME");
+    if (auto importer = persistence::ExporterImporterFactory::getInstance().createImporter(FORMAT); importer) {
+        importer.value()->loadFromFile(FILE_NAME);
+    } else {
+        EXPECT_TRUE(false); 
+    }
 
-    EXPECT_FALSE(ret);
+    auto importer = persistence::ExporterImporterFactory::getInstance().createImporter(FORMAT);
 
-    EXPECT_EQ(ret.error(), persistence::Error::FILE_NOT_EXISTS);
+    auto ret = importer.value()->loadFromFile(FILE_NAME);
+
+    EXPECT_EQ(ret.error().code, persistence::ErrorCode::FILE_NOT_EXISTS);
 }
 
-TEST_F(ExportImportProcessorTest, IncorrectJsonFormat)
+TEST_F(JsonExporterImporterTest, IncorrectJsonFormat)
 {
-    if (auto handler = persistence::ExportImportProcessor::template create<persistence::Mode::Read>("incorrectJson.json"); handler) {
-        EXPECT_EQ("Failed to import file: [json.exception.out_of_range.403] key 'cities' not found\n", stream.str());
+    if (auto importer = persistence::ExporterImporterFactory::getInstance().createImporter(FORMAT); importer) {
+        auto ret = importer.value()->loadFromFile("incorrectJson.json");
+        EXPECT_EQ(ret.error().code, persistence::ErrorCode::PARSE_FILE_ERROR);
+        EXPECT_EQ(ret.error().msg, "[json.exception.out_of_range.403] key 'cities' not found");
 
-        EXPECT_TRUE(handler.value()->empty());
+        EXPECT_TRUE(importer.value()->empty());
     } else {
         EXPECT_TRUE(false); 
     }
