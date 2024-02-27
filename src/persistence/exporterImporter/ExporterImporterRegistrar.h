@@ -5,9 +5,11 @@
 #include "src/persistence/exporterImporter/Util.h"
 
 #include <string>
+#include <type_traits>
 
 namespace persistence {
 template<typename Importer, typename Exporter>
+requires std::is_base_of_v<IImporter, Importer> && std::is_base_of_v<IExporter, Exporter>
 class ExporterImporterRegistrar {
 public:
     ExporterImporterRegistrar(const std::string& name)
