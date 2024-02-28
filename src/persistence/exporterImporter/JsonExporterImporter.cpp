@@ -3,8 +3,6 @@
 #include "src/persistence/exporterImporter/JsonExporterImporter.h"
 #include "src/persistence/exporterImporter/ExporterImporterRegistrar.h"
 
-#include "nlohmann/json.hpp"
-
 namespace persistence {
 constexpr auto PRETTIFY_JSON = 4;
 
@@ -66,21 +64,25 @@ void JsonExporter::insert(Data&& info)
 tl::expected<void, Error> JsonExporter::writeToFile(const std::string& file, bool overwrite)
 {
     if (const auto ret = openFile(file, overwrite); ret) {
-        nlohmann::json json;
-        const auto date = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-
-        json["historical_info"] = {};
-
-        for (const auto& info : infos) {
-            json["historical_info"].emplace_back(info);
-        }
-
-        stream << std::setw(PRETTIFY_JSON) << json << std::endl;
+        stream << std::setw(PRETTIFY_JSON) << toJson() << std::endl;
     } else {
         return ret;
     }
 
     return SUCCESS;
+}
+
+nlohmann::json JsonExporter::toJson()
+{
+    nlohmann::json json;
+
+    json["historical_info"] = {};
+
+    for (const auto& info : infos) {
+        json["historical_info"].emplace_back(info);
+    }
+
+    return json;
 }
 
 tl::expected<void, Error> JsonExporter::openFile(const std::string& file, bool overwrite)
@@ -115,9 +117,7 @@ tl::expected<void, Error> JsonImporter::loadFromFile(const std::string& file)
         try {
             const auto json = nlohmann::json::parse(stream);
 
-            for (const auto& info : json["historical_info"]) {
-                infos.insert(info.template get<Data>());
-            }
+            fromJson(json);
         }
         catch (const nlohmann::json::exception& e) {
             return tl::unexpected(Error{ErrorCode::PARSE_FILE_ERROR, e.what()});
@@ -138,6 +138,13 @@ tl::expected<void, Error> JsonImporter::openFile(const std::string& file)
     stream = std::fstream{file, std::ios::in};
 
     return SUCCESS;
+}
+
+void JsonImporter::fromJson(const nlohmann::json& json)
+{
+    for (const auto& info : json["historical_info"]) {
+        infos.insert(info.template get<Data>());
+    }
 }
 }
 
