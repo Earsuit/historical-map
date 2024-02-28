@@ -14,20 +14,20 @@ class ExporterImporterRegistrar {
 public:
     ExporterImporterRegistrar(const std::string& name)
     {
-        ExporterImporterFactory::getInstance().registerImporter<Importer>(name, [](){
+        ExporterImporterFactory::getInstance().registerImporter(name, [](){
             return std::make_unique<Importer>();
         });
-        ExporterImporterFactory::getInstance().registerExporter<Exporter>(name, [](){
+        ExporterImporterFactory::getInstance().registerExporter(name, [](){
             return std::make_unique<Exporter>();
         });
     }
 
     ExporterImporterRegistrar(const std::string& name, 
-                              ExporterImporterFactory::Builder<Importer> importerBuilder, 
-                              ExporterImporterFactory::Builder<Exporter> exporterBuilder)
+                              ExporterImporterFactory::Builder<IImporter> importerBuilder, 
+                              ExporterImporterFactory::Builder<IExporter> exporterBuilder)
     {
-        ExporterImporterFactory::getInstance().registerImporter<Importer>(name, importerBuilder);
-        ExporterImporterFactory::getInstance().registerExporter<Exporter>(name, exporterBuilder);
+        ExporterImporterFactory::getInstance().registerImporter(name, importerBuilder);
+        ExporterImporterFactory::getInstance().registerExporter(name, exporterBuilder);
     }
 };
 }

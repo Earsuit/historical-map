@@ -26,14 +26,12 @@ public:
         return create<IExporter>(exporters, name);
     }
 
-    template<typename T>
-    void registerImporter(const std::string& name, Builder<T> builder) {
+    void registerImporter(const std::string& name, Builder<IImporter> builder) {
         builderUniqueCheck(importers, name);
         importers[name] = builder;
     }
 
-    template<typename T>
-    void registerExporter(const std::string& name, Builder<T> builder) {
+    void registerExporter(const std::string& name, Builder<IExporter> builder) {
         builderUniqueCheck(exporters, name);
         exporters[name] = builder;
     }
