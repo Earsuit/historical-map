@@ -1,8 +1,5 @@
 #include "src/persistence/exporterImporter/ExporterImporterFactory.h"
-#include "src/persistence/exporterImporter/JsonExporterImporter.h"
 #include "src/persistence/Data.h"
-
-#include "nlohmann/json.hpp"
 
 #include <gtest/gtest.h>
 #include <cstdio>
