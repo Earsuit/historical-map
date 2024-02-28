@@ -26,6 +26,7 @@ protected:
 
 class IExporter: public IExporterImporter {
 public:
+    virtual ~IExporter() = default;
     virtual void insert(const Data& info) = 0;
     virtual void insert(Data&& info) = 0;
     virtual tl::expected<void, Error> writeToFile(const std::string& file, bool overwrite) = 0;
@@ -33,6 +34,7 @@ public:
 
 class IImporter: public IExporterImporter {
 public:
+    virtual ~IImporter() = default;
     virtual const Data& front() const noexcept = 0;
     virtual void pop() = 0;
     virtual bool empty() const noexcept = 0;
