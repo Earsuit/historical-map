@@ -120,4 +120,10 @@ size_t DatabaseManager::getWorkLoad()
     return taskQueue.size_approx();
 }
 
+DatabaseManager& DatabaseManager::getInstance()
+{
+    static DatabaseManager manager;
+    return manager;
+}
+
 }

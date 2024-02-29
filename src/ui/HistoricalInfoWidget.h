@@ -23,6 +23,7 @@ class HistoricalInfoWidget {
 public:
     HistoricalInfoWidget(): 
         logger{spdlog::get(logger::LOGGER_NAME)}, 
+        database{persistence::DatabaseManager::getInstance()},
         remove{std::make_shared<persistence::Data>(QIN_DYNASTY)}
     {
     }
@@ -35,7 +36,7 @@ public:
 
 private:
     std::shared_ptr<spdlog::logger> logger;
-    persistence::DatabaseManager database;
+    persistence::DatabaseManager& database;
     int year = QIN_DYNASTY;
     std::shared_ptr<persistence::Data> cache;
     std::shared_ptr<persistence::Data> remove;

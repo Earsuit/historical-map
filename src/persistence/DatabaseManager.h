@@ -20,7 +20,8 @@
 namespace persistence {
 class DatabaseManager {
 public:
-    DatabaseManager();
+    static DatabaseManager& getInstance();
+
     ~DatabaseManager();
 
     std::shared_ptr<Data> load(int year);
@@ -29,7 +30,13 @@ public:
 
     size_t getWorkLoad();
 
+    DatabaseManager(DatabaseManager&&) = delete;
+    DatabaseManager(const DatabaseManager&) = delete;
+    DatabaseManager& operator=(const DatabaseManager&) = delete;
+
 private:
+    DatabaseManager();
+
     Database<sqlpp::sqlite3::connection, sqlpp::sqlite3::connection_config> database;
     moodycamel::BlockingReaderWriterQueue<std::function<void()>> taskQueue;
     moodycamel::BlockingReaderWriterQueue<std::shared_ptr<Data>> loadQueue;
