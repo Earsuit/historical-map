@@ -5,6 +5,7 @@
 #include "src/persistence/Data.h"
 #include "src/logger/Util.h"
 #include "src/ui/CountryInfoWidget.h"
+#include "src/ui/IInfoWidget.h"
 
 #include "spdlog/spdlog.h"
 
@@ -19,7 +20,7 @@ namespace ui {
 constexpr auto HISTORICAL_INFO_WIDGET_NAME = "Historical Info";
 constexpr int QIN_DYNASTY = -221;
 
-class HistoricalInfoWidget {
+class HistoricalInfoWidget: public IInfoWidget {
 public:
     HistoricalInfoWidget(): 
         logger{spdlog::get(logger::LOGGER_NAME)}, 
@@ -28,11 +29,11 @@ public:
     {
     }
 
-    void paint();
+    void paint() override;
 
-    void drawRightClickMenu(float longitude, float latitude);
+    void drawRightClickMenu(float longitude, float latitude) override;
 
-    std::pair<std::shared_ptr<persistence::Data>, std::optional<persistence::Coordinate>> getInfo();
+    std::pair<std::shared_ptr<persistence::Data>, std::optional<persistence::Coordinate>> getInfo() override;
 
 private:
     std::shared_ptr<spdlog::logger> logger;
