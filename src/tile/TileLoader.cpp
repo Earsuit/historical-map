@@ -5,12 +5,13 @@
 #include <cmath>
 
 namespace tile {
-constexpr int TILE_CACHE_DEPTH = 1;
+constexpr int TILE_CACHE_SIZE = 256;
 
 using namespace std::chrono_literals;
 
 TileLoader::TileLoader():
-    logger{spdlog::get(logger::LOGGER_NAME)}
+    logger{spdlog::get(logger::LOGGER_NAME)},
+    cache{TILE_CACHE_SIZE}
 {
 }
 
@@ -26,7 +27,7 @@ void TileLoader::request(const Coordinate& coord)
         return;
     }
 
-    if (!(futureData.contains(coord) || tiles[coord.z].contains(coord))) {
+    if (!(futureData.contains(coord) || cache.contains(coord))) {
         logger->debug("Request tile at x={}, y={}, z={}", coord.x, coord.y, coord.z);
         futureData.emplace(
             std::make_pair(coord, std::async(std::launch::async, [coord, 
@@ -47,7 +48,7 @@ void TileLoader::load(const Coordinate& coord)
 {
     if (futureData.contains(coord) && futureData[coord].wait_for(0s) == std::future_status::ready) {
         if (auto&& image = futureData[coord].get(); image) {
-            tiles[coord.z].emplace(std::make_pair(coord, std::make_shared<Tile>(coord, std::move(*image))));
+            cache[coord] = std::make_shared<Tile>(coord, std::move(*image));
             logger->debug("Tile at x={}, y={}, z={} is ready", coord.x, coord.y, coord.z);
         } else {
             logger->debug("Tile at x={}, y={}, z={} failed to load.", coord.x, coord.y, coord.z);
@@ -63,23 +64,11 @@ std::optional<std::shared_ptr<Tile>> TileLoader::loadTile(const Coordinate& coor
 
     load(coord);
 
-    if (tiles[coord.z].contains(coord)) {
-        return tiles[coord.z][coord];
+    if (cache.contains(coord)) {
+        return cache[coord];
     }
-
-    resourceClean(coord);
     
     return std::nullopt;
-}
-
-void TileLoader::resourceClean(const Coordinate& coord)
-{
-    for (int i = MIN_ZOOM_LEVEL; i < MAX_ZOOM_LEVEL; i++) {
-        if (std::abs(i - coord.z) > TILE_CACHE_DEPTH && !tiles[i].empty()) {
-            logger->debug("Clear cache for zoom {}, current zoom {}", i, coord.z);
-            tiles[i].clear();
-        }
-    }
 }
 
 void TileLoader::setTileSource(std::shared_ptr<TileSource> tileSource)
@@ -102,7 +91,7 @@ void TileLoader::setTileEngine(std::shared_ptr<TileEngine> tileEngine)
 
 void TileLoader::clearCache()
 {
-    tiles = std::array<std::map<Coordinate, std::shared_ptr<Tile>>, MAX_ZOOM_LEVEL>{};
+    cache.reset();
     futureData.clear();
 }
 

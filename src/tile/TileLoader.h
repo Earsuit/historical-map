@@ -5,6 +5,7 @@
 #include "src/tile/Tile.h"
 #include "src/tile/Util.h"
 #include "src/tile/TileEngine.h"
+#include "src/util/Cache.h"
 
 #include "spdlog/spdlog.h"
 
@@ -31,12 +32,11 @@ private:
     std::shared_ptr<spdlog::logger> logger;
     std::shared_ptr<TileSource> tileSource;
     std::shared_ptr<TileEngine> tileEngine;
-    std::array<std::map<Coordinate, std::shared_ptr<Tile>>, MAX_ZOOM_LEVEL> tiles;
+    util::Cache<Coordinate, std::shared_ptr<Tile>> cache;
     std::map<Coordinate, std::future<std::optional<tile::TileEngine::Image>>> futureData;
 
     void request(const Coordinate& coord);
     void load(const Coordinate& coord);
-    void resourceClean(const Coordinate& coord);
     void clearCache();
 };
 }
