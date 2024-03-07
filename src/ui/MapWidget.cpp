@@ -39,6 +39,11 @@ constexpr auto DEFAULT_ALPHA = 1.0f;
 constexpr auto MIN_AXIS_RANGE = 0.0;
 constexpr auto MAX_AXIS_RANGE = 1.0;
 
+constexpr auto INIT_X_LIMIT_MIN = 0.6398;
+constexpr auto INIT_X_LIMIT_MAX = 0.9349;
+constexpr auto INIT_Y_LIMIT_MIN = 0.3162;
+constexpr auto INIT_Y_LIMIT_MAX = 0.4779;
+
 ImVec4 computeColor(const std::string& val)
 {
     const auto hash = std::hash<std::string>{}(val);
@@ -88,8 +93,8 @@ std::pair<tile::BoundingBox, std::optional<ImPlotPoint>> MapWidget::renderMap(Im
         ImPlot::SetupAxis(ImAxis_Y1, nullptr, AXIS_FLAGS | ImPlotAxisFlags_Invert);
         ImPlot::SetupAxisLimitsConstraints(ImAxis_Y1, MIN_AXIS_RANGE, MAX_AXIS_RANGE);
         ImPlot::SetupAxisLimitsConstraints(ImAxis_X1, MIN_AXIS_RANGE, MAX_AXIS_RANGE);
-        ImPlot::SetupAxisLimits(ImAxis_X1, MIN_AXIS_RANGE, MAX_AXIS_RANGE);
-        ImPlot::SetupAxisLimits(ImAxis_Y1, MIN_AXIS_RANGE, MAX_AXIS_RANGE);
+        ImPlot::SetupAxisLimits(ImAxis_X1, INIT_X_LIMIT_MIN, INIT_X_LIMIT_MAX);
+        ImPlot::SetupAxisLimits(ImAxis_Y1, INIT_Y_LIMIT_MIN, INIT_Y_LIMIT_MAX);
         
         const auto plotSize = ImPlot::GetPlotSize();
         const auto plotLimits = ImPlot::GetPlotLimits(ImAxis_X1, ImAxis_Y1);
