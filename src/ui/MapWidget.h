@@ -13,6 +13,7 @@
 
 #include <utility>
 #include <memory>
+#include <optional>
 
 namespace ui {
 
@@ -33,13 +34,10 @@ private:
     std::shared_ptr<spdlog::logger> logger;
     HistoricalInfoWidget& historicalInfoWidget;
     tile::TileLoader tileLoader;
-    int zoom = 0;
-    tile::BoundingBox bbox;
-    ImPlotPoint mousePos = {0.0f, 0.0f};
 
-    void renderTile();
-    void renderOverlay();
-    void renderHistoricalInfo();
+    std::pair<tile::BoundingBox, std::optional<ImPlotPoint>> renderMap(ImVec2 size, const std::string& name, std::shared_ptr<persistence::Data> info, std::optional<persistence::Coordinate> selected);
+    void renderOverlay(const std::string& name, int offset, const tile::BoundingBox& bbox, const std::optional<ImPlotPoint>& mousePos);
+    void renderHistoricalInfo(std::shared_ptr<persistence::Data> info, std::optional<persistence::Coordinate> selected);
     std::pair<double, double> renderCoordinate(persistence::Coordinate& coordinate, const ImVec4& color, float size, int id);
 };
 }

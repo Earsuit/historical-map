@@ -33,7 +33,7 @@ public:
 
     void drawRightClickMenu(float longitude, float latitude) override;
 
-    std::pair<std::shared_ptr<persistence::Data>, std::optional<persistence::Coordinate>> getInfo() override;
+    std::vector<HistoricalInfo> getInfo() override;
 
 private:
     std::shared_ptr<spdlog::logger> logger;

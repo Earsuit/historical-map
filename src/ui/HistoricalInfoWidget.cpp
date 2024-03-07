@@ -141,9 +141,9 @@ void HistoricalInfoWidget::countryInfo()
     }
 }
 
-std::pair<std::shared_ptr<persistence::Data>, std::optional<persistence::Coordinate>> HistoricalInfoWidget::getInfo()
+std::vector<HistoricalInfo> HistoricalInfoWidget::getInfo()
 {
-    return {cache, selected};
+    return {std::make_tuple("Historical Info", cache, selected)};
 }
 
 void HistoricalInfoWidget::drawRightClickMenu(float longitude, float latitude)

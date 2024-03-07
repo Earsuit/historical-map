@@ -1,4 +1,5 @@
 #include "src/ui/MapWidget.h"
+#include "src/ui/Util.h"
 
 #include "external/imgui/imgui.h"
 #include "external/imgui/misc/cpp/imgui_stdlib.h"
@@ -35,6 +36,8 @@ constexpr int FILLED_ALPHA = 50;
 constexpr auto NORMALIZE = 255.0f; 
 constexpr uint8_t MASK = 0xFF; 
 constexpr auto DEFAULT_ALPHA = 1.0f;
+constexpr auto MIN_AXIS_RANGE = 0.0;
+constexpr auto MAX_AXIS_RANGE = 1.0;
 
 ImVec4 computeColor(const std::string& val)
 {
@@ -49,29 +52,52 @@ ImVec4 computeColor(const std::string& val)
 
 void MapWidget::paint()
 {
-    renderTile();
-    renderOverlay();
-}
-
-void MapWidget::renderTile()
-{
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding,  ImVec2(0, 0));
     ImGui::Begin(MAP_WIDGET_NAME);
     ImGui::PopStyleVar(2);
 
-    if (ImPlot::BeginPlot("##map", ImGui::GetContentRegionAvail(), (ImPlotFlags_CanvasOnly ^ ImPlotFlags_NoLegend) | ImPlotFlags_Equal)) {
+    const auto area = ImGui::GetContentRegionAvail();
+    const auto infos = historicalInfoWidget.getInfo();
+
+    const ImVec2 singleMapWindowSize = {area.x / infos.size(), area.y};
+    int overlayOffset = 0;
+
+    for (auto [name, info, selected] : infos) {
+        const auto [bbox, mousePos] = renderMap(singleMapWindowSize, name, info, selected);
+        renderOverlay(name, overlayOffset, bbox, mousePos);
+        overlayOffset += singleMapWindowSize.x + ImPlot::GetStyle().PlotPadding.x - ImPlot::GetStyle().PlotBorderSize * 2;
+        ImGui::SameLine();
+    }
+
+    ImGui::End();
+}
+
+std::pair<tile::BoundingBox, std::optional<ImPlotPoint>> MapWidget::renderMap(ImVec2 size, 
+                                                               const std::string& name, 
+                                                               std::shared_ptr<persistence::Data> info, 
+                                                               std::optional<persistence::Coordinate> selected)
+{
+    tile::BoundingBox bbox;
+    std::optional<ImPlotPoint> mousePos;
+    std::string plotName = "##" + name; 
+
+    if (ImPlot::BeginPlot(plotName.c_str(), size, (ImPlotFlags_CanvasOnly ^ ImPlotFlags_NoLegend) | ImPlotFlags_Equal)) {
         ImPlot::SetupLegend(ImPlotLocation_NorthEast, ImPlotLegendFlags_NoButtons);
         ImPlot::SetupAxis(ImAxis_X1, nullptr, AXIS_FLAGS);
         ImPlot::SetupAxis(ImAxis_Y1, nullptr, AXIS_FLAGS | ImPlotAxisFlags_Invert);
-        ImPlot::SetupAxisLimitsConstraints(ImAxis_Y1, 0.0, 1.0);
-        ImPlot::SetupAxisLimitsConstraints(ImAxis_X1, 0.0, 1.0);
-        ImPlot::SetupAxisLimits(ImAxis_X1, 0.0, 1.0);
-        ImPlot::SetupAxisLimits(ImAxis_Y1, 0.0, 1.0);
+        ImPlot::SetupAxisLimitsConstraints(ImAxis_Y1, MIN_AXIS_RANGE, MAX_AXIS_RANGE);
+        ImPlot::SetupAxisLimitsConstraints(ImAxis_X1, MIN_AXIS_RANGE, MAX_AXIS_RANGE);
+        ImPlot::SetupAxisLimits(ImAxis_X1, MIN_AXIS_RANGE, MAX_AXIS_RANGE);
+        ImPlot::SetupAxisLimits(ImAxis_Y1, MIN_AXIS_RANGE, MAX_AXIS_RANGE);
         
-        const auto plotLimits = ImPlot::GetPlotLimits(ImAxis_X1, ImAxis_Y1);
         const auto plotSize = ImPlot::GetPlotSize();
-        mousePos = ImPlot::GetPlotMousePos();
+        const auto plotLimits = ImPlot::GetPlotLimits(ImAxis_X1, ImAxis_Y1);
+        if (const auto cursor = ImPlot::GetPlotMousePos(); 
+            inBound(cursor.x, plotLimits.X.Min, plotLimits.X.Max) &&
+            inBound(cursor.y, plotLimits.Y.Min, plotLimits.Y.Max)) {
+            mousePos = cursor;
+        }
 
         const auto west = tile::x2Longitude(plotLimits.X.Min, BBOX_ZOOM_LEVEL);
         const auto east = tile::x2Longitude(plotLimits.X.Max, BBOX_ZOOM_LEVEL);
@@ -83,7 +109,7 @@ void MapWidget::renderTile()
         logger->trace("Plot size x={}, y={} pixels", plotSize.x, plotSize.y);
         logger->trace("west={}, north={}, east={}, south={}", west, north, east, south);
 
-        zoom = std::clamp(bestZoomLevel(bbox, 0, plotSize.x, plotSize.y), tile::MIN_ZOOM_LEVEL, tile::MAX_ZOOM_LEVEL);
+        const auto zoom = std::clamp(bestZoomLevel(bbox, 0, plotSize.x, plotSize.y), tile::MIN_ZOOM_LEVEL, tile::MAX_ZOOM_LEVEL);
 
         const auto limit = (1 << zoom) - 1;
         const auto xMin = std::clamp(static_cast<int>(tile::longitude2X(west, zoom)), 0, limit);
@@ -108,64 +134,62 @@ void MapWidget::renderTile()
             }
         }
 
-        renderHistoricalInfo();
+        renderHistoricalInfo(info, selected);
 
         ImPlot::EndPlot();
     }
 
-    if (ImGui::BeginPopupContextItem("##map")) {
+    if (ImGui::BeginPopupContextItem(plotName.c_str())) {
         static float longitue = 0, latitude = 0;
-        if (ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
-            longitue = tile::x2Longitude(mousePos.x, BBOX_ZOOM_LEVEL);
-            latitude = tile::y2Latitude(mousePos.y, BBOX_ZOOM_LEVEL);
+        if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && mousePos) {
+            longitue = tile::x2Longitude(mousePos->x, BBOX_ZOOM_LEVEL);
+            latitude = tile::y2Latitude(mousePos->y, BBOX_ZOOM_LEVEL);
         }
 
         historicalInfoWidget.drawRightClickMenu(longitue, latitude);
         ImGui::EndPopup();
     }
 
-    ImGui::End();
+    return {bbox, mousePos};
 }
 
-void MapWidget::renderOverlay()
+void MapWidget::renderOverlay(const std::string& name, int offset, const tile::BoundingBox& bbox, const std::optional<ImPlotPoint>& mousePos)
 {
-    static bool firstTime = true;
     const ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoMove |
                                          ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | 
                                          ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
 
-    if (firstTime) {
-        firstTime = false;
-        const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    const ImGuiViewport* viewport = ImGui::GetMainViewport();
 
-        ImVec2 work_pos = viewport->WorkPos; // Use work area to avoid menu-bar/task-bar, if any!
-        ImVec2 work_size = viewport->WorkSize;
-        ImVec2 window_pos, window_pos_pivot;
-        window_pos.x = work_pos.x + OVERLAY_PAD;
-        window_pos.y = work_pos.y + OVERLAY_PAD;
-        ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
-        ImGui::SetNextWindowViewport(viewport->ID);
-    }
+    ImVec2 work_pos = viewport->WorkPos; // Use work area to avoid menu-bar/task-bar, if any!
+    ImVec2 window_pos;
+    window_pos.x = work_pos.x + OVERLAY_PAD + offset;
+    window_pos.y = work_pos.y + OVERLAY_PAD;
+    ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always);
+    ImGui::SetNextWindowViewport(viewport->ID);
 
     ImGui::PushStyleColor(ImGuiCol_TitleBg, OVERLAY_BACKGROUND_COLOR);
     ImGui::PushStyleColor(ImGuiCol_WindowBg, OVERLAY_BACKGROUND_COLOR);
-    if (ImGui::Begin("##Overlay", nullptr, windowFlags)) {
-        ImGui::Text("FPS: %.f", ImGui::GetIO().Framerate);
-        ImGui::Text("Cursor at: lon %.2f, lat %.2f", std::clamp(tile::x2Longitude(mousePos.x, BBOX_ZOOM_LEVEL), MIN_LONGITUDE, MAX_LONGITUDE), 
-                                                     std::clamp(tile::y2Latitude(mousePos.y, BBOX_ZOOM_LEVEL), MIN_LATITUDE, MAX_LATITUDE));
+    if (ImGui::Begin((name + "##Overlay").c_str(), nullptr, windowFlags)) {
+        if (mousePos) {
+            ImGui::Text("Cursor at: lon %.2f, lat %.2f", 
+                        std::clamp(tile::x2Longitude(mousePos->x, BBOX_ZOOM_LEVEL), MIN_LONGITUDE, MAX_LONGITUDE), 
+                        std::clamp(tile::y2Latitude(mousePos->y, BBOX_ZOOM_LEVEL), MIN_LATITUDE, MAX_LATITUDE));
+        } else {
+            ImGui::Text("Cursor at: ");
+        }
+
         ImGui::Text("View range: west %.2f, east %.2f, \n\t\t\tnorth %.2f, south %.2f", bbox.west, bbox.east, bbox.north, bbox.south);
     }
     ImGui::PopStyleColor(2);
     ImGui::End();
 }
 
-void MapWidget::renderHistoricalInfo()
+void MapWidget::renderHistoricalInfo(std::shared_ptr<persistence::Data> info, std::optional<persistence::Coordinate> selected)
 {
-    auto [data, selected] = historicalInfoWidget.getInfo();
-
-    if (data) {
+    if (info) {
         int dragPointId = 0;
-        for (auto& country : data->countries) {
+        for (auto& country : info->countries) {
             std::vector<ImVec2> points;
             mapbox::geometry::polygon<double> polygon{mapbox::geometry::linear_ring<double>{}};
             const auto color = computeColor(country.name);
@@ -194,7 +218,7 @@ void MapWidget::renderHistoricalInfo()
             }
         }
 
-        for (auto& city : data->cities) {
+        for (auto& city : info->cities) {
             const auto color = computeColor(city.name);
             float size = POINT_SIZE;
 

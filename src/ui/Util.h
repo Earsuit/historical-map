@@ -3,6 +3,13 @@
 
 namespace ui {
 void helpMarker(const char* message);
+
+// we are not so care about the error of floating comparison 
+template<typename T>
+bool inBound(T v, T min, T max)
+{
+    return (v > min) && (v < max);
+}
 }
 
 #endif
