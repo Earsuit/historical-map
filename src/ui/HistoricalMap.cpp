@@ -89,6 +89,22 @@ void HistoricalMap::start()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
+        if (ImGui::BeginMainMenuBar()) {
+            if (ImGui::BeginMenu("File")) {
+                if (ImGui::MenuItem("Import")) {
+
+                }
+
+                if (ImGui::MenuItem("Export")) {
+                    
+                }
+
+                ImGui::EndMenu();
+            }
+
+            ImGui::EndMainMenuBar();
+        }
+
         buildDockSpace(io);
 
         historicalInfo.paint();
@@ -117,7 +133,7 @@ void HistoricalMap::buildDockSpace(ImGuiIO& io)
     // We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
     // because it would be confusing to have two docking targets within each others.
     const ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoDocking |
-                                         ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | 
+                                         ImGuiWindowFlags_NoCollapse | 
                                          ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
                                          ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 
