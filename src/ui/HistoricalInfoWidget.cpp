@@ -14,46 +14,12 @@ constexpr double STEP = 0;
 constexpr double STEP_FAST = 0;
 constexpr auto POPUP_WINDOW_NAME = "Save for years";
 
-void HistoricalInfoWidget::paint()
+void HistoricalInfoWidget::historyInfo()
 {
-    ImGui::Begin(HISTORICAL_INFO_WIDGET_NAME, nullptr,  ImGuiWindowFlags_NoTitleBar);
-
-    // there is no year 0
-    ImGui::SliderInt("##", &year, MIN_YEAR, MAX_YEAR, "Year %d", ImGuiSliderFlags_AlwaysClamp);
-    if (year == 0) {
-        year = 1;
-    }
-    ImGui::SameLine();
-    ImGui::PushButtonRepeat(true);
-    if (ImGui::ArrowButton("##left", ImGuiDir_Left)) {
-        year--;
-        if (year == 0) {
-            year = -1;
-        }
-    }
-    ImGui::SameLine();
-    if (ImGui::ArrowButton("##right", ImGuiDir_Right)) {
-        year++;
-        if (year == 0) {
-            year = 1;
-        }
-    }
-    ImGui::PopButtonRepeat();
-
-    ImGui::SameLine();
-    helpMarker("Ctrl + click to maually set the year");
-
     if (database.getWorkLoad() != 0) {
         displaySaveProgress();
     }
 
-    historyInfo();
-
-    ImGui::End();
-}
-
-void HistoricalInfoWidget::historyInfo()
-{
     selected = std::nullopt;
 
     if (ImGui::Button("Refresh") || !cache || cache->year != year) {
@@ -72,11 +38,11 @@ void HistoricalInfoWidget::historyInfo()
     }
     ImGui::SameLine();
 
-    if (cache) {
-        if (ImGui::Button("Save")) {
-            saveInfoRange(cache->year, cache->year);
-        }
+    if (ImGui::Button("Save") && cache) {
+        saveInfoRange(cache->year, cache->year);
+    }
 
+    if (cache) {
         if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
             ImGui::OpenPopup(POPUP_WINDOW_NAME);
         }
@@ -141,12 +107,12 @@ void HistoricalInfoWidget::countryInfo()
     }
 }
 
-std::vector<HistoricalInfo> HistoricalInfoWidget::getInfo()
+std::vector<HistoricalInfo> HistoricalInfoWidget::getInfoImpl()
 {
     return {std::make_tuple("Historical Info", cache, selected)};
 }
 
-void HistoricalInfoWidget::drawRightClickMenu(float longitude, float latitude)
+void HistoricalInfoWidget::rightClickMenu(float longitude, float latitude)
 {
     if (ImGui::BeginMenu("Add to"))
     {

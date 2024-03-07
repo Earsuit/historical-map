@@ -1,5 +1,6 @@
 #include "src/ui/HistoricalMap.h"
 #include "src/logger/Util.h"
+#include "src/ui/IInfoWidget.h"
 
 #include "external/imgui/imgui.h"
 #include "external/imgui/imgui_internal.h"
@@ -169,7 +170,7 @@ void HistoricalMap::buildDockSpace(ImGuiIO& io)
 		ImGui::DockBuilderDockWindow(MAP_WIDGET_NAME, dockspace);
 		ImGui::DockBuilderDockWindow(LOG_WIDGET_NAME, down);
 		ImGui::DockBuilderDockWindow(TILE_SOURCE_WIDGET_NAME, down);
-        ImGui::DockBuilderDockWindow(HISTORICAL_INFO_WIDGET_NAME, right);
+        ImGui::DockBuilderDockWindow(INFO_WIDGET_NAME, right);
 		ImGui::DockBuilderFinish(dockspace);
     }
 

@@ -17,28 +17,21 @@
 #include <utility>
 
 namespace ui {
-constexpr auto HISTORICAL_INFO_WIDGET_NAME = "Historical Info";
 constexpr int QIN_DYNASTY = -221;
 
 class HistoricalInfoWidget: public IInfoWidget {
 public:
     HistoricalInfoWidget(): 
+        IInfoWidget{QIN_DYNASTY},
         logger{spdlog::get(logger::LOGGER_NAME)}, 
         database{persistence::DatabaseManager::getInstance()},
         remove{std::make_shared<persistence::Data>(QIN_DYNASTY)}
     {
     }
 
-    void paint() override;
-
-    void drawRightClickMenu(float longitude, float latitude) override;
-
-    std::vector<HistoricalInfo> getInfo() override;
-
 private:
     std::shared_ptr<spdlog::logger> logger;
     persistence::DatabaseManager& database;
-    int year = QIN_DYNASTY;
     std::shared_ptr<persistence::Data> cache;
     std::shared_ptr<persistence::Data> remove;
     std::optional<persistence::Coordinate> selected;
@@ -50,7 +43,6 @@ private:
     int endYear = year;
     float totalWorkLoad = 0;
 
-    void historyInfo();
     void countryInfo();
     void cityInfo();
     void displayNote();
@@ -58,6 +50,10 @@ private:
     void saveInfoRange(int startYear, int endYear);
     void savePopupWindow();
     void displaySaveProgress();
+
+    void historyInfo() override;
+    void rightClickMenu(float longitude, float latitude) override;
+    std::vector<HistoricalInfo> getInfoImpl() override;
 };
 
 }

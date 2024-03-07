@@ -5,6 +5,7 @@ SET(UI_SRC
     LogWidget.cpp
     CountryInfoWidget.cpp
     HistoricalInfoWidget.cpp
+    IInfoWidget.cpp
     Util.cpp
 )
 
