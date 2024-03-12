@@ -13,6 +13,7 @@ constexpr int NAME_INPUT_WIDTH = 100;
 constexpr double STEP = 0;
 constexpr double STEP_FAST = 0;
 constexpr auto POPUP_WINDOW_NAME = "Save for years";
+constexpr bool MUTABLE = false;
 
 void HistoricalInfoWidget::historyInfo()
 {
@@ -32,7 +33,7 @@ void HistoricalInfoWidget::historyInfo()
 
         if (cache = database.load(year); cache) {
             for (auto it = cache->countries.begin(); it != cache->countries.end(); it++) {
-                countryInfoWidgets.emplace_back(it);
+                countryInfoWidgets.emplace_back(it, MUTABLE);
             }
         }
     }
@@ -101,7 +102,7 @@ void HistoricalInfoWidget::countryInfo()
         }
 
         cache->countries.emplace_back(countryName, std::list<persistence::Coordinate>{});
-        countryInfoWidgets.emplace_back(--cache->countries.end());
+        countryInfoWidgets.emplace_back(--cache->countries.end(), MUTABLE);
         logger->debug("Add country {}, current country num in cache: {}", countryName, this->cache->countries.size());
         countryName.clear();
     }
