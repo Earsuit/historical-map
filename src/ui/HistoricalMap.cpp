@@ -116,6 +116,10 @@ void HistoricalMap::start()
         mapWidget.paint(*infoWidget);
         logWidget.paint();
 
+        if (infoWidget->complete()) {
+            infoWidget = std::move(previousInfoWidget);
+        }
+
         ImGui::Render();
         int displayWidth, displayHeight;
         glfwGetFramebufferSize(window, &displayWidth, &displayHeight);

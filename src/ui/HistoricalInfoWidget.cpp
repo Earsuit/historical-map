@@ -129,6 +129,12 @@ void HistoricalInfoWidget::drawRightClickMenu(float longitude, float latitude)
     }
 }
 
+bool HistoricalInfoWidget::complete()
+{
+    // This widget is the default one, so it always alive if no other widgets take place.
+    return false;
+}
+
 void HistoricalInfoWidget::cityInfo()
 {
     ImGui::PushItemWidth(COORDINATE_INPUT_WIDTH);

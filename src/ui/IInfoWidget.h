@@ -27,6 +27,7 @@ public:
 
     virtual void drawRightClickMenu(float longitude, float latitude) = 0;
     virtual std::vector<HistoricalInfo> getInfo() = 0;
+    virtual bool complete() = 0;
 
 protected:
     int year;

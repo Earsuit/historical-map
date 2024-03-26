@@ -31,6 +31,7 @@ public:
 
     std::vector<HistoricalInfo> getInfo() override;
     void drawRightClickMenu(float longitude, float latitude) override;
+    bool complete() override;
 
 private:
     std::shared_ptr<spdlog::logger> logger;
