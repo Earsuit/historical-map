@@ -1,6 +1,7 @@
 #include "src/ui/HistoricalMap.h"
 #include "src/logger/Util.h"
 #include "src/ui/IInfoWidget.h"
+#include "src/ui/HistoricalInfoWidget.h"
 
 #include "external/imgui/imgui.h"
 #include "external/imgui/imgui_internal.h"
@@ -30,7 +31,8 @@ static void glfwErrorCallback(int error, const char* description)
 }
 
 HistoricalMap::HistoricalMap():
-    mapWidget{historicalInfo},
+    infoWidget{std::make_unique<HistoricalInfoWidget>()},
+    mapWidget{},
     tileSourceWidget{mapWidget.getTileLoader()}
 {
     glfwSetErrorCallback(glfwErrorCallback);
@@ -109,9 +111,9 @@ void HistoricalMap::start()
 
         buildDockSpace(io);
 
-        historicalInfo.paint();
+        infoWidget->paint();
         tileSourceWidget.paint();
-        mapWidget.paint();
+        mapWidget.paint(*infoWidget);
         logWidget.paint();
 
         ImGui::Render();

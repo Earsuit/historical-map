@@ -7,7 +7,7 @@
 #include "src/ui/TileSourceWidget.h"
 #include "src/ui/LogWidget.h"
 #include "src/ui/MapWidget.h"
-#include "src/ui/HistoricalInfoWidget.h"
+#include "src/ui/IInfoWidget.h"
 #include "src/logger/StringSink.h"
 
 #include <memory>
@@ -24,7 +24,7 @@ public:
 private:
     GLFWwindow* window;
     LogWidget logWidget;
-    HistoricalInfoWidget historicalInfo;
+    std::shared_ptr<IInfoWidget> infoWidget;
     MapWidget mapWidget;
     TileSourceWidget tileSourceWidget;
 

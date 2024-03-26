@@ -55,7 +55,7 @@ ImVec4 computeColor(const std::string& val)
     return ImVec4(r, g, b, DEFAULT_ALPHA);
 }
 
-void MapWidget::paint()
+void MapWidget::paint(IInfoWidget& infoWidget)
 {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding,  ImVec2(0, 0));
@@ -63,13 +63,13 @@ void MapWidget::paint()
     ImGui::PopStyleVar(2);
 
     const auto area = ImGui::GetContentRegionAvail();
-    const auto infos = historicalInfoWidget.getInfo();
+    const auto infos = infoWidget.getInfo();
 
     const ImVec2 singleMapWindowSize = {area.x / infos.size(), area.y};
     int overlayOffset = 0;
 
     for (auto [name, info, selected] : infos) {
-        const auto [bbox, mousePos] = renderMap(singleMapWindowSize, name, info, selected);
+        const auto [bbox, mousePos] = renderMap(infoWidget, singleMapWindowSize, name, info, selected);
         renderOverlay(name, overlayOffset, bbox, mousePos);
         overlayOffset += singleMapWindowSize.x + ImPlot::GetStyle().PlotPadding.x - ImPlot::GetStyle().PlotBorderSize * 2;
         ImGui::SameLine();
@@ -78,10 +78,11 @@ void MapWidget::paint()
     ImGui::End();
 }
 
-std::pair<tile::BoundingBox, std::optional<ImPlotPoint>> MapWidget::renderMap(ImVec2 size, 
-                                                               const std::string& name, 
-                                                               std::shared_ptr<persistence::Data> info, 
-                                                               std::optional<persistence::Coordinate> selected)
+std::pair<tile::BoundingBox, std::optional<ImPlotPoint>> MapWidget::renderMap(IInfoWidget& infoWidget,
+                                                                              ImVec2 size, 
+                                                                              const std::string& name, 
+                                                                              std::shared_ptr<persistence::Data> info, 
+                                                                              std::optional<persistence::Coordinate> selected)
 {
     tile::BoundingBox bbox;
     std::optional<ImPlotPoint> mousePos;
@@ -151,7 +152,7 @@ std::pair<tile::BoundingBox, std::optional<ImPlotPoint>> MapWidget::renderMap(Im
             latitude = tile::y2Latitude(mousePos->y, BBOX_ZOOM_LEVEL);
         }
 
-        historicalInfoWidget.drawRightClickMenu(longitue, latitude);
+        infoWidget.drawRightClickMenu(longitue, latitude);
         ImGui::EndPopup();
     }
 

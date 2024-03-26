@@ -5,7 +5,7 @@
 #include "src/tile/Util.h"
 #include "src/logger/Util.h"
 #include "src/persistence/Data.h"
-#include "src/ui/HistoricalInfoWidget.h"
+#include "src/ui/IInfoWidget.h"
 
 #include "external/imgui/imgui.h"
 #include "spdlog/spdlog.h"
@@ -21,21 +21,19 @@ constexpr auto MAP_WIDGET_NAME = "Map plot";
 
 class MapWidget {
 public:
-    MapWidget(HistoricalInfoWidget& historicalInfoWidget): 
-        logger{spdlog::get(logger::LOGGER_NAME)},
-        historicalInfoWidget{historicalInfoWidget}
+    MapWidget(): 
+        logger{spdlog::get(logger::LOGGER_NAME)}
     {}
 
-    void paint();
+    void paint(IInfoWidget& infoWidget);
 
     tile::TileLoader& getTileLoader();
 
 private:
     std::shared_ptr<spdlog::logger> logger;
-    HistoricalInfoWidget& historicalInfoWidget;
     tile::TileLoader tileLoader;
 
-    std::pair<tile::BoundingBox, std::optional<ImPlotPoint>> renderMap(ImVec2 size, const std::string& name, std::shared_ptr<persistence::Data> info, std::optional<persistence::Coordinate> selected);
+    std::pair<tile::BoundingBox, std::optional<ImPlotPoint>> renderMap(IInfoWidget& infoWidget, ImVec2 size, const std::string& name, std::shared_ptr<persistence::Data> info, std::optional<persistence::Coordinate> selected);
     void renderOverlay(const std::string& name, int offset, const tile::BoundingBox& bbox, const std::optional<ImPlotPoint>& mousePos);
     void renderHistoricalInfo(std::shared_ptr<persistence::Data> info, std::optional<persistence::Coordinate> selected);
     std::pair<double, double> renderCoordinate(persistence::Coordinate& coordinate, const ImVec4& color, float size, int id);
