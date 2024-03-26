@@ -108,12 +108,12 @@ void HistoricalInfoWidget::countryInfo()
     }
 }
 
-std::vector<HistoricalInfo> HistoricalInfoWidget::getInfoImpl()
+std::vector<HistoricalInfo> HistoricalInfoWidget::getInfo()
 {
     return {std::make_tuple("Historical Info", cache, selected)};
 }
 
-void HistoricalInfoWidget::rightClickMenu(float longitude, float latitude)
+void HistoricalInfoWidget::drawRightClickMenu(float longitude, float latitude)
 {
     if (ImGui::BeginMenu("Add to"))
     {

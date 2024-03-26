@@ -29,6 +29,9 @@ public:
     {
     }
 
+    std::vector<HistoricalInfo> getInfo() override;
+    void drawRightClickMenu(float longitude, float latitude) override;
+
 private:
     std::shared_ptr<spdlog::logger> logger;
     persistence::DatabaseManager& database;
@@ -52,8 +55,6 @@ private:
     void displaySaveProgress();
 
     void historyInfo() override;
-    void rightClickMenu(float longitude, float latitude) override;
-    std::vector<HistoricalInfo> getInfoImpl() override;
 };
 
 }

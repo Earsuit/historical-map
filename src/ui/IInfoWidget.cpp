@@ -40,14 +40,4 @@ void IInfoWidget::paint()
 
     ImGui::End();
 }
-
-void IInfoWidget::drawRightClickMenu(float longitude, float latitude)
-{
-    rightClickMenu(longitude, latitude);
-}
-
-std::vector<HistoricalInfo> IInfoWidget::getInfo()
-{
-    return getInfoImpl();
-}
 }
