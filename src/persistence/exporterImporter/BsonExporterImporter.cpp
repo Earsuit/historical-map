@@ -10,6 +10,8 @@ tl::expected<void, Error> BsonExporter::writeToFile(const std::string& file, boo
         std::vector<std::uint8_t> binary = nlohmann::json::to_bson(toJson());
 
         stream.write(reinterpret_cast<const char*>(binary.data()), binary.size());
+
+        stream.flush();
     } else {
         return ret;
     }
