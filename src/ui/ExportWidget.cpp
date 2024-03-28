@@ -4,7 +4,6 @@
 #include "ImFileDialog.h"
 
 namespace ui {
-constexpr bool IMMUTABLE = true;
 constexpr auto EXPORT_FORMAT_POPUP_NAME = "Export formats";
 constexpr auto SAVE_DIALOG_KEY = "ExportDialog";
 constexpr auto SAVE_CONFIRM_POPUP_NAME = "Confirmation";
@@ -21,8 +20,9 @@ void ExportWidget::historyInfo()
         countryInfoWidgets.clear();
 
         if (cache = database.load(year); cache) {
-            for (auto it = cache->countries.begin(); it != cache->countries.end(); it++) {
-                countryInfoWidgets.emplace_back(it, IMMUTABLE);
+            countryInfoWidgets.reserve(cache->countries.size());
+            for (auto it = cache->countries.cbegin(); it != cache->countries.cend(); it++) {
+                countryInfoWidgets.emplace_back(it);
             }
         }
     }
@@ -89,7 +89,7 @@ void ExportWidget::paintCountryInfo()
     for (auto& countryInfoWidget : countryInfoWidgets) {
         if (ImGui::TreeNode((countryInfoWidget.getName() + "##country").c_str())) {
             ImGui::SeparatorText(countryInfoWidget.getName().c_str());
-            countryInfoWidget.paint(this->selected);
+            countryInfoWidget.paint(selected);
 
             ImGui::TreePop();
             ImGui::Spacing();
@@ -110,7 +110,7 @@ void ExportWidget::paintCityInfo()
             hovered |= ImGui::IsItemHovered();
 
             if (hovered) {
-                this->selected = city.coordinate;
+                selected = city.coordinate;
             }
 
             ImGui::TreePop();
@@ -121,7 +121,7 @@ void ExportWidget::paintCityInfo()
 
 void ExportWidget::paintNote()
 {
-    ImGui::InputTextMultiline("##note", &cache->note.text, ImGui::GetContentRegionAvail(), ImGuiInputTextFlags_ReadOnly);
+    ImGui::TextUnformatted(cache->note.text.c_str(), cache->note.text.c_str() + cache->note.text.size());
 }
 
 std::vector<HistoricalInfo> ExportWidget::getInfo()

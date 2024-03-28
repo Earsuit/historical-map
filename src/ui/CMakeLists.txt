@@ -3,7 +3,6 @@ SET(UI_SRC
     MapWidget.cpp
     TileSourceWidget.cpp
     LogWidget.cpp
-    CountryInfoWidget.cpp
     HistoricalInfoWidget.cpp
     IInfoWidget.cpp
     Util.cpp

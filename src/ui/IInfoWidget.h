@@ -8,11 +8,15 @@
 #include <optional>
 #include <vector>
 #include <string>
+#include <variant>
 
 namespace ui {
 constexpr auto INFO_WIDGET_NAME = "Info widget";
 
-using HistoricalInfo = std::tuple<std::string, std::shared_ptr<persistence::Data>, std::optional<persistence::Coordinate>>;
+using MutableData = std::shared_ptr<persistence::Data>;
+using ImmutableData = std::shared_ptr<const persistence::Data>;
+using HistoricalData = std::variant<MutableData, ImmutableData>;
+using HistoricalInfo = std::tuple<std::string, HistoricalData, std::optional<persistence::Coordinate>>;
 
 class IInfoWidget {
 public:

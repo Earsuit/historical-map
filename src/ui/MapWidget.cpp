@@ -17,7 +17,7 @@ constexpr auto AXIS_FLAGS = ImPlotAxisFlags_NoLabel | ImPlotAxisFlags_NoGridLine
                             ImPlotAxisFlags_NoTickMarks | ImPlotAxisFlags_NoTickLabels |
                             ImPlotAxisFlags_NoInitialFit | ImPlotAxisFlags_NoMenus |
                             ImPlotAxisFlags_NoMenus | ImPlotAxisFlags_NoHighlight;
-constexpr int BBOX_ZOOM_LEVEL = 0; // only compute the zoom level from level 0, otherwise the computed zoom level will be a mess
+
 constexpr ImVec4 OVERLAY_BACKGROUND_COLOR = {0.0f, 0.0f, 0.0f, 0.35f};
 constexpr float OVERLAY_PAD = 10.0f;
 constexpr float MAX_LONGITUDE = 180.0f;
@@ -68,8 +68,8 @@ void MapWidget::paint(IInfoWidget& infoWidget)
     const ImVec2 singleMapWindowSize = {area.x / infos.size(), area.y};
     int overlayOffset = 0;
 
-    for (auto [name, info, selected] : infos) {
-        const auto [bbox, mousePos] = renderMap(infoWidget, singleMapWindowSize, name, info, selected);
+    for (auto [name, historicalData, selected] : infos) {
+        const auto [bbox, mousePos] = renderMap(infoWidget, singleMapWindowSize, name, historicalData, selected);
         renderOverlay(name, overlayOffset, bbox, mousePos);
         overlayOffset += singleMapWindowSize.x + ImPlot::GetStyle().PlotPadding.x - ImPlot::GetStyle().PlotBorderSize * 2;
         ImGui::SameLine();
@@ -81,7 +81,7 @@ void MapWidget::paint(IInfoWidget& infoWidget)
 std::pair<tile::BoundingBox, std::optional<ImPlotPoint>> MapWidget::renderMap(IInfoWidget& infoWidget,
                                                                               ImVec2 size, 
                                                                               const std::string& name, 
-                                                                              std::shared_ptr<persistence::Data> info, 
+                                                                              HistoricalData historicalData, 
                                                                               std::optional<persistence::Coordinate> selected)
 {
     tile::BoundingBox bbox;
@@ -140,7 +140,7 @@ std::pair<tile::BoundingBox, std::optional<ImPlotPoint>> MapWidget::renderMap(II
             }
         }
 
-        renderHistoricalInfo(info, selected);
+        renderHistoricalInfo(historicalData, selected);
 
         ImPlot::EndPlot();
     }
@@ -191,70 +191,56 @@ void MapWidget::renderOverlay(const std::string& name, int offset, const tile::B
     ImGui::End();
 }
 
-void MapWidget::renderHistoricalInfo(std::shared_ptr<persistence::Data> info, std::optional<persistence::Coordinate> selected)
+void MapWidget::renderHistoricalInfo(HistoricalData historicalData, std::optional<persistence::Coordinate> selected)
 {
-    if (info) {
-        int dragPointId = 0;
-        for (auto& country : info->countries) {
-            std::vector<ImVec2> points;
-            mapbox::geometry::polygon<double> polygon{mapbox::geometry::linear_ring<double>{}};
-            const auto color = computeColor(country.name);
+    std::visit(
+        [&selected, this](auto& data){
+            if (data) {
+                int dragPointId = 0;
+                for (auto& country : data->countries) {
+                    std::vector<ImVec2> points;
+                    mapbox::geometry::polygon<double> polygon{mapbox::geometry::linear_ring<double>{}};
+                    const auto color = computeColor(country.name);
 
-            points.reserve(country.borderContour.size());
-            for (auto& coordinate : country.borderContour) {
-                float size = POINT_SIZE;
+                    points.reserve(country.borderContour.size());
+                    for (auto& coordinate : country.borderContour) {
+                        float size = POINT_SIZE;
 
-                if (selected && coordinate == *selected) {
-                    size = SELECTED_POINT_SIZE;
+                        if (selected && coordinate == *selected) {
+                            size = SELECTED_POINT_SIZE;
+                        }
+
+                        const auto [x, y] = this->renderCoordinate(coordinate, color, size, dragPointId++);
+                        polygon.back().emplace_back(x, y);
+                        points.emplace_back(ImPlot::PlotToPixels(ImPlotPoint(x, y)));
+                    }
+
+                    if (country.borderContour.size() >= MINIMAL_POINTS_OF_POLYGON) {
+                        const auto visualCenter = mapbox::polylabel(polygon, VISUAL_CENTER_PERCISION);
+                        ImPlot::Annotation(visualCenter.x, visualCenter.y, color, COUNTRY_ANNOTATION_OFFSET, false, "%s", country.name.c_str());
+                        ImPlot::SetNextFillStyle(color);
+                        if (ImPlot::BeginItem(country.name.c_str(), ImPlotItemFlags_None, ImPlotCol_Fill)){
+                            ImPlot::GetPlotDrawList()->AddConvexPolyFilled(points.data(), points.size(), IM_COL32(color.x * NORMALIZE, color.y * NORMALIZE, color.z * NORMALIZE, FILLED_ALPHA));
+                            ImPlot::EndItem();
+                        }
+                    }
                 }
 
-                const auto [x, y] = renderCoordinate(coordinate, color, size, dragPointId++);
-                polygon.back().emplace_back(x, y);
-                points.emplace_back(ImPlot::PlotToPixels(ImPlotPoint(x, y)));
-            }
+                for (auto& city : data->cities) {
+                    const auto color = computeColor(city.name);
+                    float size = POINT_SIZE;
 
-            if (country.borderContour.size() >= MINIMAL_POINTS_OF_POLYGON) {
-                const auto visualCenter = mapbox::polylabel(polygon, VISUAL_CENTER_PERCISION);
-                ImPlot::Annotation(visualCenter.x, visualCenter.y, color, COUNTRY_ANNOTATION_OFFSET, false, "%s", country.name.c_str());
-                ImPlot::SetNextFillStyle(color);
-                if (ImPlot::BeginItem(country.name.c_str(), ImPlotItemFlags_None, ImPlotCol_Fill)){
-                    ImPlot::GetPlotDrawList()->AddConvexPolyFilled(points.data(), points.size(), IM_COL32(color.x * NORMALIZE, color.y * NORMALIZE, color.z * NORMALIZE, FILLED_ALPHA));
-                    ImPlot::EndItem();
+                    if (selected && city.coordinate == *selected) {
+                        size = SELECTED_POINT_SIZE;
+                    }
+
+                    const auto [x, y] = this->renderCoordinate(city.coordinate, color, size, dragPointId++);
+                    ImPlot::Annotation(x, y, color, CITY_ANNOTATION_OFFSET, true, "%s", city.name.c_str());
                 }
             }
-        }
-
-        for (auto& city : info->cities) {
-            const auto color = computeColor(city.name);
-            float size = POINT_SIZE;
-
-            if (selected && city.coordinate == *selected) {
-                size = SELECTED_POINT_SIZE;
-            }
-
-            const auto [x, y] = renderCoordinate(city.coordinate, color, size, dragPointId++);
-            ImPlot::Annotation(x, y, color, CITY_ANNOTATION_OFFSET, true, "%s", city.name.c_str());
-        }
-    }
-}
-
-std::pair<double, double> MapWidget::renderCoordinate(persistence::Coordinate& coordinate, const ImVec4& color, float size, int id)
-{
-    double x = tile::longitude2X(coordinate.longitude, BBOX_ZOOM_LEVEL);
-    double y = tile::latitude2Y(coordinate.latitude, BBOX_ZOOM_LEVEL);
-    
-    if (ImPlot::DragPoint(id, &x, &y, color, size)) {
-        coordinate.latitude = tile::y2Latitude(static_cast<float>(y), BBOX_ZOOM_LEVEL);
-        coordinate.longitude = tile::x2Longitude(static_cast<float>(x), BBOX_ZOOM_LEVEL);
-    }
-
-    logger->trace("Lon {}, lat {} at [{}, {}]",
-                  coordinate.longitude,
-                  coordinate.latitude,
-                  x,
-                  y);
-
-    return {x, y};
+        },
+        historicalData
+    );    
 }
 
 tile::TileLoader& MapWidget::getTileLoader()

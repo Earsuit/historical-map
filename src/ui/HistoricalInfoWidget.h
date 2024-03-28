@@ -39,7 +39,7 @@ private:
     std::shared_ptr<persistence::Data> cache;
     std::shared_ptr<persistence::Data> remove;
     std::optional<persistence::Coordinate> selected;
-    std::list<CountryInfoWidget> countryInfoWidgets;
+    std::list<CountryInfoWidget<decltype(persistence::Data::countries)::iterator>> countryInfoWidgets;
     std::string newCityName;
     std::string cityLongitude;
     std::string cityLatitude;

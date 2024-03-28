@@ -10,7 +10,7 @@
 #include "spdlog/spdlog.h"
 
 #include <memory>
-#include <list>
+#include <vector>
 #include <set>
 
 namespace ui {
@@ -30,7 +30,7 @@ public:
 private:
     struct DataCompare
     {
-        bool operator()(std::shared_ptr<persistence::Data> lhs, std::shared_ptr<persistence::Data> rhs) const
+        bool operator()(auto lhs, auto rhs) const
         {
             return lhs->year < rhs->year;
         }
@@ -39,9 +39,9 @@ private:
     std::shared_ptr<spdlog::logger> logger;
     persistence::DatabaseManager& database;
     std::optional<persistence::Coordinate> selected;
-    std::shared_ptr<persistence::Data> cache;
-    std::set<std::shared_ptr<persistence::Data>, DataCompare> toBeExported;
-    std::list<CountryInfoWidget> countryInfoWidgets;
+    std::shared_ptr<const persistence::Data> cache;
+    std::set<std::shared_ptr<const persistence::Data>, DataCompare> toBeExported;
+    std::vector<CountryInfoWidget<decltype(persistence::Data::countries)::const_iterator>> countryInfoWidgets;
     bool isComplete = false;
     std::string exportFormat;
     std::unique_ptr<persistence::IExporter> exporter;
