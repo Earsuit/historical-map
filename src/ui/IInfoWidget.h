@@ -24,6 +24,7 @@ public:
     virtual ~IInfoWidget() = default;
 
     void paint();
+    int getYear() const noexcept;
 
     virtual void drawRightClickMenu(float longitude, float latitude) = 0;
     virtual std::vector<HistoricalInfo> getInfo() = 0;

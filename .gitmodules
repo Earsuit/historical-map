@@ -31,3 +31,9 @@
 [submodule "external/expected"]
 	path = external/expected
 	url = https://github.com/TartanLlama/expected.git
+[submodule "external/imFileDialog"]
+	path = external/imFileDialog
+	url = https://github.com/Earsuit/ImFileDialog.git
+[submodule "external/magic_enum"]
+	path = external/magic_enum
+	url = https://github.com/Neargye/magic_enum.git

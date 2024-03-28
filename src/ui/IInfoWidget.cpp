@@ -40,4 +40,9 @@ void IInfoWidget::paint()
 
     ImGui::End();
 }
+
+int IInfoWidget::getYear() const noexcept
+{
+    return year;
+}
 }

@@ -2,12 +2,14 @@
 #include "src/logger/Util.h"
 #include "src/ui/IInfoWidget.h"
 #include "src/ui/HistoricalInfoWidget.h"
+#include "src/ui/ExportWidget.h"
 
 #include "external/imgui/imgui.h"
 #include "external/imgui/imgui_internal.h"
 #include "external/imgui/backends/imgui_impl_glfw.h"
 #include "external/imgui/backends/imgui_impl_opengl3.h"
 #include "external/implot/implot.h"
+#include "ImFileDialog.h"
 
 #include "spdlog/spdlog.h"
 
@@ -66,6 +68,35 @@ HistoricalMap::HistoricalMap():
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glslVersion);
 
+    ifd::FileDialog::getInstance().createTexture = [](const uint8_t* data, int w, int h, ifd::Format fmt) -> void* {
+		GLuint tex;
+
+		glGenTextures(1, &tex);
+		glBindTexture(GL_TEXTURE_2D, tex);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+		if (fmt == ifd::Format::BGRA) {
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_BGRA, GL_UNSIGNED_BYTE, data);
+		} else if (fmt == ifd::Format::RGBA) {
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+		} else {
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+		}
+
+		glGenerateMipmap(GL_TEXTURE_2D);
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+		return reinterpret_cast<void*>(tex);
+	};
+
+    ifd::FileDialog::getInstance().deleteTexture = [](void* tex) {
+		GLuint texID = (GLuint)((uintptr_t)tex);
+		glDeleteTextures(1, &texID);
+	};
+
     spdlog::get(logger::LOGGER_NAME)->info("Initialization complete.");
 }
 
@@ -100,7 +131,10 @@ void HistoricalMap::start()
                 }
 
                 if (ImGui::MenuItem("Export")) {
-                    
+                    if (dynamic_cast<ExportWidget*>(infoWidget.get()) == nullptr) {
+                        previousInfoWidget.swap(infoWidget);
+                        infoWidget = std::make_unique<ExportWidget>(previousInfoWidget->getYear());
+                    }
                 }
 
                 ImGui::EndMenu();
@@ -117,7 +151,8 @@ void HistoricalMap::start()
         logWidget.paint();
 
         if (infoWidget->complete()) {
-            infoWidget = std::move(previousInfoWidget);
+            infoWidget.swap(previousInfoWidget);
+            previousInfoWidget.release();
         }
 
         ImGui::Render();
