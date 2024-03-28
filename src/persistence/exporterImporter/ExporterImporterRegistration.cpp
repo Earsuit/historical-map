@@ -3,6 +3,6 @@
 #include "src/persistence/exporterImporter/BsonExporterImporter.h"
 
 namespace persistence {
-static ExporterImporterRegistrar<JsonImporter, JsonExporter> jsonExporterImporterRegistrar{"JSON"};
-static ExporterImporterRegistrar<BsonImporter, BsonExporter> bsonExporterImporterRegistrar{"BSON"};
+static ExporterImporterRegistrar<JsonImporter, JsonExporter> jsonExporterImporterRegistrar{"json"};
+static ExporterImporterRegistrar<BsonImporter, BsonExporter> bsonExporterImporterRegistrar{"bson"};
 }

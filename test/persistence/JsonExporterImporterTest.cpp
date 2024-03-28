@@ -7,7 +7,7 @@
 
 namespace {
 constexpr auto FILE_NAME = "jsonExporterImporterTest.json";
-constexpr auto FORMAT = "JSON";
+constexpr auto FORMAT = "json";
 
 class JsonExporterImporterTest : public ::testing::Test {
 public:

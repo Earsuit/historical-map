@@ -9,7 +9,7 @@
 
 namespace {
 constexpr auto FILE_NAME = "bsonExporterImporterTest.bson";
-constexpr auto FORMAT = "BSON";
+constexpr auto FORMAT = "bson";
 
 class BsonExporterImporterTest : public ::testing::Test {
 public:
