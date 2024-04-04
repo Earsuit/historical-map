@@ -10,7 +10,7 @@ constexpr auto SAVE_CONFIRM_POPUP_NAME = "Confirmation";
 
 void ExportWidget::historyInfo()
 {
-    selected = std::nullopt;
+    hovered = std::nullopt;
 
     if (!cache || cache->year != year) {
         logger->debug("Load data of year {} from database.", year);
@@ -26,20 +26,15 @@ void ExportWidget::historyInfo()
             }
         }
     }
-
-    bool tick = false;
-
-    if (cache) {
-        tick = toBeExported.contains(cache);
+    
+    if (!selectAlls.contains(year)) {
+        selectAlls[year] = false;
     }
 
-    ImGui::Checkbox("Add", &tick);
-
-    if (cache) {
-        if (tick) {
-            toBeExported.insert(cache);
-        } else {
-            toBeExported.erase(cache);
+    if (ImGui::Checkbox("Select all", &selectAlls[year])) {
+        if (!selectAlls[year]) {
+            // select all is unticked, deselect all
+           toBeExported.erase(cache);
         }
     }
 
@@ -50,6 +45,31 @@ void ExportWidget::historyInfo()
     ImGui::SameLine();
     if (ImGui::Button("Cancel")) {
         isComplete = true;
+    }
+
+    if (cache) {
+        const bool selectAll = selectAlls[year];
+        selectAlls[year] = true;    // reset to true so we can track if there all individual items are ticked
+
+        if (!toBeExported.contains(cache)) {
+            // so we don't need to check the existance in the following code
+            toBeExported.emplace(std::make_pair(cache, Selected{}));
+        }
+
+        ImGui::SeparatorText("Countries");
+        paintCountryInfo(selectAll);
+
+        ImGui::SeparatorText("Cities");
+        paintCityInfo(selectAll);
+
+        ImGui::SeparatorText("Note");
+        paintNote(selectAll);
+
+        if (auto& selection = toBeExported[cache]; selection.countries.empty() && 
+                                                selection.cities.empty() && 
+                                                selection.note == false) {
+            toBeExported.erase(cache);
+        }
     }
 
     if (ImGui::BeginPopup(EXPORT_FORMAT_POPUP_NAME)) {
@@ -71,25 +91,17 @@ void ExportWidget::historyInfo()
     }
 
     processResult();
-
-    if (cache) {
-        ImGui::SeparatorText("Countries");
-        paintCountryInfo();
-
-        ImGui::SeparatorText("Cities");
-        paintCityInfo();
-
-        ImGui::SeparatorText("Note");
-        paintNote();
-    }
 }
 
-void ExportWidget::paintCountryInfo()
+void ExportWidget::paintCountryInfo(bool selectAll)
 {
     for (auto& countryInfoWidget : countryInfoWidgets) {
+
+        selectCountry(countryInfoWidget.getName(), selectAll);
+        ImGui::SameLine();
+
         if (ImGui::TreeNode((countryInfoWidget.getName() + "##country").c_str())) {
-            ImGui::SeparatorText(countryInfoWidget.getName().c_str());
-            countryInfoWidget.paint(selected);
+            countryInfoWidget.paint(hovered);
 
             ImGui::TreePop();
             ImGui::Spacing();
@@ -97,20 +109,23 @@ void ExportWidget::paintCountryInfo()
     }
 }
 
-void ExportWidget::paintCityInfo()
+void ExportWidget::paintCityInfo(bool selectAll)
 {
     for (auto& city : cache->cities) {
-        bool hovered = false;
+        bool isHovered = false;
+
+        selectCity(city.name, selectAll);
+        ImGui::SameLine();
 
         if (ImGui::TreeNode((city.name + "##city").c_str())) {
             ImGui::Text("latitude %.2f", city.coordinate.latitude);
-            hovered |= ImGui::IsItemHovered();
+            isHovered |= ImGui::IsItemHovered();
             ImGui::SameLine();
             ImGui::Text("longitude %.2f", city.coordinate.longitude);
-            hovered |= ImGui::IsItemHovered();
+            isHovered |= ImGui::IsItemHovered();
 
-            if (hovered) {
-                selected = city.coordinate;
+            if (isHovered) {
+                hovered = city.coordinate;
             }
 
             ImGui::TreePop();
@@ -119,14 +134,18 @@ void ExportWidget::paintCityInfo()
     }
 }
 
-void ExportWidget::paintNote()
+void ExportWidget::paintNote(bool selectAll)
 {
+    if (!cache->note.text.empty()) {
+        selectNote(selectAll);
+    }
+
     ImGui::TextUnformatted(cache->note.text.c_str(), cache->note.text.c_str() + cache->note.text.size());
 }
 
 std::vector<HistoricalInfo> ExportWidget::getInfo()
 {
-    return {std::make_tuple("Export", cache, selected)};
+    return {std::make_tuple("Export", cache, hovered)};
 }
 
 bool ExportWidget::complete()
@@ -140,21 +159,38 @@ void ExportWidget::processResult()
         if (!exporter) {
             if(auto ret = persistence::ExporterImporterFactory::getInstance().createExporter(exportFormat); ret) {
                 exporter = std::move(*ret);
-                for (auto info : toBeExported) {
-                    exporter->insert(*info);
-                }
+                for (const auto& [info, selected] : toBeExported) {
+                    persistence::Data out{info->year};
+                    for (const auto& country : info->countries) {
+                        if (selected.countries.contains(country.name)) {
+                            out.countries.emplace_back(country);
+                        }
+                    }
 
-                if (auto ret = exporter->writeToFile(*result, false); !ret) {
-                    // fail to write to a file
-                    ImGui::OpenPopup(SAVE_CONFIRM_POPUP_NAME);
-                    confirmPopupOpen = true;
-                } else {
-                    isComplete = true;
+                    for (const auto& city : info->cities) {
+                        if (selected.cities.contains(city.name)) {
+                            out.cities.emplace_back(city);
+                        }
+                    }
+
+                    if (selected.note) {
+                        out.note = info->note;
+                    }
+
+                    exporter->insert(std::move(out));
                 }
             }
         }
 
         if (exporter) {
+            if (auto ret = exporter->writeToFile(*result, false); !ret) {
+                // fail to write to a file
+                ImGui::OpenPopup(SAVE_CONFIRM_POPUP_NAME);
+                confirmPopupOpen = true;
+            } else {
+                isComplete = true;
+            }
+
             if (ImGui::BeginPopupModal(SAVE_CONFIRM_POPUP_NAME, &confirmPopupOpen, ImGuiWindowFlags_AlwaysAutoResize) && exporter) {
                 ImGui::Text("File already exists, do you want to overwrite it?");
 
@@ -178,5 +214,45 @@ void ExportWidget::processResult()
             }
         }
     }
+}
+
+void ExportWidget::selectCountry(const std::string& name, bool selectAll)
+{
+    doSelect(name, toBeExported[cache].countries, selectAll);
+}
+
+void ExportWidget::selectCity(const std::string& name, bool selectAll)
+{
+    doSelect(name, toBeExported[cache].cities, selectAll);
+}
+
+void ExportWidget::selectNote(bool selectAll)
+{
+    bool tick = selectAll || toBeExported[cache].note;
+
+    ImGui::Checkbox("##note", &tick);
+
+    if (tick) {
+        toBeExported[cache].note = true;
+    } else {
+        toBeExported[cache].note = false;
+    }
+
+    selectAlls[year] = selectAlls[year] & tick;
+}
+
+void ExportWidget::doSelect(const std::string& name, std::set<std::string, CompareString>& container, bool selectAll)
+{
+    bool tick = selectAll || container.contains(name);
+
+    ImGui::Checkbox(("##" + name).c_str(), &tick);
+
+    if (tick) {
+        container.insert(name);
+    } else {
+        container.erase(name);
+    }
+
+    selectAlls[year] = selectAlls[year] & tick;
 }
 }
