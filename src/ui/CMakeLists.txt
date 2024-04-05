@@ -10,4 +10,8 @@ SET(UI_SRC
 )
 
 add_library(libui STATIC ${UI_SRC} ${IMGUI_SRC} ${IMPLOT_SRC} ${IM_FILE_DIALOG_SRC})
-target_link_libraries(libui PRIVATE OpenGL::GL glfw GLEW::GLEW ${CMAKE_DL_LIBS} PkgConfig::GIO2 PkgConfig::GTK3 libstbImageImpl)
+target_link_libraries(libui PRIVATE OpenGL::GL glfw GLEW::GLEW ${CMAKE_DL_LIBS} libstbImageImpl)
+
+if (LINUX)
+    target_link_libraries(libui PRIVATE PkgConfig::GIO2 PkgConfig::GTK3)
+endif()

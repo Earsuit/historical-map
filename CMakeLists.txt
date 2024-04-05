@@ -1,13 +1,17 @@
 cmake_minimum_required(VERSION 3.19 FATAL_ERROR)
 
-set(CMAKE_C_COMPILER /usr/bin/gcc)
-set(CMAKE_CXX_COMPILER /usr/bin/g++)
-
-project(Historical_map C CXX)
+project(Historical_map CXX)
 
 set(CMAKE_CXX_STANDARD 20 ON CACHE INTERNAL "")
 set(CMAKE_CXX_STANDARD_REQUIRED ON ON CACHE INTERNAL "")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
+
+if (APPLE)
+# suppress the warning of OpenGL API deprecated since MacOS 10.14
+# add std::result_of back to c++20 for mapbox/variant, 
+# but it still works on Linux with g++11 with C++20?
+add_definitions(-DGL_SILENCE_DEPRECATION -D_LIBCPP_ENABLE_CXX20_REMOVED_TYPE_TRAITS)
+endif()
 
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
@@ -60,7 +64,7 @@ include_directories(external/implot)
 include_directories(external/stb)
 include_directories(external/spdlog/include)
 include_directories(external/cereal/include)
-include_directories(external/readerwriterqueue)
+include_directories(external/concurrentqueue)
 include_directories(external/variant/include)
 include_directories(external/geometry/include)
 include_directories(external/polylabel/include)
@@ -92,7 +96,14 @@ SET(IM_FILE_DIALOG_SRC
 )
 
 add_executable(HistoricalMap main.cpp)
+
+if (APPLE)
+# On macos we have to specify glfw GLEW::GLEW when compiling main.cpp because it includes HistoricalMap.h
+# which includes glfw and glew
+target_link_libraries(HistoricalMap PRIVATE glfw GLEW::GLEW libui libtile  -Wl,-force_load libpersistence liblogger)
+else()
 target_link_libraries(HistoricalMap PRIVATE libui libtile -Wl,--whole-archive libpersistence -Wl,--no-whole-archive liblogger)
+endif()
 
 add_subdirectory(src)
 add_subdirectory(test)

@@ -6,7 +6,7 @@
 
 #include "sqlpp11/sqlite3/sqlite3.h"
 #include "sqlpp11/sqlite3/connection_config.h"
-#include "readerwriterqueue.h"
+#include "blockingconcurrentqueue.h"
 #include "spdlog/spdlog.h"
 
 #include <future>
@@ -38,8 +38,8 @@ private:
     DatabaseManager();
 
     Database<sqlpp::sqlite3::connection, sqlpp::sqlite3::connection_config> database;
-    moodycamel::BlockingReaderWriterQueue<std::function<void()>> taskQueue;
-    moodycamel::BlockingReaderWriterQueue<std::shared_ptr<Data>> loadQueue;
+    moodycamel::BlockingConcurrentQueue<std::function<void()>> taskQueue;
+    moodycamel::BlockingConcurrentQueue<std::shared_ptr<Data>> loadQueue;
     std::shared_ptr<spdlog::logger> logger;
     util::Cache<int, std::shared_ptr<Data>> cache;
     std::set<int> requesting;

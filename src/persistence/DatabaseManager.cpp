@@ -105,7 +105,7 @@ bool DatabaseManager::request(int year)
 {
     if (!taskQueue.enqueue([this, year](){
                             this->logger->debug("Process load task for year {}.", year);
-                            this->loadQueue.emplace(std::make_shared<Data>(this->database.load(year)));
+                            this->loadQueue.enqueue(std::make_shared<Data>(this->database.load(year)));
                         })) {
         logger->error("Enqueue request database year {} task fail.", year);
 

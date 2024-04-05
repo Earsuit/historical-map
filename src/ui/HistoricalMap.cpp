@@ -42,9 +42,9 @@ HistoricalMap::HistoricalMap():
         throw std::runtime_error("Failed to initialize glfw.");
     }
     
-    const auto glslVersion = "#version 130";
+    const auto glslVersion = "#version 330";
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 
     // Create window with graphics context
     window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Historical Map", NULL, NULL);

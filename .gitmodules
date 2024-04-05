@@ -13,9 +13,6 @@
 [submodule "external/cereal"]
 	path = external/cereal
 	url = git@github.com:USCiLab/cereal.git
-[submodule "external/readerwriterqueue"]
-	path = external/readerwriterqueue
-	url = git@github.com:cameron314/readerwriterqueue.git
 [submodule "external/polylabel"]
 	path = external/polylabel
 	url = git@github.com:mapbox/polylabel.git
@@ -37,3 +34,6 @@
 [submodule "external/magic_enum"]
 	path = external/magic_enum
 	url = https://github.com/Neargye/magic_enum.git
+[submodule "external/concurrentqueue"]
+	path = external/concurrentqueue
+	url = https://github.com/cameron314/concurrentqueue.git

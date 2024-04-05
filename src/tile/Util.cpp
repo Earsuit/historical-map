@@ -1,6 +1,7 @@
 #include "src/tile/Util.h"
 
 #include <cmath>
+#include <algorithm>
 
 namespace tile {
 
