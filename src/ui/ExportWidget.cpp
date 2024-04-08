@@ -4,9 +4,12 @@
 #include "ImFileDialog.h"
 
 namespace ui {
+using namespace std::chrono_literals;
+
 constexpr auto EXPORT_FORMAT_POPUP_NAME = "Export formats";
 constexpr auto SAVE_DIALOG_KEY = "ExportDialog";
 constexpr auto SAVE_CONFIRM_POPUP_NAME = "Confirmation";
+constexpr auto EXPORT_FAIL_POPUP_NAME = "Error";
 
 void ExportWidget::historyInfo()
 {
@@ -31,12 +34,7 @@ void ExportWidget::historyInfo()
         selectAlls[year] = false;
     }
 
-    if (ImGui::Checkbox("Select all", &selectAlls[year])) {
-        if (!selectAlls[year]) {
-            // select all is unticked, deselect all
-           toBeExported.erase(cache);
-        }
-    }
+    ImGui::Checkbox("Select all", &selectAlls[year]);
 
     ImGui::SameLine();
     if (ImGui::Button("Export as")) {
@@ -51,11 +49,6 @@ void ExportWidget::historyInfo()
         const bool selectAll = selectAlls[year];
         selectAlls[year] = true;    // reset to true so we can track if there all individual items are ticked
 
-        if (!toBeExported.contains(cache)) {
-            // so we don't need to check the existance in the following code
-            toBeExported.emplace(std::make_pair(cache, Selected{}));
-        }
-
         ImGui::SeparatorText("Countries");
         paintCountryInfo(selectAll);
 
@@ -64,18 +57,13 @@ void ExportWidget::historyInfo()
 
         ImGui::SeparatorText("Note");
         paintNote(selectAll);
-
-        if (auto& selection = toBeExported[cache]; selection.countries.empty() && 
-                                                selection.cities.empty() && 
-                                                selection.note == false) {
-            toBeExported.erase(cache);
-        }
     }
 
     if (ImGui::BeginPopup(EXPORT_FORMAT_POPUP_NAME)) {
-        for (auto& format : persistence::ExporterImporterFactory::getInstance().supportedFormat()) {
+        for (auto& format : exporter.supportedFormat()) {
             if(ImGui::Selectable(format.c_str())) {
                 exportFormat = format;
+                ImGui::CloseCurrentPopup();
                 ifd::FileDialog::getInstance().save(SAVE_DIALOG_KEY, "Export historical info", "*." + exportFormat + " {." + exportFormat +"}");
             }
         }
@@ -85,19 +73,20 @@ void ExportWidget::historyInfo()
 
     if (ifd::FileDialog::getInstance().isDone(SAVE_DIALOG_KEY)) {
         if (ifd::FileDialog::getInstance().hasResult()) {
-            result = ifd::FileDialog::getInstance().getResult().u8string();
+            const std::string file = ifd::FileDialog::getInstance().getResult().u8string();
+            exportTask = std::move(exporter.doExport(file, exportFormat, true));
         } 
         ifd::FileDialog::getInstance().close();
     }
 
-    processResult();
+    checkExportProgress();
 }
 
 void ExportWidget::paintCountryInfo(bool selectAll)
 {
     for (auto& countryInfoWidget : countryInfoWidgets) {
 
-        selectCountry(countryInfoWidget.getName(), selectAll);
+        select(*countryInfoWidget.getCountryIterator(), selectAll);
         ImGui::SameLine();
 
         if (ImGui::TreeNode((countryInfoWidget.getName() + "##country").c_str())) {
@@ -114,7 +103,7 @@ void ExportWidget::paintCityInfo(bool selectAll)
     for (auto& city : cache->cities) {
         bool isHovered = false;
 
-        selectCity(city.name, selectAll);
+        select(city, selectAll);
         ImGui::SameLine();
 
         if (ImGui::TreeNode((city.name + "##city").c_str())) {
@@ -137,7 +126,7 @@ void ExportWidget::paintCityInfo(bool selectAll)
 void ExportWidget::paintNote(bool selectAll)
 {
     if (!cache->note.text.empty()) {
-        selectNote(selectAll);
+        select(cache->note, selectAll);
     }
 
     ImGui::TextUnformatted(cache->note.text.c_str(), cache->note.text.c_str() + cache->note.text.size());
@@ -153,106 +142,22 @@ bool ExportWidget::complete()
     return isComplete;
 }
 
-void ExportWidget::processResult()
+void ExportWidget::checkExportProgress()
 {
-    if (result) {
-        if (!exporter) {
-            if(auto ret = persistence::ExporterImporterFactory::getInstance().createExporter(exportFormat); ret) {
-                exporter = std::move(*ret);
-                for (const auto& [info, selected] : toBeExported) {
-                    persistence::Data out{info->year};
-                    for (const auto& country : info->countries) {
-                        if (selected.countries.contains(country.name)) {
-                            out.countries.emplace_back(country);
-                        }
-                    }
+    if (exportTask.valid() && exportTask.wait_for(0s) == std::future_status::ready) {
+        if (auto ret = exportTask.get(); ret) {
+            isComplete = true;
+        } else {
+            auto errorMsg = ret.error().msg;
+            logger->error("Failed to export: " + errorMsg);
 
-                    for (const auto& city : info->cities) {
-                        if (selected.cities.contains(city.name)) {
-                            out.cities.emplace_back(city);
-                        }
-                    }
-
-                    if (selected.note) {
-                        out.note = info->note;
-                    }
-
-                    exporter->insert(std::move(out));
-                }
-            }
-        }
-
-        if (exporter) {
-            if (auto ret = exporter->writeToFile(*result, false); !ret) {
-                // fail to write to a file
-                ImGui::OpenPopup(SAVE_CONFIRM_POPUP_NAME);
-                confirmPopupOpen = true;
-            } else {
-                isComplete = true;
-            }
-
-            if (ImGui::BeginPopupModal(SAVE_CONFIRM_POPUP_NAME, &confirmPopupOpen, ImGuiWindowFlags_AlwaysAutoResize) && exporter) {
-                ImGui::Text("File already exists, do you want to overwrite it?");
-
-                if (ImGui::Button("Yes")) {
-                    if (exporter->writeToFile(*result, true)) {
-                        confirmPopupOpen = false;
-                        isComplete = true;
-                    }
-                }
-                ImGui::SameLine();
-                if (ImGui::Button("No")) {
-                    confirmPopupOpen = false;
-                }
-
-                ImGui::EndPopup();
-            }
-
-            if (!confirmPopupOpen) {
-                exporter.release();
-                result.reset();
-            }
+            ImGui::OpenPopup(EXPORT_FAIL_POPUP_NAME);
+            exportFailPopup = true;
         }
     }
-}
 
-void ExportWidget::selectCountry(const std::string& name, bool selectAll)
-{
-    doSelect(name, toBeExported[cache].countries, selectAll);
-}
-
-void ExportWidget::selectCity(const std::string& name, bool selectAll)
-{
-    doSelect(name, toBeExported[cache].cities, selectAll);
-}
-
-void ExportWidget::selectNote(bool selectAll)
-{
-    bool tick = selectAll || toBeExported[cache].note;
-
-    ImGui::Checkbox("##note", &tick);
-
-    if (tick) {
-        toBeExported[cache].note = true;
-    } else {
-        toBeExported[cache].note = false;
+    if (ImGui::BeginPopupModal(EXPORT_FAIL_POPUP_NAME, &exportFailPopup, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::Text("Failed to export: %s", errorMsg.c_str());
     }
-
-    selectAlls[year] = selectAlls[year] & tick;
-}
-
-void ExportWidget::doSelect(const std::string& name, std::set<std::string, CompareString>& container, bool selectAll)
-{
-    bool tick = selectAll || container.contains(name);
-
-    ImGui::Checkbox(("##" + name).c_str(), &tick);
-
-    if (tick) {
-        container.insert(name);
-    } else {
-        container.erase(name);
-    }
-
-    selectAlls[year] = selectAlls[year] & tick;
 }
 }

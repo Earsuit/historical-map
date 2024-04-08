@@ -4,7 +4,7 @@
 #include "src/ui/IInfoWidget.h"
 #include "src/ui/CountryInfoWidget.h"
 #include "src/persistence/DatabaseManager.h"
-#include "src/persistence/exporterImporter/IExporterImporter.h"
+#include "src/persistence/exporterImporter/ExportManager.h"
 #include "src/logger/Util.h"
 
 #include "spdlog/spdlog.h"
@@ -12,8 +12,8 @@
 #include <memory>
 #include <vector>
 #include <map>
-#include <set>
 #include <string>
+#include <future>
 
 namespace ui {
 class ExportWidget: public IInfoWidget {
@@ -30,52 +30,53 @@ public:
     bool complete() override;
 
 private:
-    struct CompareYear
-    {
-        bool operator()(const auto& lhs, const auto& rhs) const
-        {
-            return lhs->year < rhs->year;
-        }
-    };
-
-    struct CompareString
-    {
-        bool operator()(const auto& lhs, const auto& rhs) const
-        {
-            return std::hash<std::string>{}(lhs) < std::hash<std::string>{}(rhs);
-        }
-    };
-
-    struct Selected
-    {
-        std::set<std::string, CompareString> countries;
-        std::set<std::string, CompareString> cities;
-        bool note;
-    };
-
     std::shared_ptr<spdlog::logger> logger;
     persistence::DatabaseManager& database;
+    persistence::ExportManager exporter;
+    std::future<tl::expected<void, persistence::Error>> exportTask;
     std::optional<persistence::Coordinate> hovered;
     std::shared_ptr<const persistence::Data> cache;
     std::map<int, bool> selectAlls;
-    std::map<std::shared_ptr<const persistence::Data>, Selected, CompareYear> toBeExported;
     std::vector<CountryInfoWidget<decltype(persistence::Data::countries)::const_iterator>> countryInfoWidgets;
     bool isComplete = false;
     std::string exportFormat;
-    std::unique_ptr<persistence::IExporter> exporter;
-    std::optional<std::string> result;
-    bool confirmPopupOpen = true;
+    std::string errorMsg;
+    bool exportFailPopup = false;
 
     void historyInfo() override;
 
     void paintCountryInfo(bool selectAll);
     void paintCityInfo(bool selectAll);
     void paintNote(bool selectAll);
-    void processResult();
-    void selectCountry(const std::string& name, bool selectAll);
-    void selectCity(const std::string& name, bool selectAll);
-    void selectNote(bool selectAll);
-    void doSelect(const std::string& name, std::set<std::string, CompareString>& container, bool selectAll);
+    void checkExportProgress();
+
+    template<typename T>
+    void checkbox(const T& item, bool& tick)
+    {
+        ImGui::Checkbox(("##" + item.name).c_str(), &tick);
+    }
+
+    template<>
+    void checkbox(const persistence::Note& item, bool& tick)
+    {
+        ImGui::Checkbox("##note", &tick);
+    }
+
+    template<typename T>
+    void select(const T& item, bool selectAll)
+    {
+        bool tick = selectAll || exporter.isSelected(item, year);
+
+        checkbox(item, tick);
+
+        if (tick) {
+            exporter.select(item, cache);
+        } else {
+            exporter.deselect(item, cache);
+        }
+
+        selectAlls[year] = selectAlls[year] & tick;
+    }
 };
 }
 
