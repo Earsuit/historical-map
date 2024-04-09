@@ -34,6 +34,7 @@ private:
     persistence::DatabaseManager& database;
     persistence::ExportManager exporter;
     std::future<tl::expected<void, persistence::Error>> exportTask;
+    bool exportComplete = false;
     std::optional<persistence::Coordinate> hovered;
     std::shared_ptr<const persistence::Data> cache;
     std::map<int, bool> selectAlls;

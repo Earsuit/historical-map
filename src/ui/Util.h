@@ -10,6 +10,8 @@ bool inBound(T v, T min, T max)
 {
     return (v > min) && (v < max);
 }
+
+void alignForWidth(float width, float alignment = 0.5f);
 }
 
 #endif

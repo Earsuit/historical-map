@@ -12,6 +12,7 @@
 #include <map>
 #include <future>
 #include <vector>
+#include <atomic>
 
 namespace persistence {
 class ExportManager {
@@ -30,6 +31,7 @@ public:
 
     std::future<tl::expected<void, Error>> doExport(const std::string& file, const std::string& format, bool overwrite);
     std::vector<std::string> supportedFormat();
+    float getExportProgress();
 
 private:
     struct CompareString
@@ -54,6 +56,8 @@ private:
     };
 
     std::map<int, Selected> selections;
+    int itemQuantity = 0;
+    std::atomic<float> progress = 0;
 };
 }
 

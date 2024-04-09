@@ -1,7 +1,9 @@
 #include "src/ui/ExportWidget.h"
+#include "src/ui/Util.h"
 #include "src/persistence/exporterImporter/ExporterImporterFactory.h"
 
 #include "ImFileDialog.h"
+#include "imgui.h"
 
 namespace ui {
 using namespace std::chrono_literals;
@@ -10,6 +12,9 @@ constexpr auto EXPORT_FORMAT_POPUP_NAME = "Export formats";
 constexpr auto SAVE_DIALOG_KEY = "ExportDialog";
 constexpr auto SAVE_CONFIRM_POPUP_NAME = "Confirmation";
 constexpr auto EXPORT_FAIL_POPUP_NAME = "Error";
+constexpr auto EXPORT_PROGRESS_POPUP_NAME = "Exporting";
+constexpr auto EXPORT_PROGRESS_BAR_SIZE = ImVec2{400, 0};
+constexpr auto EXPORT_PROGRESS_DONE_BUTTON_LABEL = "Done";
 
 void ExportWidget::historyInfo()
 {
@@ -75,6 +80,7 @@ void ExportWidget::historyInfo()
         if (ifd::FileDialog::getInstance().hasResult()) {
             const std::string file = ifd::FileDialog::getInstance().getResult().u8string();
             exportTask = std::move(exporter.doExport(file, exportFormat, true));
+            ImGui::OpenPopup(EXPORT_PROGRESS_POPUP_NAME);
         } 
         ifd::FileDialog::getInstance().close();
     }
@@ -146,7 +152,7 @@ void ExportWidget::checkExportProgress()
 {
     if (exportTask.valid() && exportTask.wait_for(0s) == std::future_status::ready) {
         if (auto ret = exportTask.get(); ret) {
-            isComplete = true;
+            exportComplete = true;
         } else {
             auto errorMsg = ret.error().msg;
             logger->error("Failed to export: " + errorMsg);
@@ -154,6 +160,25 @@ void ExportWidget::checkExportProgress()
             ImGui::OpenPopup(EXPORT_FAIL_POPUP_NAME);
             exportFailPopup = true;
         }
+    }
+
+    if (ImGui::BeginPopupModal(EXPORT_PROGRESS_POPUP_NAME, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::ProgressBar(exporter.getExportProgress(), EXPORT_PROGRESS_BAR_SIZE);
+
+        alignForWidth(ImGui::CalcTextSize(EXPORT_PROGRESS_DONE_BUTTON_LABEL).x);
+
+        if(!exportComplete) {
+            ImGui::BeginDisabled();
+        }
+        if (ImGui::Button(EXPORT_PROGRESS_DONE_BUTTON_LABEL)) {
+            isComplete = true;
+            ImGui::CloseCurrentPopup();
+        }
+        if(!exportComplete) {
+            ImGui::EndDisabled();
+        }
+
+        ImGui::EndPopup();
     }
 
     if (ImGui::BeginPopupModal(EXPORT_FAIL_POPUP_NAME, &exportFailPopup, ImGuiWindowFlags_AlwaysAutoResize)) {
