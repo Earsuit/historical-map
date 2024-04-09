@@ -156,4 +156,11 @@ float ExportManager::getExportProgress()
 {
     return progress / itemQuantity;
 }
+
+void ExportManager::clear(int year)
+{
+    if (selections.contains(year)) {
+        selections.erase(year);
+    }
+}
 }

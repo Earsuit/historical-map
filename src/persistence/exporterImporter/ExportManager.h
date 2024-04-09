@@ -29,6 +29,7 @@ public:
     bool isSelected(const City& city, int year);
     bool isSelected([[maybe_unused]] const Note& note, int year);
 
+    void clear(int year);
     std::future<tl::expected<void, Error>> doExport(const std::string& file, const std::string& format, bool overwrite);
     std::vector<std::string> supportedFormat();
     float getExportProgress();

@@ -39,7 +39,9 @@ void ExportWidget::historyInfo()
         selectAlls[year] = false;
     }
 
-    ImGui::Checkbox("Select all", &selectAlls[year]);
+    if (ImGui::Checkbox("Select all", &selectAlls[year]) && !selectAlls[year]) {
+        exporter.clear(year);
+    }
 
     ImGui::SameLine();
     if (ImGui::Button("Export as")) {
@@ -52,7 +54,8 @@ void ExportWidget::historyInfo()
 
     if (cache) {
         const bool selectAll = selectAlls[year];
-        selectAlls[year] = true;    // reset to true so we can track if there all individual items are ticked
+        // reset to true if not empty year so we can track if all individual items are ticked
+        selectAlls[year] = !(cache->countries.empty() && cache->cities.empty() && cache->note.text.empty());
 
         ImGui::SeparatorText("Countries");
         paintCountryInfo(selectAll);
