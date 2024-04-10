@@ -6,6 +6,7 @@
 #include "src/persistence/DatabaseManager.h"
 #include "src/persistence/exporterImporter/ExportManager.h"
 #include "src/logger/Util.h"
+#include "src/util/Generator.h"
 
 #include "spdlog/spdlog.h"
 
@@ -43,6 +44,10 @@ private:
     std::string exportFormat;
     std::string errorMsg;
     bool exportFailPopup = false;
+    int startYear;
+    int endYear;
+    util::Generator<int> generator;
+    bool processMultiYearSelection = false;
 
     void historyInfo() override;
 
@@ -50,6 +55,8 @@ private:
     void paintCityInfo(bool selectAll);
     void paintNote(bool selectAll);
     void checkExportProgress();
+    void selectMultiYears();
+    util::Generator<int> multiYearsSelectionGenerator(int start, int end);
 
     template<typename T>
     void checkbox(const T& item, bool& tick)
