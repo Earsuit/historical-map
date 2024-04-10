@@ -28,7 +28,7 @@ void ExportWidget::historyInfo()
     }
 
     if (ImGui::Checkbox("Select all", &selectAlls[year]) && !selectAlls[year]) {
-        exporter.clear(year);
+        selector.clear(year);
     }
     if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
         ImGui::OpenPopup(SELECT_MULTIPLE_YEAR_POPUP_NAME);
@@ -93,7 +93,7 @@ void ExportWidget::historyInfo()
     if (ifd::FileDialog::getInstance().isDone(SAVE_DIALOG_KEY)) {
         if (ifd::FileDialog::getInstance().hasResult()) {
             const std::string file = ifd::FileDialog::getInstance().getResult().u8string();
-            exportTask = std::move(exporter.doExport(file, exportFormat, true));
+            exportTask = std::move(exporter.doExport(selector, file, exportFormat, true));
             ImGui::OpenPopup(EXPORT_PROGRESS_POPUP_NAME);
         } 
         ifd::FileDialog::getInstance().close();

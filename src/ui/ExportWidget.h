@@ -5,6 +5,7 @@
 #include "src/ui/CountryInfoWidget.h"
 #include "src/persistence/DatabaseManager.h"
 #include "src/persistence/exporterImporter/ExportManager.h"
+#include "src/persistence/Selector.h"
 #include "src/logger/Util.h"
 #include "src/util/Generator.h"
 
@@ -34,6 +35,7 @@ private:
     std::shared_ptr<spdlog::logger> logger;
     persistence::DatabaseManager& database;
     persistence::ExportManager exporter;
+    persistence::Selector selector;
     std::future<tl::expected<void, persistence::Error>> exportTask;
     bool exportComplete = false;
     std::optional<persistence::Coordinate> hovered;
@@ -74,14 +76,14 @@ private:
     template<typename T>
     void select(const T& item, bool selectAll)
     {
-        bool tick = selectAll || exporter.isSelected(item, year);
+        bool tick = selectAll || selector.isSelected(item, year);
 
         checkbox(item, tick);
 
         if (tick) {
-            exporter.select(item, cache);
+            selector.select(item, cache);
         } else {
-            exporter.deselect(item, cache);
+            selector.deselect(item, cache);
         }
 
         selectAlls[year] = selectAlls[year] & tick;
