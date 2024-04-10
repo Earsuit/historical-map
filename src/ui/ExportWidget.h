@@ -64,8 +64,9 @@ private:
         ImGui::Checkbox(("##" + item.name).c_str(), &tick);
     }
 
-    template<>
-    void checkbox(const persistence::Note& item, bool& tick)
+    template<typename T>
+    requires std::is_same_v<T, persistence::Note>
+    void checkbox(const T& item, bool& tick)
     {
         ImGui::Checkbox("##note", &tick);
     }
