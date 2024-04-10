@@ -58,6 +58,7 @@ public:
     Generator& operator=(const Generator&) = delete;
     Generator(Generator&& other): coro(std::move(other.coro)) 
     {
+        other.coro = {};    // has to set empty otherwise it is still true
     }
 
     Generator& operator=(Generator&& other) {

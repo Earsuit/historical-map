@@ -2,6 +2,7 @@
 #define SRC_PERSISTENCE_SELECTOR
 
 #include "src/persistence/Data.h"
+#include "src/util/Generator.h"
 
 #include <memory>
 #include <map>
@@ -11,6 +12,26 @@
 namespace persistence {
 class Selector {
 public:
+    void select(const Country& country, std::shared_ptr<const Data> from);
+    void select(const City& city, std::shared_ptr<const Data> from);
+    void select([[maybe_unused]] const Note& note, std::shared_ptr<const Data> from);
+ 
+    void deselect(const Country& country, std::shared_ptr<const Data> from);
+    void deselect(const City& city, std::shared_ptr<const Data> from);
+    void deselect([[maybe_unused]] const Note& note, std::shared_ptr<const Data> from);
+ 
+    bool isSelected(const Country& country, int year);
+    bool isSelected(const City& city, int year);
+    bool isSelected([[maybe_unused]] const Note& note, int year);
+
+    void clear(int year);
+    void clearAll();
+
+    int getQuantity() const noexcept { return selection.size(); };
+
+    util::Generator<Data> getSelections() const;
+
+private:
     struct CompareString
     {
         bool operator()(const std::string& lhs, const std::string& rhs) const noexcept
@@ -32,28 +53,7 @@ public:
         }
     };
 
-    void select(const Country& country, std::shared_ptr<const Data> from);
-    void select(const City& city, std::shared_ptr<const Data> from);
-    void select([[maybe_unused]] const Note& note, std::shared_ptr<const Data> from);
- 
-    void deselect(const Country& country, std::shared_ptr<const Data> from);
-    void deselect(const City& city, std::shared_ptr<const Data> from);
-    void deselect([[maybe_unused]] const Note& note, std::shared_ptr<const Data> from);
- 
-    bool isSelected(const Country& country, int year);
-    bool isSelected(const City& city, int year);
-    bool isSelected([[maybe_unused]] const Note& note, int year);
-
-    void clear(int year);
-    void clearAll();
-
-    int getQuantity() const noexcept { return quantity; };
-
-    const std::map<int, Selected>& getSelections() const noexcept { return selection; }
-
-private:
     std::map<int, Selected> selection;
-    int quantity = 0;
 };
 }
 

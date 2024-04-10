@@ -17,40 +17,17 @@ std::future<tl::expected<void, Error>> ExportManager::doExport(const Selector& s
              file, 
              format, 
              overwrite, 
-             &selections = selector.getSelections(),
-             quantity = selector.getQuantity()]() -> tl::expected<void, Error>
+             selections = std::move(selector.getSelections()),
+             quantity = selector.getQuantity()]() mutable -> tl::expected<void, Error>
             {
                 if (auto ret = ExporterImporterFactory::getInstance().createExporter(format); ret) {
                     auto exporter = std::move(ret.value());
 
                     this->progress = 0;
                     float count = 1;
-                    for (const auto& [year, selected] : selections) {
-                        std::this_thread::sleep_for(std::chrono::seconds(1));
-                        if (!selected.empty()) {
-                            Data toBeExported{.year = year};
-
-                            for (auto& country : selected.from->countries) {
-                                if (selected.countries.contains(country.name)) {
-                                    toBeExported.countries.emplace_back(country);
-                                    this->progress = (++count)/quantity;
-                                }
-                            }
-
-                            for (auto& city : selected.from->cities) {
-                                if (selected.cities.contains(city.name)) {
-                                    toBeExported.cities.emplace_back(city);
-                                    this->progress = (++count)/quantity;
-                                }
-                            }
-
-                            if (selected.note) {
-                                toBeExported.note = selected.from->note;
-                                this->progress = (++count)/quantity;
-                            }
-
-                            exporter->insert(std::move(toBeExported));
-                        }
+                    while (selections.next()) {
+                        exporter->insert(selections.getValue());
+                        this->progress = (++count)/quantity;
                     }
 
                     this->progress = 1.0f;
