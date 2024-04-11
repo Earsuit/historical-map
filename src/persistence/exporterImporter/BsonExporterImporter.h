@@ -7,23 +7,17 @@
 
 namespace persistence {
 class BsonExporter: public JsonExporter {
-public:
-    tl::expected<void, Error> writeToFile(const std::string& file, bool overwrite) override;
-
 private:
-    tl::expected<void, Error> openFile(const std::string& file, bool overwrite);
+    virtual tl::expected<std::fstream, Error> openFile(const std::string& file, bool overwrite) override;
+    virtual void toStream(std::fstream stream, const nlohmann::json& json) override;
 
     std::fstream stream;
 };
 
 class BsonImporter: public JsonImporter {
-public:
-    tl::expected<void, Error> loadFromFile(const std::string& file) override;
-
 private:
-    tl::expected<void, Error> openFile(const std::string& file);
-
-    std::fstream stream;
+    virtual nlohmann::json parse(std::fstream stream) override;
+    virtual tl::expected<std::fstream, Error> openFile(const std::string& file) override;
 };
 }
 

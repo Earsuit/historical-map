@@ -12,33 +12,31 @@
 namespace persistence {
 class JsonExporter: public IExporter {
 public:
-    tl::expected<void, Error> writeToFile(const std::string& file, bool overwrite) override;
-    void insert(const Data& info) override;
-    void insert(Data&& info) override;
+    JsonExporter();
 
-protected:
-    nlohmann::json toJson();
+    virtual tl::expected<void, Error> writeToFile(const std::string& file, bool overwrite) override final;
+    virtual void insert(const Data& info) override;
+    virtual void insert(Data&& info) override;
+
+    auto getJson() const noexcept { return json; }
 
 private:
-    tl::expected<void, Error> openFile(const std::string& file, bool overwrite);
+    virtual tl::expected<std::fstream, Error> openFile(const std::string& file, bool overwrite);
+    virtual void toStream(std::fstream stream, const nlohmann::json& json);
 
+    nlohmann::json json;
     std::fstream stream;
 };
 
 class JsonImporter: public IImporter {
-public:
-    const Data& front() const noexcept override;
-    void pop() override;
-    bool empty() const noexcept override;
-    tl::expected<void, Error> loadFromFile(const std::string& file) override;
-
-protected:
-    void fromJson(const nlohmann::json& json);
-
 private:
-    tl::expected<void, Error> openFile(const std::string& file);
+    virtual tl::expected<void, Error> loadTo(std::fstream stream, std::set<Data, CompareYear>& infos) override final;
 
-    std::fstream stream;
+    virtual tl::expected<std::fstream, Error> openFile(const std::string& file) override;
+
+    virtual nlohmann::json parse(std::fstream stream);
+
+    void fromJson();
 };
 }
 

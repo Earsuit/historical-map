@@ -36,6 +36,8 @@ set(PERSISTENCE_SRC
   exporterImporter/BsonExporterImporter.h
   exporterImporter/ExportManager.h
   exporterImporter/ExportManager.cpp
+  exporterImporter/IExporterImporter.h
+  exporterImporter/IExporterImporter.cpp
 )
 
 add_library(libpersistence STATIC ${PERSISTENCE_SRC})

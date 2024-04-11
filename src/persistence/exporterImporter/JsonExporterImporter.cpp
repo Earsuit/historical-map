@@ -1,7 +1,6 @@
 #ifndef SRC_PERSISTENCE_EXPORTER_IMPORTER_JSON_EXPORTER_IMPORTER_CPP
 #define SRC_PERSISTENCE_EXPORTER_IMPORTER_JSON_EXPORTER_IMPORTER_CPP
 #include "src/persistence/exporterImporter/JsonExporterImporter.h"
-#include "src/persistence/exporterImporter/ExporterImporterRegistrar.h"
 
 namespace persistence {
 constexpr auto PRETTIFY_JSON = 4;
@@ -51,102 +50,75 @@ void from_json(const nlohmann::json& j, Data& d) {
     j.at("note").get_to(d.note);
 }
 
+JsonExporter::JsonExporter()
+{
+    json["historical_info"] = {};
+}
+
 void JsonExporter::insert(const Data& info)
 {
-    infos.emplace(std::move(info));
+    json["historical_info"].emplace_back(info);
 }
 
 void JsonExporter::insert(Data&& info)
 {
-    infos.emplace(std::move(info));
+    json["historical_info"].emplace_back(std::move(info));
 }
 
 tl::expected<void, Error> JsonExporter::writeToFile(const std::string& file, bool overwrite)
 {
-    if (const auto ret = openFile(file, overwrite); ret) {
-        stream << std::setw(PRETTIFY_JSON) << toJson() << std::endl;
+    if (auto&& ret = openFile(file, overwrite); ret) {
+        toStream(std::move(ret).value(), json);
     } else {
-        return ret;
+        return tl::unexpected{ret.error()};;
     }
 
     return SUCCESS;
 }
 
-nlohmann::json JsonExporter::toJson()
+void JsonExporter::toStream(std::fstream stream, const nlohmann::json& json)
 {
-    nlohmann::json json;
-
-    json["historical_info"] = {};
-
-    for (const auto& info : infos) {
-        json["historical_info"].emplace_back(info);
-    }
-
-    return json;
+    stream << std::setw(PRETTIFY_JSON) << json << std::endl;
 }
 
-tl::expected<void, Error> JsonExporter::openFile(const std::string& file, bool overwrite)
+tl::expected<std::fstream, Error> JsonExporter::openFile(const std::string& file, bool overwrite)
 {
     if (!overwrite && std::filesystem::exists(file)) {
         return tl::unexpected(Error{ErrorCode::FILE_EXISTS});
     }
 
-    stream = std::fstream{file, std::ios::out | std::ios::trunc};
-
-    return SUCCESS;
+    return std::fstream{file, std::ios::out | std::ios::trunc};
 }
 
-const Data& JsonImporter::front() const noexcept
+tl::expected<void, Error> JsonImporter::loadTo(std::fstream stream, std::set<Data, CompareYear>& infos)
 {
-    return *infos.begin();
-}
+    try {
+        const auto json = parse(std::move(stream));
 
-void JsonImporter::pop()
-{
-    infos.erase(infos.begin());
-}
-
-bool JsonImporter::empty() const noexcept
-{
-    return infos.empty();
-}
-
-tl::expected<void, Error> JsonImporter::loadFromFile(const std::string& file)
-{
-    if (const auto ret = openFile(file); ret) {
-        try {
-            const auto json = nlohmann::json::parse(stream);
-
-            fromJson(json);
+        for (const auto& info : json["historical_info"]) {
+            infos.insert(info.template get<Data>());
         }
-        catch (const nlohmann::json::exception& e) {
-            return tl::unexpected(Error{ErrorCode::PARSE_FILE_ERROR, e.what()});
-        }
-    } else {
-        return ret;
+    }
+    catch (const nlohmann::json::exception& e) {
+        return tl::unexpected(Error{ErrorCode::PARSE_FILE_ERROR, e.what()});
     }
 
     return SUCCESS;
 }
 
-tl::expected<void, Error> JsonImporter::openFile(const std::string& file)
+tl::expected<std::fstream, Error> JsonImporter::openFile(const std::string& file)
 {
     if (!std::filesystem::exists(file)) {
         return tl::unexpected(Error{ErrorCode::FILE_NOT_EXISTS});
     }
 
-    stream = std::fstream{file, std::ios::in};
-
-    return SUCCESS;
+    return std::fstream{file, std::ios::in};
 }
 
-void JsonImporter::fromJson(const nlohmann::json& json)
+nlohmann::json JsonImporter::parse(std::fstream stream)
 {
-    for (const auto& info : json["historical_info"]) {
-        infos.insert(info.template get<Data>());
-    }
+    return nlohmann::json::parse(stream);
 }
 }
-
 
 #endif

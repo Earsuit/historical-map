@@ -8,23 +8,10 @@
 
 #include <string>
 #include <set>
+#include <fstream>
 
 namespace persistence {
-class IExporterImporter {
-private:
-    struct DataCompare
-    {
-        bool operator()(const auto& lhs, const auto& rhs) const
-        {
-            return lhs.year < rhs.year;
-        }
-    };
-
-protected:
-    std::set<Data, DataCompare> infos;
-};
-
-class IExporter: public IExporterImporter {
+class IExporter {
 public:
     virtual ~IExporter() = default;
     virtual void insert(const Data& info) = 0;
@@ -32,13 +19,30 @@ public:
     virtual tl::expected<void, Error> writeToFile(const std::string& file, bool overwrite) = 0;
 };
 
-class IImporter: public IExporterImporter {
+class IImporter {
 public:
+    struct CompareYear
+    {
+        bool operator()(const auto& lhs, const auto& rhs) const
+        {
+            return lhs.year < rhs.year;
+        }
+    };
+
     virtual ~IImporter() = default;
-    virtual const Data& front() const noexcept = 0;
-    virtual void pop() = 0;
-    virtual bool empty() const noexcept = 0;
-    virtual tl::expected<void, Error> loadFromFile(const std::string& file) = 0;
+    
+    const Data& front() const noexcept;
+    void pop();
+    bool empty() const noexcept;
+    size_t size() const noexcept;
+    tl::expected<void, Error> loadFromFile(const std::string& file);
+
+private:
+    // this cache is necessary because we have to parse the file to see if the content is valid or not
+    std::set<Data, CompareYear> infos;
+
+    virtual tl::expected<void, Error> loadTo(std::fstream stream, std::set<Data, CompareYear>& infos) = 0;
+    virtual tl::expected<std::fstream, Error> openFile(const std::string& file) = 0;
 };
 }
 
