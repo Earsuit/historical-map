@@ -26,7 +26,7 @@ std::future<tl::expected<void, Error>> ExportManager::doExport(const Selector& s
                     this->progress = 0;
                     float count = 1;
                     while (selections.next()) {
-                        exporter->insert(selections.getValue());
+                        exporter->insert(*selections.getValue());
                         this->progress = (++count)/quantity;
                     }
 

@@ -29,7 +29,7 @@ public:
 
     int getQuantity() const noexcept { return selection.size(); };
 
-    util::Generator<Data> getSelections() const;
+    util::Generator<std::shared_ptr<const Data>> getSelections() const;
 
 private:
     struct CompareString

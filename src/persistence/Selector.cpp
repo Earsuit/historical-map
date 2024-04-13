@@ -92,32 +92,32 @@ void Selector::clearAll()
     selection.clear();
 }
 
-util::Generator<Data> Selector::getSelections() const
+util::Generator<std::shared_ptr<const Data>> Selector::getSelections() const
 {
     for (const auto& [year, selected] : selection) {
         if (selected.empty()) {
             continue;
         }
         
-        Data out{.year = year};
+        auto out = std::make_shared<Data>(year);
         
         for (auto& country : selected.from->countries) {
             if (selected.countries.contains(country.name)) {
-                out.countries.emplace_back(country);
+                out->countries.emplace_back(country);
             }
         }
 
         for (auto& city : selected.from->cities) {
             if (selected.cities.contains(city.name)) {
-                out.cities.emplace_back(city);
+                out->cities.emplace_back(city);
             }
         }
 
         if (selected.note) {
-            out.note = selected.from->note;
+            out->note = selected.from->note;
         }
 
-        co_yield out;
+        co_yield std::const_pointer_cast<const Data>(out);
     }
 }
 }
