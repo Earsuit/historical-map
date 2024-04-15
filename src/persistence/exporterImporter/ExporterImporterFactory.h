@@ -44,7 +44,7 @@ public:
         return factory;
     }
 
-    std::vector<std::string> supportedFormat()
+    std::vector<std::string> supportedFormat() const
     {
         std::vector<std::string> formats;
         for (const auto& [format, builder] : importers) {

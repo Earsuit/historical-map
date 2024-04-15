@@ -16,31 +16,19 @@ ImportManager::doImport(const std::string& file,
             {
                 if (auto ret = ExporterImporterFactory::getInstance().createImporter(format); ret) {
                     auto importer = std::move(ret.value());
+                    auto loader = importer->loadFromFile(file);
+                    std::map<int, std::shared_ptr<const Data>> infos;
 
-                    if (auto ret = importer->open(file); ret) {
-                        auto total = importer->getSize();
-                        float count = 0;
-                        auto loader = importer->load();
-                        std::map<int, std::shared_ptr<const Data>> infos;
-
-                        while (loader.next()) {
-                            if (const auto& ret = loader.getValue(); ret) {
-                                infos.emplace(std::make_pair(ret.value().year, std::make_shared<const Data>(ret.value())));
-
-                                if (total) {
-                                    this->progress = (++count) / *total;
-                                }
-                            } else {
-                                return tl::unexpected{ret.error()};
-                            }
+                    while (loader.next()) {
+                        if (const auto& ret = loader.getValue(); ret) {
+                            infos.emplace(std::make_pair(ret.value().year, std::make_shared<const Data>(ret.value())));
+                            this->yearImported++;
+                        } else {
+                            return tl::unexpected{ret.error()};
                         }
-
-                        this->progress = COMPLETE;
-
-                        return infos;
-                    } else {
-                        return tl::unexpected{ret.error()};
                     }
+
+                    return infos;
                 } else {
                     return tl::unexpected{ret.error()};
                 }
@@ -48,13 +36,13 @@ ImportManager::doImport(const std::string& file,
         );
 }
 
-std::vector<std::string> ImportManager::supportedFormat()
+std::vector<std::string> ImportManager::supportedFormat() const
 {
     return persistence::ExporterImporterFactory::getInstance().supportedFormat();
 }
 
-float ImportManager::getProgress()
+size_t ImportManager::numOfYearsImported() const noexcept
 {
-    return progress;
+    return yearImported;
 }
 }

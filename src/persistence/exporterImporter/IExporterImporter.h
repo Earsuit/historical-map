@@ -9,7 +9,6 @@
 
 #include <string>
 #include <fstream>
-#include <optional>
 
 namespace persistence {
 class IExporter {
@@ -24,10 +23,9 @@ class IImporter {
 public:
     virtual ~IImporter() = default;
 
-    virtual tl::expected<void, Error> open(const std::string& file) = 0;
-    virtual util::Generator<tl::expected<Data, Error>> load() = 0;
-    // some format might not be able to extract size
-    virtual std::optional<size_t> getSize() const noexcept = 0;
+    // It must taken a copy of the path since it returns a coroutine generator, 
+    // if passing a temperatory object, it might be destroyed before using
+    virtual util::Generator<tl::expected<Data, Error>> loadFromFile(const std::string file) = 0;
 };
 }
 

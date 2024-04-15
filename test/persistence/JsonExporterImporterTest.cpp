@@ -136,18 +136,14 @@ TEST_F(JsonExporterImporterTest, ExportAndImport)
     std::vector<persistence::Data> readback;
 
     if (auto importer = persistence::ExporterImporterFactory::getInstance().createImporter(FORMAT); importer) {
-        if (auto ret = importer.value()->open(FILE_NAME); ret) {
-            auto loader = importer.value()->load();
+        auto loader = importer.value()->loadFromFile(FILE_NAME);
 
-            while (loader.next()) {
-                if (const auto& ret = loader.getValue(); ret) {
-                    readback.emplace_back(ret.value());
-                } else {
-                    EXPECT_TRUE(false);
-                }
+        while (loader.next()) {
+            if (const auto& ret = loader.getValue(); ret) {
+                readback.emplace_back(ret.value());
+            } else {
+                EXPECT_TRUE(false);
             }
-        } else {
-            EXPECT_TRUE(false);
         }
     } else {
         EXPECT_TRUE(false);
@@ -190,17 +186,17 @@ TEST_F(JsonExporterImporterTest, ReadFileNotExists)
 {
     auto importer = persistence::ExporterImporterFactory::getInstance().createImporter(FORMAT);
 
-    auto ret = importer.value()->open(FILE_NAME);
+    auto loader = importer.value()->loadFromFile(FILE_NAME);
+    
+    loader.next();
 
-    EXPECT_EQ(ret.error().code, persistence::ErrorCode::FILE_NOT_EXISTS);
+    EXPECT_EQ(loader.getValue().error().code, persistence::ErrorCode::FILE_NOT_EXISTS);
 }
 
 TEST_F(JsonExporterImporterTest, IncorrectJsonFormat)
 {
     if (auto importer = persistence::ExporterImporterFactory::getInstance().createImporter(FORMAT); importer) {
-        importer.value()->open("incorrectJson.json");
-
-        auto loader = importer.value()->load();
+        auto loader = importer.value()->loadFromFile("incorrectJson.json");
         std::optional<persistence::Error> error;
 
         while (loader.next()) {

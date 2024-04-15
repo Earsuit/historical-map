@@ -18,11 +18,11 @@ public:
     std::future<tl::expected<std::map<int, std::shared_ptr<const Data>>, Error>> 
     doImport(const std::string& file, 
              const std::string& format);
-    std::vector<std::string> supportedFormat();
-    float getProgress();
+    std::vector<std::string> supportedFormat() const;
+    size_t numOfYearsImported() const noexcept;
 
 private:
-    std::atomic<float> progress = 0;
+    std::atomic<size_t> yearImported = 0;
 };
 }
 

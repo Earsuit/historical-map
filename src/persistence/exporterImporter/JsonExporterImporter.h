@@ -29,16 +29,12 @@ private:
 
 class JsonImporter: public IImporter {
 public:
-    virtual tl::expected<void, Error> open(const std::string& file) override final;
-    virtual util::Generator<tl::expected<Data, Error>> load() override final;
-    virtual std::optional<size_t> getSize() const noexcept override final;
+    virtual util::Generator<tl::expected<Data, Error>> loadFromFile(const std::string file) override final;
 
 private:
     virtual tl::expected<std::fstream, Error> openFile(const std::string& file);
-    virtual nlohmann::json parse(std::fstream stream);
 
-    std::optional<size_t> size;
-    nlohmann::json json;
+    virtual nlohmann::json parse(std::fstream stream);
 };
 }
 

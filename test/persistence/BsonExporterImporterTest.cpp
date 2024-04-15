@@ -138,18 +138,14 @@ TEST_F(BsonExporterImporterTest, ExportAndImport)
     std::vector<persistence::Data> readback;
 
     if (auto importer = persistence::ExporterImporterFactory::getInstance().createImporter(FORMAT); importer) {
-        if (auto ret = importer.value()->open(FILE_NAME); ret) {
-            auto loader = importer.value()->load();
+        auto loader = importer.value()->loadFromFile(FILE_NAME);
 
-            while (loader.next()) {
-                if (const auto& ret = loader.getValue(); ret) {
-                    readback.emplace_back(ret.value());
-                } else {
-                    EXPECT_TRUE(false);
-                }
+        while (loader.next()) {
+            if (const auto& ret = loader.getValue(); ret) {
+                readback.emplace_back(ret.value());
+            } else {
+                EXPECT_TRUE(false);
             }
-        } else {
-            EXPECT_TRUE(false);
         }
     } else {
         EXPECT_TRUE(false);
@@ -192,30 +188,27 @@ TEST_F(BsonExporterImporterTest, ReadFileNotExists)
 {
     auto importer = persistence::ExporterImporterFactory::getInstance().createImporter(FORMAT);
 
-    auto ret = importer.value()->open(FILE_NAME);
+    auto loader = importer.value()->loadFromFile(FILE_NAME);
+    
+    loader.next();
 
-    EXPECT_EQ(ret.error().code, persistence::ErrorCode::FILE_NOT_EXISTS);
+    EXPECT_EQ(loader.getValue().error().code, persistence::ErrorCode::FILE_NOT_EXISTS);
 }
 
 TEST_F(BsonExporterImporterTest, IncorrectJsonFormat)
 {
     if (auto importer = persistence::ExporterImporterFactory::getInstance().createImporter(FORMAT); importer) {
+        auto loader = importer.value()->loadFromFile("incorrectJson.json");
         std::optional<persistence::Error> error;
-    
-        if (auto ret = importer.value()->open("incorrectJson.json"); ret) {
-            auto loader = importer.value()->load();
 
-            while (loader.next()) {
-                if (const auto& ret = loader.getValue(); ret) {
-                    continue;
-                } else {
-                    error = ret.error();
-                }
+        while (loader.next()) {
+            if (const auto& ret = loader.getValue(); ret) {
+                continue;
+            } else {
+                error = ret.error();
             }
-        } else {
-            error = ret.error();
         }
-
+        
         if (error) {
             EXPECT_EQ(error.value().code, persistence::ErrorCode::PARSE_FILE_ERROR);
             EXPECT_EQ(error.value().msg, "[json.exception.parse_error.110] parse error at byte 230: syntax error while parsing BSON cstring: unexpected end of input");
