@@ -3,7 +3,6 @@
 
 #include "src/persistence/exporterImporter/IExporterImporter.h"
 
-#include "spdlog/spdlog.h"
 #include "nlohmann/json.hpp"
 
 #include <fstream>
@@ -29,14 +28,17 @@ private:
 };
 
 class JsonImporter: public IImporter {
+public:
+    virtual tl::expected<void, Error> open(const std::string& file) override final;
+    virtual util::Generator<tl::expected<Data, Error>> load() override final;
+    virtual std::optional<size_t> getSize() const noexcept override final;
+
 private:
-    virtual tl::expected<void, Error> loadTo(std::fstream stream, std::set<Data, CompareYear>& infos) override final;
-
-    virtual tl::expected<std::fstream, Error> openFile(const std::string& file) override;
-
+    virtual tl::expected<std::fstream, Error> openFile(const std::string& file);
     virtual nlohmann::json parse(std::fstream stream);
 
-    void fromJson();
+    std::optional<size_t> size;
+    nlohmann::json json;
 };
 }
 

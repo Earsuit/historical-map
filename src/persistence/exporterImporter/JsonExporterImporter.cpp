@@ -4,6 +4,7 @@
 
 namespace persistence {
 constexpr auto PRETTIFY_JSON = 4;
+constexpr auto JSON_FIRST_LEVEL_NAME = "historical_info";
 
 void to_json(nlohmann::json& j, const Coordinate& c) {
     j = nlohmann::json{{"latitude", c.latitude}, {"longitude", c.longitude}};
@@ -52,17 +53,17 @@ void from_json(const nlohmann::json& j, Data& d) {
 
 JsonExporter::JsonExporter()
 {
-    json["historical_info"] = {};
+    json[JSON_FIRST_LEVEL_NAME] = {};
 }
 
 void JsonExporter::insert(const Data& info)
 {
-    json["historical_info"].emplace_back(info);
+    json[JSON_FIRST_LEVEL_NAME].emplace_back(info);
 }
 
 void JsonExporter::insert(Data&& info)
 {
-    json["historical_info"].emplace_back(std::move(info));
+    json[JSON_FIRST_LEVEL_NAME].emplace_back(std::move(info));
 }
 
 tl::expected<void, Error> JsonExporter::writeToFile(const std::string& file, bool overwrite)
@@ -90,20 +91,38 @@ tl::expected<std::fstream, Error> JsonExporter::openFile(const std::string& file
     return std::fstream{file, std::ios::out | std::ios::trunc};
 }
 
-tl::expected<void, Error> JsonImporter::loadTo(std::fstream stream, std::set<Data, CompareYear>& infos)
+tl::expected<void, Error> JsonImporter::open(const std::string& file)
 {
-    try {
-        const auto json = parse(std::move(stream));
-
-        for (const auto& info : json["historical_info"]) {
-            infos.insert(info.template get<Data>());
+    if (auto&& ret = openFile(file); ret) {
+        try {
+            json = parse(std::move(ret).value());
+            size = json.size();
         }
-    }
-    catch (const nlohmann::json::exception& e) {
-        return tl::unexpected(Error{ErrorCode::PARSE_FILE_ERROR, e.what()});
+        catch (const nlohmann::json::exception& e) {
+            return tl::unexpected(Error{ErrorCode::PARSE_FILE_ERROR, e.what()});
+        }
+    } else {
+        return tl::unexpected{ret.error()};
     }
 
     return SUCCESS;
+}
+
+util::Generator<tl::expected<Data, Error>> JsonImporter::load()
+{
+    std::optional<Error> error;
+    try {
+        for (const auto& info : json[JSON_FIRST_LEVEL_NAME]) {
+            co_yield info.template get<Data>();
+        }
+    }
+    catch (const nlohmann::json::exception& e) {
+        error = {ErrorCode::PARSE_FILE_ERROR, e.what()};
+    }
+
+    if (error) {
+        co_yield tl::unexpected(*error);
+    }
 }
 
 tl::expected<std::fstream, Error> JsonImporter::openFile(const std::string& file)
@@ -118,6 +137,11 @@ tl::expected<std::fstream, Error> JsonImporter::openFile(const std::string& file
 nlohmann::json JsonImporter::parse(std::fstream stream)
 {
     return nlohmann::json::parse(stream);
+}
+
+std::optional<size_t> JsonImporter::getSize() const noexcept
+{
+    return size;
 }
 }
 

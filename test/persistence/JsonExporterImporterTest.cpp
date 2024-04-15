@@ -136,50 +136,24 @@ TEST_F(JsonExporterImporterTest, ExportAndImport)
     std::vector<persistence::Data> readback;
 
     if (auto importer = persistence::ExporterImporterFactory::getInstance().createImporter(FORMAT); importer) {
-        importer.value()->loadFromFile(FILE_NAME);
-        while (!importer.value()->empty()) {
-            readback.emplace_back(importer.value()->front());
-            importer.value()->pop();
+        if (auto ret = importer.value()->open(FILE_NAME); ret) {
+            auto loader = importer.value()->load();
+
+            while (loader.next()) {
+                if (const auto& ret = loader.getValue(); ret) {
+                    readback.emplace_back(ret.value());
+                } else {
+                    EXPECT_TRUE(false);
+                }
+            }
+        } else {
+            EXPECT_TRUE(false);
         }
     } else {
         EXPECT_TRUE(false);
     }
 
     EXPECT_EQ(readback, infos);
-}
-
-TEST_F(JsonExporterImporterTest, NextOutputYearAscendingOrder)
-{
-    const std::vector<persistence::Data> infos{
-        {100}, {10}, {-200}, {-300}, {1}, {2}
-    };
-
-    const std::vector<int> expected{
-        -300, -200, 1, 2, 10, 100
-    };
-
-    if (auto exporter = persistence::ExporterImporterFactory::getInstance().createExporter(FORMAT); exporter) {
-        for (const auto& info : infos) {
-            exporter.value()->insert(info);
-        }
-
-        EXPECT_TRUE(exporter.value()->writeToFile(FILE_NAME, false));
-    } else {
-        EXPECT_TRUE(false); 
-    }
-
-    if (auto importer = persistence::ExporterImporterFactory::getInstance().createImporter(FORMAT); importer) {
-        importer.value()->loadFromFile(FILE_NAME);
-        int i = 0;
-        while (!importer.value()->empty()) {
-            EXPECT_EQ(expected[i++], importer.value()->front().year);
-            importer.value()->pop();
-        }
-
-        EXPECT_EQ(i, expected.size());
-    } else {
-        EXPECT_TRUE(false); 
-    }
 }
 
 TEST_F(JsonExporterImporterTest, WriteFileExists)
@@ -214,15 +188,9 @@ TEST_F(JsonExporterImporterTest, OverWrite)
 
 TEST_F(JsonExporterImporterTest, ReadFileNotExists)
 {
-    if (auto importer = persistence::ExporterImporterFactory::getInstance().createImporter(FORMAT); importer) {
-        importer.value()->loadFromFile(FILE_NAME);
-    } else {
-        EXPECT_TRUE(false); 
-    }
-
     auto importer = persistence::ExporterImporterFactory::getInstance().createImporter(FORMAT);
 
-    auto ret = importer.value()->loadFromFile(FILE_NAME);
+    auto ret = importer.value()->open(FILE_NAME);
 
     EXPECT_EQ(ret.error().code, persistence::ErrorCode::FILE_NOT_EXISTS);
 }
@@ -230,11 +198,25 @@ TEST_F(JsonExporterImporterTest, ReadFileNotExists)
 TEST_F(JsonExporterImporterTest, IncorrectJsonFormat)
 {
     if (auto importer = persistence::ExporterImporterFactory::getInstance().createImporter(FORMAT); importer) {
-        auto ret = importer.value()->loadFromFile("incorrectJson.json");
-        EXPECT_EQ(ret.error().code, persistence::ErrorCode::PARSE_FILE_ERROR);
-        EXPECT_EQ(ret.error().msg, "[json.exception.out_of_range.403] key 'cities' not found");
+        importer.value()->open("incorrectJson.json");
 
-        EXPECT_TRUE(importer.value()->empty());
+        auto loader = importer.value()->load();
+        std::optional<persistence::Error> error;
+
+        while (loader.next()) {
+            if (const auto& ret = loader.getValue(); ret) {
+                continue;
+            } else {
+                error = ret.error();
+            }
+        }
+
+        if (error) {
+            EXPECT_EQ(error.value().code, persistence::ErrorCode::PARSE_FILE_ERROR);
+            EXPECT_EQ(error.value().msg, "[json.exception.out_of_range.403] key 'cities' not found");
+        } else {
+            EXPECT_TRUE(false); 
+        }
     } else {
         EXPECT_TRUE(false); 
     }

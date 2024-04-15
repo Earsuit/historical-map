@@ -3,12 +3,13 @@
 
 #include "src/persistence/Data.h"
 #include "src/persistence/exporterImporter/Util.h"
+#include "src/util/Generator.h"
 
 #include "tl/expected.hpp"
 
 #include <string>
-#include <set>
 #include <fstream>
+#include <optional>
 
 namespace persistence {
 class IExporter {
@@ -21,28 +22,12 @@ public:
 
 class IImporter {
 public:
-    struct CompareYear
-    {
-        bool operator()(const auto& lhs, const auto& rhs) const
-        {
-            return lhs.year < rhs.year;
-        }
-    };
-
     virtual ~IImporter() = default;
-    
-    const Data& front() const noexcept;
-    void pop();
-    bool empty() const noexcept;
-    size_t size() const noexcept;
-    tl::expected<void, Error> loadFromFile(const std::string& file);
 
-private:
-    // this cache is necessary because we have to parse the file to see if the content is valid or not
-    std::set<Data, CompareYear> infos;
-
-    virtual tl::expected<void, Error> loadTo(std::fstream stream, std::set<Data, CompareYear>& infos) = 0;
-    virtual tl::expected<std::fstream, Error> openFile(const std::string& file) = 0;
+    virtual tl::expected<void, Error> open(const std::string& file) = 0;
+    virtual util::Generator<tl::expected<Data, Error>> load() = 0;
+    // some format might not be able to extract size
+    virtual std::optional<size_t> getSize() const noexcept = 0;
 };
 }
 

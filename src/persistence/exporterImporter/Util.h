@@ -14,8 +14,8 @@ enum class ErrorCode {
 };
 
 struct Error {
-    const ErrorCode code;
-    const std::string msg;
+    ErrorCode code;
+    std::string msg;
 };
 
 static const auto SUCCESS = tl::expected<void, Error>{};

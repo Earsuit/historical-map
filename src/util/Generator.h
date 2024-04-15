@@ -34,7 +34,7 @@ public:
       
         template<std::convertible_to<T> From>
         auto yield_value(From&& from) {                          
-            current_value = std::forward<From>(from);;
+            current_value = std::forward<From>(from);
             return std::suspend_always{};
         }
 
@@ -73,6 +73,11 @@ public:
 
     bool next() {                                             
         coro.resume();
+
+        if (coro.promise().exception_) {
+            std::rethrow_exception(coro.promise().exception_);
+        }
+
         return !coro.done();
     }
 private:

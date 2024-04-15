@@ -4,47 +4,43 @@
 namespace persistence {
 constexpr auto COMPLETE = 1.0f;
 
-std::future<tl::expected<void, Error>> ImportManager::doImport(Selector& selector,
-                                                               const std::string& file, 
-                                                               const std::string& format)
+std::future<tl::expected<std::map<int, std::shared_ptr<const Data>>, Error>> 
+ImportManager::doImport(const std::string& file, 
+                        const std::string& format)
 {
     return std::async(
             std::launch::async,
             [this, 
              file, 
-             format, 
-             &selector]() -> tl::expected<void, Error>
+             format]() -> tl::expected<std::map<int, std::shared_ptr<const Data>>, Error>
             {
                 if (auto ret = ExporterImporterFactory::getInstance().createImporter(format); ret) {
                     auto importer = std::move(ret.value());
 
-                    if (auto success = importer->loadFromFile(file); success) {
-                        while(!importer->empty()) {
-                            auto info = std::make_shared<const Data>(importer->front());
-                            auto total = importer->size();
-                            float count = 0;
+                    if (auto ret = importer->open(file); ret) {
+                        auto total = importer->getSize();
+                        float count = 0;
+                        auto loader = importer->load();
+                        std::map<int, std::shared_ptr<const Data>> infos;
 
-                            for (const auto& country: info->countries) {
-                                selector.select(country, info);
+                        while (loader.next()) {
+                            if (const auto& ret = loader.getValue(); ret) {
+                                infos.emplace(std::make_pair(ret.value().year, std::make_shared<const Data>(ret.value())));
+
+                                if (total) {
+                                    this->progress = (++count) / *total;
+                                }
+                            } else {
+                                return tl::unexpected{ret.error()};
                             }
-
-                            for (const auto& city : info->cities) {
-                                selector.select(city, info);
-                            }
-
-                            selector.select(info->note, info);
-
-                            importer->pop();
-
-                            this->progress = (++count) / total;
                         }
 
                         this->progress = COMPLETE;
-                    } else {
-                        return tl::unexpected{success.error()};
-                    }
 
-                    return SUCCESS;
+                        return infos;
+                    } else {
+                        return tl::unexpected{ret.error()};
+                    }
                 } else {
                     return tl::unexpected{ret.error()};
                 }
