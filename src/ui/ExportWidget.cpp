@@ -66,7 +66,7 @@ void ExportWidget::historyInfo()
         handleCityInfo(selectAll);
 
         ImGui::SeparatorText("Note");
-        paintNote(selectAll);
+        handleNote(selectAll);
     }
 
     if (ImGui::BeginPopup(EXPORT_FORMAT_POPUP_NAME)) {
@@ -130,13 +130,13 @@ void ExportWidget::handleCityInfo(bool selectAll)
     }
 }
 
-void ExportWidget::paintNote(bool selectAll)
+void ExportWidget::handleNote(bool selectAll)
 {
     if (!cache->note.text.empty()) {
         select(cache->note, selectAll);
     }
 
-    ImGui::TextUnformatted(cache->note.text.c_str(), cache->note.text.c_str() + cache->note.text.size());
+    paintNote(cache->note);
 }
 
 std::vector<HistoricalInfo> ExportWidget::getInfo()

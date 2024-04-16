@@ -54,7 +54,7 @@ private:
 
     void handleCountryInfo(bool selectAll);
     void handleCityInfo(bool selectAll);
-    void paintNote(bool selectAll);
+    void handleNote(bool selectAll);
     void checkExportProgress();
     void selectMultiYears();
     util::Generator<int> multiYearsSelectionGenerator(int start, int end);

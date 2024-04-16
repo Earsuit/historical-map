@@ -113,6 +113,16 @@ std::optional<persistence::Coordinate> paintCityInfo(T& city)
 
     return selected;
 }
+
+template<typename T>
+void paintNote(T& note)
+{
+    if constexpr (std::is_const_v<std::remove_reference_t<T>>) {
+        ImGui::TextUnformatted(note.text.c_str(), note.text.c_str() + note.text.size());
+    } else {
+        ImGui::InputTextMultiline("##note", &note.text, ImGui::GetContentRegionAvail(), ImGuiInputTextFlags_AllowTabInput);
+    }
+}
 }
 
 #endif

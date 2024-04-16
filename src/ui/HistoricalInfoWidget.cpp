@@ -195,7 +195,7 @@ void HistoricalInfoWidget::displayNote()
         cache->note.text.clear();
     }
 
-    ImGui::InputTextMultiline("##note", &cache->note.text, ImGui::GetContentRegionAvail(), ImGuiInputTextFlags_AllowTabInput);
+    paintNote(cache->note);
 }
 
 void HistoricalInfoWidget::saveInfo(int saveForYear)
