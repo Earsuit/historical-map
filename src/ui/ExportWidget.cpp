@@ -63,7 +63,7 @@ void ExportWidget::historyInfo()
         handleCountryInfo(selectAll);
 
         ImGui::SeparatorText("Cities");
-        paintCityInfo(selectAll);
+        handleCityInfo(selectAll);
 
         ImGui::SeparatorText("Note");
         paintNote(selectAll);
@@ -111,7 +111,7 @@ void ExportWidget::handleCountryInfo(bool selectAll)
     }
 }
 
-void ExportWidget::paintCityInfo(bool selectAll)
+void ExportWidget::handleCityInfo(bool selectAll)
 {
     for (auto& city : cache->cities) {
         bool isHovered = false;
@@ -120,14 +120,8 @@ void ExportWidget::paintCityInfo(bool selectAll)
         ImGui::SameLine();
 
         if (ImGui::TreeNode((city.name + "##city").c_str())) {
-            ImGui::Text("latitude %.2f", city.coordinate.latitude);
-            isHovered |= ImGui::IsItemHovered();
-            ImGui::SameLine();
-            ImGui::Text("longitude %.2f", city.coordinate.longitude);
-            isHovered |= ImGui::IsItemHovered();
-
-            if (isHovered) {
-                hovered = city.coordinate;
+            if (const auto& ret = paintCityInfo(city); ret) {
+                hovered = ret;
             }
 
             ImGui::TreePop();

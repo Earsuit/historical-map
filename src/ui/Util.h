@@ -10,7 +10,10 @@
 #include <type_traits>
 
 namespace ui {
+constexpr int COORDINATE_INPUT_WIDTH = 50;
+ 
 void helpMarker(const char* message);
+void alignForWidth(float width, float alignment = 0.5f);
 
 // we are not so care about the error of floating comparison 
 template<typename T>
@@ -18,8 +21,6 @@ bool inBound(T v, T min, T max)
 {
     return (v > min) && (v < max);
 }
-
-void alignForWidth(float width, float alignment = 0.5f);
 
 template<typename Y>
 void itemFiled(const char* label, Y& value)
@@ -47,7 +48,6 @@ void itemFiled(const char* label, const Y& value)
 template<typename T>
 std::optional<persistence::Coordinate> paintCountryInfo(T& country)
 {
-    constexpr int COORDINATE_INPUT_WIDTH = 50;
     std::optional<persistence::Coordinate> selected;
 
     ImGui::PushItemWidth(COORDINATE_INPUT_WIDTH);
@@ -84,6 +84,29 @@ std::optional<persistence::Coordinate> paintCountryInfo(T& country)
     } else {
         country.borderContour.erase(std::remove_if(country.borderContour.begin(), country.borderContour.end(), loopFunc), 
                                     country.borderContour.cend());
+    }
+
+    ImGui::PopItemWidth();
+
+    return selected;
+}
+
+template<typename T>
+std::optional<persistence::Coordinate> paintCityInfo(T& city)
+{
+    std::optional<persistence::Coordinate> selected;
+    bool hovered = false;
+
+    ImGui::PushItemWidth(COORDINATE_INPUT_WIDTH);
+
+    itemFiled("latitude", city.coordinate.latitude);
+    hovered |= ImGui::IsItemHovered();
+    ImGui::SameLine();
+    itemFiled("longitude", city.coordinate.longitude);
+    hovered |= ImGui::IsItemHovered();
+
+    if (hovered) {
+        selected = city.coordinate;
     }
 
     ImGui::PopItemWidth();

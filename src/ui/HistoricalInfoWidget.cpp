@@ -8,10 +8,7 @@ namespace ui {
 constexpr int MIN_YEAR = -3000;
 constexpr int MAX_YEAR = 1911;
 constexpr int SLIDER_WIDTH = 40;
-constexpr int COORDINATE_INPUT_WIDTH = 50;
 constexpr int NAME_INPUT_WIDTH = 100;
-constexpr double STEP = 0;
-constexpr double STEP_FAST = 0;
 constexpr auto POPUP_WINDOW_NAME = "Save for years";
 
 void HistoricalInfoWidget::historyInfo()
@@ -135,26 +132,18 @@ bool HistoricalInfoWidget::complete()
 
 void HistoricalInfoWidget::cityInfo()
 {
-    ImGui::PushItemWidth(COORDINATE_INPUT_WIDTH);
     cache->cities.remove_if([this](auto& city){
         bool remove = false;
-        bool hovered = false;
 
         if (ImGui::TreeNode((city.name + "##city").c_str())) {
-            ImGui::InputFloat("latitude", &city.coordinate.latitude, STEP, STEP_FAST, "%.2f");
-            hovered |= ImGui::IsItemHovered();
-            ImGui::SameLine();
-            ImGui::InputFloat("longitude", &city.coordinate.longitude, STEP, STEP_FAST, "%.2f");
-            hovered |= ImGui::IsItemHovered();
-            ImGui::SameLine();
+            if (const auto& ret = paintCityInfo(city); ret) {
+                this->selected = ret;
+            }
+
             if (ImGui::Button("Remove")) {
                 this->remove->cities.emplace_back(city);
                 this->logger->debug("Delete city {}, current city num in cache: {}", city.name, this->cache->cities.size());
                 remove = true;
-            }
-
-            if (hovered) {
-                this->selected = city.coordinate;
             }
 
             ImGui::TreePop();
@@ -163,7 +152,6 @@ void HistoricalInfoWidget::cityInfo()
         
         return remove;
     });
-    ImGui::PopItemWidth();
 
     ImGui::PushItemWidth(NAME_INPUT_WIDTH);
     ImGui::InputTextWithHint("##City name", "City name", &newCityName);

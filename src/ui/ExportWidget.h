@@ -53,7 +53,7 @@ private:
     void historyInfo() override;
 
     void handleCountryInfo(bool selectAll);
-    void paintCityInfo(bool selectAll);
+    void handleCityInfo(bool selectAll);
     void paintNote(bool selectAll);
     void checkExportProgress();
     void selectMultiYears();
