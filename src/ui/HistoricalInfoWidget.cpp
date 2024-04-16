@@ -140,6 +140,7 @@ void HistoricalInfoWidget::cityInfo()
                 this->selected = ret;
             }
 
+            ImGui::SameLine();
             if (ImGui::Button("Remove")) {
                 this->remove->cities.emplace_back(city);
                 this->logger->debug("Delete city {}, current city num in cache: {}", city.name, this->cache->cities.size());
