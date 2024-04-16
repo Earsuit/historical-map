@@ -29,14 +29,13 @@ public:
     {
         bool hovered = false;
 
-        ImGui::PushItemWidth(COORDINATE_INPUT_WIDTH);
-
         if (const auto& ret = paintCountryInfo(country); ret) {
             // only update if we hovered on this country
             selected = ret;
         }
 
         if constexpr (!util::is_const_iterator_v<T>) {
+            ImGui::PushItemWidth(COORDINATE_INPUT_WIDTH);
             // input filed for new coordinate
             itemFiled("Latitude", latitude);
             hovered |= ImGui::IsItemHovered();
@@ -83,8 +82,6 @@ private:
     decltype(*it) country;
     std::string latitude{};
     std::string longitude{};
-
-    constexpr static int COORDINATE_INPUT_WIDTH = 50;
 };
 }
 
