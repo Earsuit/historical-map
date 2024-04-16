@@ -1,19 +1,20 @@
 #include "src/persistence/exporterImporter/ImportManager.h"
 #include "src/persistence/exporterImporter/ExporterImporterFactory.h"
 
+#include <filesystem>
+
 namespace persistence {
 constexpr auto COMPLETE = 1.0f;
 
 std::future<tl::expected<std::map<int, std::shared_ptr<const Data>>, Error>> 
-ImportManager::doImport(const std::string& file, 
-                        const std::string& format)
+ImportManager::doImport(const std::string& file)
 {
     return std::async(
             std::launch::async,
             [this, 
-             file, 
-             format]() -> tl::expected<std::map<int, std::shared_ptr<const Data>>, Error>
+             file]() -> tl::expected<std::map<int, std::shared_ptr<const Data>>, Error>
             {
+                const auto format = std::filesystem::u8path(file).extension();
                 if (auto ret = ExporterImporterFactory::getInstance().createImporter(format); ret) {
                     auto importer = std::move(ret.value());
                     auto loader = importer->loadFromFile(file);
