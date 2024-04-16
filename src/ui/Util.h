@@ -47,8 +47,10 @@ void itemFiled(const char* label, const Y& value)
 template<typename T>
 std::optional<persistence::Coordinate> paintCountryInfo(T& country)
 {
+    constexpr int COORDINATE_INPUT_WIDTH = 50;
     std::optional<persistence::Coordinate> selected;
 
+    ImGui::PushItemWidth(COORDINATE_INPUT_WIDTH);
     auto loopFunc = [&selected](auto& coordinate){
                         bool hovered = false;
                         bool remove = false;
@@ -83,6 +85,8 @@ std::optional<persistence::Coordinate> paintCountryInfo(T& country)
         country.borderContour.erase(std::remove_if(country.borderContour.begin(), country.borderContour.end(), loopFunc), 
                                     country.borderContour.cend());
     }
+
+    ImGui::PopItemWidth();
 
     return selected;
 }

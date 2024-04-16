@@ -2,7 +2,6 @@
 #define SRC_UI_EXPORTWIDGET
 
 #include "src/ui/IInfoWidget.h"
-#include "src/ui/CountryInfoWidget.h"
 #include "src/persistence/DatabaseManager.h"
 #include "src/persistence/exporterImporter/ExportManager.h"
 #include "src/persistence/Selector.h"
@@ -10,6 +9,7 @@
 #include "src/util/Generator.h"
 
 #include "spdlog/spdlog.h"
+#include "imgui.h"
 
 #include <memory>
 #include <vector>
@@ -41,7 +41,6 @@ private:
     std::optional<persistence::Coordinate> hovered;
     std::shared_ptr<const persistence::Data> cache;
     std::map<int, bool> selectAlls;
-    std::vector<CountryInfoWidget<decltype(persistence::Data::countries)::const_iterator>> countryInfoWidgets;
     bool isComplete = false;
     std::string exportFormat;
     std::string errorMsg;
@@ -53,7 +52,7 @@ private:
 
     void historyInfo() override;
 
-    void paintCountryInfo(bool selectAll);
+    void handleCountryInfo(bool selectAll);
     void paintCityInfo(bool selectAll);
     void paintNote(bool selectAll);
     void checkExportProgress();

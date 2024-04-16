@@ -51,16 +51,7 @@ void ExportWidget::historyInfo()
     if (!cache || cache->year != year) {
         logger->debug("Load data of year {} from database.", year);
 
-        cache.reset();
-
-        countryInfoWidgets.clear();
-
-        if (cache = database.load(year); cache) {
-            countryInfoWidgets.reserve(cache->countries.size());
-            for (auto it = cache->countries.cbegin(); it != cache->countries.cend(); it++) {
-                countryInfoWidgets.emplace_back(it);
-            }
-        }
+        cache = database.load(year);
     }
 
     if (cache) {
@@ -69,7 +60,7 @@ void ExportWidget::historyInfo()
         selectAlls[year] = !(cache->countries.empty() && cache->cities.empty() && cache->note.text.empty());
 
         ImGui::SeparatorText("Countries");
-        paintCountryInfo(selectAll);
+        handleCountryInfo(selectAll);
 
         ImGui::SeparatorText("Cities");
         paintCityInfo(selectAll);
@@ -102,15 +93,17 @@ void ExportWidget::historyInfo()
     checkExportProgress();
 }
 
-void ExportWidget::paintCountryInfo(bool selectAll)
+void ExportWidget::handleCountryInfo(bool selectAll)
 {
-    for (auto& countryInfoWidget : countryInfoWidgets) {
+    for (const auto& country : cache->countries) {
 
-        select(*countryInfoWidget.getCountryIterator(), selectAll);
+        select(country, selectAll);
         ImGui::SameLine();
 
-        if (ImGui::TreeNode((countryInfoWidget.getName() + "##country").c_str())) {
-            countryInfoWidget.paint(hovered);
+        if (ImGui::TreeNode((country.name + "##country").c_str())) {
+            if (const auto& ret = paintCountryInfo(country); ret) {
+                hovered = ret;
+            }
 
             ImGui::TreePop();
             ImGui::Spacing();
