@@ -69,7 +69,6 @@ void HistoricalInfoWidget::countryInfo()
     countryInfoWidgets.remove_if([this](auto& countryInfoWidget){
         bool remove = false;
         if (ImGui::TreeNode((countryInfoWidget.getName() + "##country").c_str())) {
-            ImGui::SeparatorText(countryInfoWidget.getName().c_str());
             countryInfoWidget.paint(this->selected);
 
             if (this->selected) {

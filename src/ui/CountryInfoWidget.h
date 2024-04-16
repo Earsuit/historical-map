@@ -4,6 +4,7 @@
 #include "src/persistence/Data.h"
 #include "src/logger/Util.h"
 #include "src/util/TypeTraits.h"
+#include "src/ui/Util.h"
 
 #include "spdlog/spdlog.h"
 #include "external/imgui/imgui.h"
@@ -30,46 +31,17 @@ public:
 
         ImGui::PushItemWidth(COORDINATE_INPUT_WIDTH);
 
-        auto loopFunc = [&selected, this](auto& coordinate){
-                            bool hovered = false;
-                            bool remove = false;
+        if (const auto& ret = paintCountryInfo(country); ret) {
+            // only update if we hovered on this country
+            selected = ret;
+        }
 
-                            // create ID scope so we can reuse labels
-                            ImGui::PushID(&coordinate);
-                            this->inputFiled("latitude", coordinate.latitude);
-                            hovered |= ImGui::IsItemHovered();
-                            ImGui::SameLine();
-                            this->inputFiled("longitude", coordinate.longitude);
-                            hovered |= ImGui::IsItemHovered();
-
-                            if constexpr (!util::is_const_iterator_v<T>) {
-                                ImGui::SameLine();
-                                if (ImGui::Button("Remove")) {
-                                    this->logger->debug("Delete coordinate lat={}, lon={}.", coordinate.latitude, coordinate.longitude);
-                                    remove = true;
-                                }
-                            }
-
-                            if (hovered) {
-                                selected = coordinate;
-                            }
-
-                            ImGui::PopID();
-
-                            return remove;
-                        };
-
-        if constexpr (util::is_const_iterator_v<T>) {
-            std::for_each(country.borderContour.cbegin(), country.borderContour.cend(), loopFunc);
-        } else {
-            country.borderContour.erase(std::remove_if(country.borderContour.begin(), country.borderContour.end(), loopFunc), 
-                                        country.borderContour.end());
-
+        if constexpr (!util::is_const_iterator_v<T>) {
             // input filed for new coordinate
-            inputFiled("Latitude", latitude);
+            itemFiled("Latitude", latitude);
             hovered |= ImGui::IsItemHovered();
             ImGui::SameLine();
-            inputFiled("Longitude", longitude);
+            itemFiled("Longitude", longitude);
             hovered |= ImGui::IsItemHovered();
             ImGui::SameLine();
             const auto pressed = ImGui::Button("Add");
@@ -112,29 +84,7 @@ private:
     std::string latitude{};
     std::string longitude{};
 
-    constexpr static double STEP = 0;
-    constexpr static double STEP_FAST = 0;
     constexpr static int COORDINATE_INPUT_WIDTH = 50;
-
-    template<typename Y>
-    void inputFiled(const char* label, Y& value)
-    {
-        if constexpr (std::is_same_v<std::remove_const_t<Y>, float>) {
-            ImGui::InputFloat(label, &value, STEP, STEP_FAST, "%.2f");
-        } else {
-            ImGui::InputText(label, &value);
-        }
-    }
-
-    template<typename Y>
-    void inputFiled(const char* label, const Y& value)
-    {
-        if constexpr (std::is_same_v<Y, float>) {
-            ImGui::LabelText(label, "%.2f", value);
-        } else {
-            ImGui::LabelText(label, value);
-        }
-    }
 };
 }
 
