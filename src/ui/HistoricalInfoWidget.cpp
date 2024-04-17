@@ -140,7 +140,7 @@ void HistoricalInfoWidget::cityInfo()
         bool remove = false;
 
         if (ImGui::TreeNode((city.name + "##city").c_str())) {
-            if (const auto& ret = paintCityInfo(city); ret) {
+            if (const auto& ret = paintInfo(city); ret) {
                 this->selected = ret;
             }
 
@@ -200,7 +200,7 @@ void HistoricalInfoWidget::displayNote()
         cache->note.text.clear();
     }
 
-    paintNote(cache->note);
+    paintInfo(cache->note);
 }
 
 void HistoricalInfoWidget::saveInfo(int saveForYear)

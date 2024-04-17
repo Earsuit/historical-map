@@ -47,7 +47,7 @@ void itemFiled(const char* label, const Y& value)
 
 template<typename T>
 requires (std::is_same_v<std::remove_cvref_t<T>, persistence::Country>)
-std::optional<persistence::Coordinate> paintCountryInfo(T& country)
+std::optional<persistence::Coordinate> paintInfo(T&& country)
 {
     std::optional<persistence::Coordinate> selected;
 
@@ -94,7 +94,7 @@ std::optional<persistence::Coordinate> paintCountryInfo(T& country)
 
 template<typename T>
 requires (std::is_same_v<std::remove_cvref_t<T>, persistence::City>)
-std::optional<persistence::Coordinate> paintCityInfo(T& city)
+std::optional<persistence::Coordinate> paintInfo(T&& city)
 {
     std::optional<persistence::Coordinate> selected;
     bool hovered = false;
@@ -118,7 +118,7 @@ std::optional<persistence::Coordinate> paintCityInfo(T& city)
 
 template<typename T>
 requires (std::is_same_v<std::remove_cvref_t<T>, persistence::Note>)
-void paintNote(T& note)
+void paintInfo(T&& note)
 {
     if constexpr (std::is_const_v<std::remove_reference_t<T>>) {
         ImGui::TextUnformatted(note.text.c_str(), note.text.c_str() + note.text.size());

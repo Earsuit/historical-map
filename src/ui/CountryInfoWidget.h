@@ -29,7 +29,7 @@ public:
     {
         bool hovered = false;
 
-        if (const auto& ret = paintCountryInfo(country); ret) {
+        if (const auto& ret = paintInfo(country); ret) {
             // only update if we hovered on this country
             selected = ret;
         }

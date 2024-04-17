@@ -105,7 +105,7 @@ void ExportWidget::handleCountryInfo(bool selectAll)
         ImGui::SameLine();
 
         if (ImGui::TreeNode((country.name + "##country").c_str())) {
-            if (const auto& ret = paintCountryInfo(country); ret) {
+            if (const auto& ret = paintInfo(country); ret) {
                 hovered = ret;
             }
 
@@ -124,7 +124,7 @@ void ExportWidget::handleCityInfo(bool selectAll)
         ImGui::SameLine();
 
         if (ImGui::TreeNode((city.name + "##city").c_str())) {
-            if (const auto& ret = paintCityInfo(city); ret) {
+            if (const auto& ret = paintInfo(city); ret) {
                 hovered = ret;
             }
 
@@ -140,7 +140,7 @@ void ExportWidget::handleNote(bool selectAll)
         select(cache->note, selectAll);
     }
 
-    paintNote(cache->note);
+    paintInfo(cache->note);
 }
 
 std::vector<HistoricalInfo> ExportWidget::getInfo()
