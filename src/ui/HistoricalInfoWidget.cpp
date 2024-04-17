@@ -11,23 +11,25 @@ constexpr int SLIDER_WIDTH = 40;
 constexpr int NAME_INPUT_WIDTH = 100;
 constexpr auto POPUP_WINDOW_NAME = "Save for years";
 
-void HistoricalInfoWidget::historyInfo()
+int HistoricalInfoWidget::historyInfo(int year)
 {
+    currentYear = year;
+
     if (database.getWorkLoad() != 0) {
         displaySaveProgress();
     }
 
     selected = std::nullopt;
 
-    if (ImGui::Button("Refresh") || !cache || cache->year != year) {
-        logger->debug("Load data of year {} from database.", year);
+    if (ImGui::Button("Refresh") || !cache || cache->year != currentYear) {
+        logger->debug("Load data of year {} from database.", currentYear);
         
-        remove = std::make_shared<persistence::Data>(year);
+        remove = std::make_shared<persistence::Data>(currentYear);
         cache.reset();
 
         countryInfoWidgets.clear();
 
-        if (cache = database.load(year); cache) {
+        if (cache = database.load(currentYear); cache) {
             for (auto it = cache->countries.begin(); it != cache->countries.end(); it++) {
                 countryInfoWidgets.emplace_back(it);
             }
@@ -57,6 +59,8 @@ void HistoricalInfoWidget::historyInfo()
         ImGui::SeparatorText("Note");
         displayNote();
     }
+
+    return currentYear;
 }
 
 void HistoricalInfoWidget::countryInfo()
@@ -204,7 +208,7 @@ void HistoricalInfoWidget::saveInfo(int saveForYear)
     std::shared_ptr<persistence::Data> toUpdate;
     std::shared_ptr<persistence::Data> toRemove;
 
-    if (saveForYear == year) {
+    if (saveForYear == currentYear) {
         toUpdate = cache;
         toRemove = remove;
     } else {
@@ -228,7 +232,7 @@ void HistoricalInfoWidget::saveInfoRange(int startYear, int endYear)
     }
 
     // don't clear cache because the user may continue editing
-    remove = std::make_shared<persistence::Data>(year);
+    remove = std::make_shared<persistence::Data>(currentYear);
 
     totalWorkLoad = static_cast<float>(database.getWorkLoad());
 }
@@ -241,10 +245,10 @@ void HistoricalInfoWidget::savePopupWindow()
         ImGui::InputInt("End", &endYear);
         
         if (ImGui::Button("Save##ForYears")) {
-            if (startYear <= year && endYear >= year) {
+            if (startYear <= currentYear && endYear >= currentYear) {
                 saveInfoRange(startYear, endYear);
             } else {
-                logger->error("Year range must contain current year {}", year);
+                logger->error("Year range must contain current year {}", currentYear);
             }
         }
         

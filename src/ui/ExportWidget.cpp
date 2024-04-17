@@ -19,21 +19,23 @@ constexpr auto SELECT_MULTIPLE_YEAR_POPUP_NAME = "Select multiple years";
 constexpr auto PROCESS_MULTI_YEAR_SELECTION_POPUP_NAME = "Selecting";
 constexpr auto SELECT_MULTI_YEAR_YEAR_CONSTRAINTS = "Start year must be less than end year.";
 
-void ExportWidget::historyInfo()
+int ExportWidget::historyInfo(int year)
 {
+    currentYear = year;
+
     hovered = std::nullopt;
     
-    if (!selectAlls.contains(year)) {
-        selectAlls[year] = false;
+    if (!selectAlls.contains(currentYear)) {
+        selectAlls[currentYear] = false;
     }
 
-    if (ImGui::Checkbox("Select all", &selectAlls[year]) && !selectAlls[year]) {
-        selector.clear(year);
+    if (ImGui::Checkbox("Select all", &selectAlls[currentYear]) && !selectAlls[currentYear]) {
+        selector.clear(currentYear);
     }
     if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
         ImGui::OpenPopup(SELECT_MULTIPLE_YEAR_POPUP_NAME);
-        startYear = year;
-        endYear = year;
+        startYear = currentYear;
+        endYear = currentYear;
     }
     ImGui::SameLine();
     helpMarker("Right click to select multiple years");
@@ -91,6 +93,8 @@ void ExportWidget::historyInfo()
     }
 
     checkExportProgress();
+
+    return currentYear;
 }
 
 void ExportWidget::handleCountryInfo(bool selectAll)
@@ -213,13 +217,13 @@ void ExportWidget::selectMultiYears()
     }
 
     if (ImGui::BeginPopupModal(PROCESS_MULTI_YEAR_SELECTION_POPUP_NAME, &processMultiYearSelection, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::ProgressBar(static_cast<float>(year - startYear) / (endYear - startYear), PROGRESS_BAR_SIZE);
-        ImGui::Text("Processing year %d", year);
+        ImGui::ProgressBar(static_cast<float>(currentYear - startYear) / (endYear - startYear), PROGRESS_BAR_SIZE);
+        ImGui::Text("Processing year %d", currentYear);
 
-        if (cache && cache->year == year) {
+        if (cache && cache->year == currentYear) {
             processMultiYearSelection  = generator.next();
-            year = generator.getValue();
-            selectAlls[year] = true;
+            currentYear = generator.getValue();
+            selectAlls[currentYear] = true;
         }
 
         ImGui::EndPopup();

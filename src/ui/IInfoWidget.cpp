@@ -36,7 +36,8 @@ void IInfoWidget::paint()
     ImGui::SameLine();
     helpMarker("Ctrl + click to maually set the year");
 
-    historyInfo();
+    // the derived class may change the year
+    year = historyInfo(year);
 
     ImGui::End();
 }

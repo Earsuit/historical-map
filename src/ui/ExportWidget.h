@@ -45,12 +45,13 @@ private:
     std::string exportFormat;
     std::string errorMsg;
     bool exportFailPopup = false;
+    int currentYear;
     int startYear;
     int endYear;
     util::Generator<int> generator;
     bool processMultiYearSelection = false;
 
-    void historyInfo() override;
+    virtual int historyInfo(int year) override;
 
     void handleCountryInfo(bool selectAll);
     void handleCityInfo(bool selectAll);
@@ -75,7 +76,7 @@ private:
     template<typename T>
     void select(const T& item, bool selectAll)
     {
-        bool tick = selectAll || selector.isSelected(item, year);
+        bool tick = selectAll || selector.isSelected(item, currentYear);
 
         checkbox(item, tick);
 
@@ -85,7 +86,7 @@ private:
             selector.deselect(item, cache);
         }
 
-        selectAlls[year] = selectAlls[year] & tick;
+        selectAlls[currentYear] = selectAlls[currentYear] & tick;
     }
 };
 }

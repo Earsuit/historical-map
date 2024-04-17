@@ -43,8 +43,9 @@ private:
     std::string newCityName;
     std::string cityLongitude;
     std::string cityLatitude;
-    int startYear = year;
-    int endYear = year;
+    int currentYear;
+    int startYear;
+    int endYear;
     float totalWorkLoad = 0;
 
     void countryInfo();
@@ -55,7 +56,7 @@ private:
     void savePopupWindow();
     void displaySaveProgress();
 
-    void historyInfo() override;
+    virtual int historyInfo(int year) override;
 };
 
 }

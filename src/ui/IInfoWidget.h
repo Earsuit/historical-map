@@ -34,11 +34,10 @@ public:
     virtual std::vector<HistoricalInfo> getInfo() = 0;
     virtual bool complete() = 0;
 
-protected:
+private:
     int year;
 
-private:
-    virtual void historyInfo() = 0;
+    virtual int historyInfo(int year) = 0;
 };
 }
 
