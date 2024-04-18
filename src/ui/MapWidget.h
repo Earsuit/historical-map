@@ -39,10 +39,10 @@ private:
     std::pair<tile::BoundingBox, std::optional<ImPlotPoint>> renderMap(IInfoWidget& infoWidget, 
                                                                        ImVec2 size, 
                                                                        const std::string& name, 
-                                                                       HistoricalData historicalData, 
+                                                                       HistoricalInfo historicalInfo, 
                                                                        std::optional<persistence::Coordinate> hovered);
     void renderOverlay(const std::string& name, int offset, const tile::BoundingBox& bbox, const std::optional<ImPlotPoint>& mousePos);
-    void renderHistoricalInfo(HistoricalData historicalData, std::optional<persistence::Coordinate> hovered);
+    void renderHistoricalInfo(HistoricalInfo historicalInfo, std::optional<persistence::Coordinate> hovered);
     
     template<typename T>
     std::pair<double, double> renderCoordinate(T& coordinate, const ImVec4& color, float size, int id)

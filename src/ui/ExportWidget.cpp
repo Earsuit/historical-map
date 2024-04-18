@@ -143,9 +143,9 @@ void ExportWidget::handleNote(bool selectAll)
     paintInfo(cache->note);
 }
 
-std::vector<HistoricalInfo> ExportWidget::getInfo() const
+std::vector<HistoricalInfoPack> ExportWidget::getInfos() const
 {
-    return {std::make_tuple("Export", cache)};
+    return {HistoricalInfoPack{cache, "Export"}};
 }
 
 bool ExportWidget::complete() const noexcept

@@ -107,9 +107,9 @@ void HistoricalInfoWidget::countryInfo()
     }
 }
 
-std::vector<HistoricalInfo> HistoricalInfoWidget::getInfo() const
+std::vector<HistoricalInfoPack> HistoricalInfoWidget::getInfos() const
 {
-    return {std::make_tuple("Historical Info", cache)};
+    return {HistoricalInfoPack(cache, "Historical Info")};
 }
 
 void HistoricalInfoWidget::drawRightClickMenu(float longitude, float latitude)

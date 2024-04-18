@@ -29,7 +29,7 @@ public:
     {
     }
 
-    std::vector<HistoricalInfo> getInfo() const override;
+    std::vector<HistoricalInfoPack> getInfos() const override;
     void drawRightClickMenu(float longitude, float latitude) override;
     bool complete() const noexcept override;
     virtual std::optional<persistence::Coordinate> getHovered() const noexcept override;

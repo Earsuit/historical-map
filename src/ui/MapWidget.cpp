@@ -63,14 +63,14 @@ void MapWidget::paint(IInfoWidget& infoWidget)
     ImGui::PopStyleVar(2);
 
     const auto area = ImGui::GetContentRegionAvail();
-    const auto infos = infoWidget.getInfo();
+    const auto infos = infoWidget.getInfos();
 
     const ImVec2 singleMapWindowSize = {area.x / infos.size(), area.y};
     int overlayOffset = 0;
     const auto hovered = infoWidget.getHovered();
 
-    for (auto [name, historicalData] : infos) {
-        const auto [bbox, mousePos] = renderMap(infoWidget, singleMapWindowSize, name, historicalData, hovered);
+    for (auto [info, name] : infos) {
+        const auto [bbox, mousePos] = renderMap(infoWidget, singleMapWindowSize, name, info, hovered);
         renderOverlay(name, overlayOffset, bbox, mousePos);
         overlayOffset += singleMapWindowSize.x + ImPlot::GetStyle().PlotPadding.x - ImPlot::GetStyle().PlotBorderSize * 2;
         ImGui::SameLine();
@@ -82,7 +82,7 @@ void MapWidget::paint(IInfoWidget& infoWidget)
 std::pair<tile::BoundingBox, std::optional<ImPlotPoint>> MapWidget::renderMap(IInfoWidget& infoWidget,
                                                                               ImVec2 size, 
                                                                               const std::string& name, 
-                                                                              HistoricalData historicalData, 
+                                                                              HistoricalInfo historicalInfo, 
                                                                               std::optional<persistence::Coordinate> hovered)
 {
     tile::BoundingBox bbox;
@@ -141,7 +141,7 @@ std::pair<tile::BoundingBox, std::optional<ImPlotPoint>> MapWidget::renderMap(II
             }
         }
 
-        renderHistoricalInfo(historicalData, hovered);
+        renderHistoricalInfo(historicalInfo, hovered);
 
         ImPlot::EndPlot();
     }
@@ -192,7 +192,7 @@ void MapWidget::renderOverlay(const std::string& name, int offset, const tile::B
     ImGui::End();
 }
 
-void MapWidget::renderHistoricalInfo(HistoricalData historicalData, std::optional<persistence::Coordinate> hovered)
+void MapWidget::renderHistoricalInfo(HistoricalInfo historicalInfo, std::optional<persistence::Coordinate> hovered)
 {
     std::visit(
         [&hovered, this](auto& data){
@@ -240,7 +240,7 @@ void MapWidget::renderHistoricalInfo(HistoricalData historicalData, std::optiona
                 }
             }
         },
-        historicalData
+        historicalInfo
     );    
 }
 
