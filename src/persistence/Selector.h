@@ -20,9 +20,9 @@ public:
     void deselect(const City& city, std::shared_ptr<const Data> from);
     void deselect([[maybe_unused]] const Note& note, std::shared_ptr<const Data> from);
  
-    bool isSelected(const Country& country, int year);
-    bool isSelected(const City& city, int year);
-    bool isSelected([[maybe_unused]] const Note& note, int year);
+    bool isSelected(const Country& country, int year) const;
+    bool isSelected(const City& city, int year) const;
+    bool isSelected([[maybe_unused]] const Note& note, int year) const;
 
     void clear(int year);
     void clearAll();

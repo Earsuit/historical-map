@@ -53,28 +53,28 @@ void Selector::deselect(const Note& note, std::shared_ptr<const Data> from)
     }
 }
 
-bool Selector::isSelected(const Country& country, int year)
+bool Selector::isSelected(const Country& country, int year) const
 {
     if (selection.contains(year)) {
-        return selection[year].countries.contains(country.name);
+        return selection.at(year).countries.contains(country.name);
     } else {
         return false;
     }
 }
 
-bool Selector::isSelected(const City& city, int year)
+bool Selector::isSelected(const City& city, int year) const
 {
     if (selection.contains(year)) {
-        return selection[year].cities.contains(city.name);
+        return selection.at(year).cities.contains(city.name);
     } else {
         return false;
     }
 }
 
-bool Selector::isSelected(const Note& note, int year)
+bool Selector::isSelected(const Note& note, int year) const 
 {
     if (selection.contains(year)) {
-        return selection[year].note;
+        return selection.at(year).note;
     } else {
         return false;
     }
