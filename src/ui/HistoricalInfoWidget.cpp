@@ -109,7 +109,7 @@ void HistoricalInfoWidget::countryInfo()
 
 std::vector<HistoricalInfo> HistoricalInfoWidget::getInfo()
 {
-    return {std::make_tuple("Historical Info", cache, selected)};
+    return {std::make_tuple("Historical Info", cache)};
 }
 
 void HistoricalInfoWidget::drawRightClickMenu(float longitude, float latitude)
@@ -265,6 +265,11 @@ void HistoricalInfoWidget::displaySaveProgress()
     if (database.getWorkLoad() == 0) {
         totalWorkLoad  = 0;
     }
+}
+
+std::optional<persistence::Coordinate> HistoricalInfoWidget::getHovered() const noexcept
+{
+    return selected;
 }
 
 }

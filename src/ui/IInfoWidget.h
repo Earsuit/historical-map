@@ -16,7 +16,7 @@ constexpr auto INFO_WIDGET_NAME = "Info widget";
 using MutableData = std::shared_ptr<persistence::Data>;
 using ImmutableData = std::shared_ptr<const persistence::Data>;
 using HistoricalData = std::variant<MutableData, ImmutableData>;
-using HistoricalInfo = std::tuple<std::string, HistoricalData, std::optional<persistence::Coordinate>>;
+using HistoricalInfo = std::tuple<std::string, HistoricalData>;
 
 class IInfoWidget {
 public:
@@ -32,6 +32,7 @@ public:
 
     virtual void drawRightClickMenu(float longitude, float latitude) = 0;
     virtual std::vector<HistoricalInfo> getInfo() = 0;
+    virtual std::optional<persistence::Coordinate> getHovered() const noexcept = 0;
     virtual bool complete() = 0;
 
 private:

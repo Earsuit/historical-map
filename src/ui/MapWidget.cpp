@@ -67,9 +67,10 @@ void MapWidget::paint(IInfoWidget& infoWidget)
 
     const ImVec2 singleMapWindowSize = {area.x / infos.size(), area.y};
     int overlayOffset = 0;
+    const auto hovered = infoWidget.getHovered();
 
-    for (auto [name, historicalData, selected] : infos) {
-        const auto [bbox, mousePos] = renderMap(infoWidget, singleMapWindowSize, name, historicalData, selected);
+    for (auto [name, historicalData] : infos) {
+        const auto [bbox, mousePos] = renderMap(infoWidget, singleMapWindowSize, name, historicalData, hovered);
         renderOverlay(name, overlayOffset, bbox, mousePos);
         overlayOffset += singleMapWindowSize.x + ImPlot::GetStyle().PlotPadding.x - ImPlot::GetStyle().PlotBorderSize * 2;
         ImGui::SameLine();
@@ -82,7 +83,7 @@ std::pair<tile::BoundingBox, std::optional<ImPlotPoint>> MapWidget::renderMap(II
                                                                               ImVec2 size, 
                                                                               const std::string& name, 
                                                                               HistoricalData historicalData, 
-                                                                              std::optional<persistence::Coordinate> selected)
+                                                                              std::optional<persistence::Coordinate> hovered)
 {
     tile::BoundingBox bbox;
     std::optional<ImPlotPoint> mousePos;
@@ -140,7 +141,7 @@ std::pair<tile::BoundingBox, std::optional<ImPlotPoint>> MapWidget::renderMap(II
             }
         }
 
-        renderHistoricalInfo(historicalData, selected);
+        renderHistoricalInfo(historicalData, hovered);
 
         ImPlot::EndPlot();
     }
@@ -191,10 +192,10 @@ void MapWidget::renderOverlay(const std::string& name, int offset, const tile::B
     ImGui::End();
 }
 
-void MapWidget::renderHistoricalInfo(HistoricalData historicalData, std::optional<persistence::Coordinate> selected)
+void MapWidget::renderHistoricalInfo(HistoricalData historicalData, std::optional<persistence::Coordinate> hovered)
 {
     std::visit(
-        [&selected, this](auto& data){
+        [&hovered, this](auto& data){
             if (data) {
                 int dragPointId = 0;
                 for (auto& country : data->countries) {
@@ -206,7 +207,7 @@ void MapWidget::renderHistoricalInfo(HistoricalData historicalData, std::optiona
                     for (auto& coordinate : country.borderContour) {
                         float size = POINT_SIZE;
 
-                        if (selected && coordinate == *selected) {
+                        if (hovered && coordinate == *hovered) {
                             size = SELECTED_POINT_SIZE;
                         }
 
@@ -230,7 +231,7 @@ void MapWidget::renderHistoricalInfo(HistoricalData historicalData, std::optiona
                     const auto color = computeColor(city.name);
                     float size = POINT_SIZE;
 
-                    if (selected && city.coordinate == *selected) {
+                    if (hovered && city.coordinate == *hovered) {
                         size = SELECTED_POINT_SIZE;
                     }
 

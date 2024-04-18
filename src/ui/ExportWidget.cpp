@@ -145,7 +145,7 @@ void ExportWidget::handleNote(bool selectAll)
 
 std::vector<HistoricalInfo> ExportWidget::getInfo()
 {
-    return {std::make_tuple("Export", cache, hovered)};
+    return {std::make_tuple("Export", cache)};
 }
 
 bool ExportWidget::complete()
@@ -235,5 +235,10 @@ util::Generator<int> ExportWidget::multiYearsSelectionGenerator(int start, int e
     for (int y = start; y <= end; y++) {
         co_yield y;
     }
+}
+
+std::optional<persistence::Coordinate> ExportWidget::getHovered() const noexcept
+{
+    return hovered;
 }
 }

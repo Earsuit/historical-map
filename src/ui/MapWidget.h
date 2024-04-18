@@ -40,9 +40,9 @@ private:
                                                                        ImVec2 size, 
                                                                        const std::string& name, 
                                                                        HistoricalData historicalData, 
-                                                                       std::optional<persistence::Coordinate> selected);
+                                                                       std::optional<persistence::Coordinate> hovered);
     void renderOverlay(const std::string& name, int offset, const tile::BoundingBox& bbox, const std::optional<ImPlotPoint>& mousePos);
-    void renderHistoricalInfo(HistoricalData historicalData, std::optional<persistence::Coordinate> selected);
+    void renderHistoricalInfo(HistoricalData historicalData, std::optional<persistence::Coordinate> hovered);
     
     template<typename T>
     std::pair<double, double> renderCoordinate(T& coordinate, const ImVec4& color, float size, int id)
