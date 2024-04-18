@@ -107,7 +107,7 @@ void HistoricalInfoWidget::countryInfo()
     }
 }
 
-std::vector<HistoricalInfo> HistoricalInfoWidget::getInfo()
+std::vector<HistoricalInfo> HistoricalInfoWidget::getInfo() const
 {
     return {std::make_tuple("Historical Info", cache)};
 }
@@ -128,7 +128,7 @@ void HistoricalInfoWidget::drawRightClickMenu(float longitude, float latitude)
     }
 }
 
-bool HistoricalInfoWidget::complete()
+bool HistoricalInfoWidget::complete() const noexcept
 {
     // This widget is the default one, so it always alive if no other widgets take place.
     return false;

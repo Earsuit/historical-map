@@ -31,9 +31,9 @@ public:
     int getYear() const noexcept;
 
     virtual void drawRightClickMenu(float longitude, float latitude) = 0;
-    virtual std::vector<HistoricalInfo> getInfo() = 0;
+    virtual std::vector<HistoricalInfo> getInfo() const = 0;
     virtual std::optional<persistence::Coordinate> getHovered() const noexcept = 0;
-    virtual bool complete() = 0;
+    virtual bool complete() const noexcept = 0;
 
 private:
     int year;

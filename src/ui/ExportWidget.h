@@ -28,8 +28,8 @@ public:
     }
 
     void drawRightClickMenu(float longitude, float latitude) override {};
-    std::vector<HistoricalInfo> getInfo() override;
-    bool complete() override;
+    std::vector<HistoricalInfo> getInfo() const override;
+    bool complete() const noexcept override;
     virtual std::optional<persistence::Coordinate> getHovered() const noexcept override;
 
 private:
