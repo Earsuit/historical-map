@@ -78,7 +78,7 @@ std::shared_ptr<Data> DatabaseManager::load(int year)
     return nullptr;
 }
 
-void DatabaseManager::remove(std::shared_ptr<Data> data)
+void DatabaseManager::remove(std::shared_ptr<const Data> data)
 {
     if (!taskQueue.enqueue([this, data](){
                                 this->logger->debug("Process remove task for year {}.", data->year);
@@ -88,7 +88,7 @@ void DatabaseManager::remove(std::shared_ptr<Data> data)
     }
 }
 
-void DatabaseManager::update(std::shared_ptr<Data> data)
+void DatabaseManager::update(std::shared_ptr<const Data> data)
 {
     if (!taskQueue.enqueue([this, data](){
                             this->logger->debug("Process update task for year {}.", data->year);
