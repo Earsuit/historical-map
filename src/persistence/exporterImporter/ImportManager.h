@@ -20,7 +20,7 @@ public:
     doImport(const std::string& file);
     std::vector<std::string> supportedFormat() const;
     size_t numOfYearsImported() const noexcept;
-    std::shared_ptr<const Data> find(int year);
+    std::shared_ptr<const Data> find(int year) const;
     std::optional<int> nextYear(int year) const;
     std::optional<int> previousYear(int year) const;
     std::optional<int> firstYear() const;

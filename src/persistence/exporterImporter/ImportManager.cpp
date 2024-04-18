@@ -46,10 +46,10 @@ size_t ImportManager::numOfYearsImported() const noexcept
     return yearImported;
 }
 
-std::shared_ptr<const Data> ImportManager::find(int year)
+std::shared_ptr<const Data> ImportManager::find(int year) const
 {
     if (cache.contains(year)) {
-        return cache[year];
+        return cache.at(year);
     }
 
     return nullptr;
