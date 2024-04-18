@@ -90,9 +90,6 @@ void DatabaseManager::remove(std::shared_ptr<Data> data)
 
 void DatabaseManager::update(std::shared_ptr<Data> data)
 {
-    // overwrite the cached data
-    cache[data->year] = data;
-
     if (!taskQueue.enqueue([this, data](){
                             this->logger->debug("Process update task for year {}.", data->year);
                             this->database.upsert(*data);
