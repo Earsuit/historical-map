@@ -10,38 +10,13 @@ using namespace std::chrono_literals;
 
 constexpr auto EXPORT_FORMAT_POPUP_NAME = "Export formats";
 constexpr auto SAVE_DIALOG_KEY = "ExportDialog";
-constexpr auto SAVE_CONFIRM_POPUP_NAME = "Confirmation";
 constexpr auto EXPORT_FAIL_POPUP_NAME = "Error";
 constexpr auto EXPORT_PROGRESS_POPUP_NAME = "Exporting";
 constexpr auto PROGRESS_BAR_SIZE = ImVec2{400, 0};
 constexpr auto EXPORT_PROGRESS_DONE_BUTTON_LABEL = "Done";
-constexpr auto SELECT_MULTIPLE_YEAR_POPUP_NAME = "Select multiple years";
-constexpr auto PROCESS_MULTI_YEAR_SELECTION_POPUP_NAME = "Selecting";
-constexpr auto SELECT_MULTI_YEAR_YEAR_CONSTRAINTS = "Start year must be less than end year.";
 
-int ExportWidget::historyInfo(int year)
+void ExportWidget::buttons()
 {
-    currentYear = year;
-
-    hovered = std::nullopt;
-    
-    if (!selectAlls.contains(currentYear)) {
-        selectAlls[currentYear] = false;
-    }
-
-    if (ImGui::Checkbox("Select all", &selectAlls[currentYear]) && !selectAlls[currentYear]) {
-        selector.clear(currentYear);
-    }
-    if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
-        ImGui::OpenPopup(SELECT_MULTIPLE_YEAR_POPUP_NAME);
-        startYear = currentYear;
-        endYear = currentYear;
-    }
-    ImGui::SameLine();
-    helpMarker("Right click to select multiple years");
-
-    selectMultiYears();
-
     if (ImGui::Button("Export as")) {
         ImGui::OpenPopup(EXPORT_FORMAT_POPUP_NAME);
     }
@@ -49,28 +24,30 @@ int ExportWidget::historyInfo(int year)
     if (ImGui::Button("Cancel")) {
         isComplete = true;
     }
+}
 
-    if (!cache || cache->year != year) {
-        logger->debug("Load data of year {} from database.", year);
+int ExportWidget::overwriteYear(int year)
+{
+    currentYear = year;
+    return currentYear;
+}
 
-        cache = database.load(year);
+void ExportWidget::updateInfo()
+{
+    if (!cache || cache->year != currentYear) {
+        logger->debug("Load data of year {} from database.", currentYear);
+
+        cache = database.load(currentYear);
     }
+}
 
-    if (cache) {
-        const bool selectAll = selectAlls[year];
-        // reset to true if not empty year so we can track if all individual items are ticked
-        selectAlls[year] = !(cache->countries.empty() && cache->cities.empty() && cache->note.text.empty());
+bool ExportWidget::cacheReady() const noexcept
+{
+    return cache && cache->year == currentYear;
+}
 
-        ImGui::SeparatorText("Countries");
-        handleCountryInfo(selectAll);
-
-        ImGui::SeparatorText("Cities");
-        handleCityInfo(selectAll);
-
-        ImGui::SeparatorText("Note");
-        handleNote(selectAll);
-    }
-
+void ExportWidget::doExportImport(const persistence::Selector& selector)
+{
     if (ImGui::BeginPopup(EXPORT_FORMAT_POPUP_NAME)) {
         for (auto& format : exporter.supportedFormat()) {
             if(ImGui::Selectable(format.c_str())) {
@@ -93,59 +70,16 @@ int ExportWidget::historyInfo(int year)
     }
 
     checkExportProgress();
-
-    return currentYear;
 }
 
-void ExportWidget::handleCountryInfo(bool selectAll)
+std::optional<HistoricalInfoPack> ExportWidget::getSelectableInfo() const
 {
-    for (const auto& country : cache->countries) {
-
-        select(country, selectAll);
-        ImGui::SameLine();
-
-        if (ImGui::TreeNode((country.name + "##country").c_str())) {
-            if (const auto& ret = paintInfo(country); ret) {
-                hovered = ret;
-            }
-
-            ImGui::TreePop();
-            ImGui::Spacing();
-        }
-    }
+    return HistoricalInfoPack{cache, "Export"};
 }
 
-void ExportWidget::handleCityInfo(bool selectAll)
+std::optional<HistoricalInfoPack> ExportWidget::getUnselectableInfo() const
 {
-    for (auto& city : cache->cities) {
-        bool isHovered = false;
-
-        select(city, selectAll);
-        ImGui::SameLine();
-
-        if (ImGui::TreeNode((city.name + "##city").c_str())) {
-            if (const auto& ret = paintInfo(city); ret) {
-                hovered = ret;
-            }
-
-            ImGui::TreePop();
-            ImGui::Spacing();
-        }
-    }
-}
-
-void ExportWidget::handleNote(bool selectAll)
-{
-    if (!cache->note.text.empty()) {
-        select(cache->note, selectAll);
-    }
-
-    paintInfo(cache->note);
-}
-
-std::vector<HistoricalInfoPack> ExportWidget::getInfos() const
-{
-    return {HistoricalInfoPack{cache, "Export"}};
+    return std::nullopt;
 }
 
 bool ExportWidget::complete() const noexcept
@@ -189,56 +123,5 @@ void ExportWidget::checkExportProgress()
     if (ImGui::BeginPopupModal(EXPORT_FAIL_POPUP_NAME, &exportFailPopup, ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::Text("Failed to export: %s", errorMsg.c_str());
     }
-}
-
-void ExportWidget::selectMultiYears()
-{
-    if (ImGui::BeginPopup(SELECT_MULTIPLE_YEAR_POPUP_NAME)) {
-        ImGui::SeparatorText(SELECT_MULTIPLE_YEAR_POPUP_NAME);
-        ImGui::InputInt("Start", &startYear);
-        ImGui::InputInt("End", &endYear);
-        helpMarker(SELECT_MULTI_YEAR_YEAR_CONSTRAINTS);
-        
-        if (ImGui::Button("Select")) {
-            if (startYear < endYear) {
-                generator = multiYearsSelectionGenerator(startYear, endYear);
-                processMultiYearSelection = true;
-                ImGui::CloseCurrentPopup();
-            } else {
-                logger->error(SELECT_MULTI_YEAR_YEAR_CONSTRAINTS);
-            }
-        }
-        
-        ImGui::EndPopup();
-
-        if (processMultiYearSelection) {
-            ImGui::OpenPopup(PROCESS_MULTI_YEAR_SELECTION_POPUP_NAME);
-        }
-    }
-
-    if (ImGui::BeginPopupModal(PROCESS_MULTI_YEAR_SELECTION_POPUP_NAME, &processMultiYearSelection, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::ProgressBar(static_cast<float>(currentYear - startYear) / (endYear - startYear), PROGRESS_BAR_SIZE);
-        ImGui::Text("Processing year %d", currentYear);
-
-        if (cache && cache->year == currentYear) {
-            processMultiYearSelection  = generator.next();
-            currentYear = generator.getValue();
-            selectAlls[currentYear] = true;
-        }
-
-        ImGui::EndPopup();
-    }
-}
-
-util::Generator<int> ExportWidget::multiYearsSelectionGenerator(int start, int end)
-{
-    for (int y = start; y <= end; y++) {
-        co_yield y;
-    }
-}
-
-std::optional<persistence::Coordinate> ExportWidget::getHovered() const noexcept
-{
-    return hovered;
 }
 }
