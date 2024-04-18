@@ -68,8 +68,8 @@ std::optional<int> ImportManager::nextYear(int year) const
 
 std::optional<int> ImportManager::previousYear(int year) const
 {
-    if (auto it = cache.lower_bound(year); it != cache.end()) {
-        return it->first;
+    if (auto it = cache.lower_bound(year); it != cache.end() && it != cache.begin()) {
+        return (--it)->first;
     }
 
     return std::nullopt;
