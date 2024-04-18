@@ -21,6 +21,7 @@ int ExportImportWidget::historyInfo(int year)
     }
 
     if (ImGui::Checkbox("Select all", &selectAlls[currentYear]) && !selectAlls[currentYear]) {
+        logger->debug("Clear all selections from year {}", currentYear);
         selector.clear(currentYear);
     }
 

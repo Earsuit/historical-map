@@ -92,14 +92,28 @@ private:
                 std::shared_ptr<const persistence::Data> info, 
                 bool selectAll)
     {
-        bool tick = selectAll || selector.isSelected(item, info->year);
+        const auto contains = selector.isSelected(item, info->year);
+        bool tick = selectAll || contains;
 
         checkbox(item, tick);
 
-        if (tick) {
-            selector.select(item, info);
+        std::string name;
+        if constexpr (std::is_same_v<T, persistence::Note>) {
+            name = "note";
         } else {
-            selector.deselect(item, info);
+            name = item.name;
+        }
+
+        if (tick) {
+            if (!contains) {
+                logger->debug("Select {} from year {}", name, info->year);
+                selector.select(item, info);
+            }
+        } else {
+            if (contains) {
+                logger->debug("deselect {} from year {}", name.c_str(), info->year);
+                selector.deselect(item, info);
+            }
         }
 
         selectAlls[currentYear] = selectAlls[currentYear] & tick;
