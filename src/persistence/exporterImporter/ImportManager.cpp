@@ -5,6 +5,7 @@
 
 namespace persistence {
 constexpr auto COMPLETE = 1.0f;
+constexpr int PERIOD_INDEX = 1;
 
 std::future<tl::expected<void, Error>> 
 ImportManager::doImport(const std::string& file)
@@ -14,7 +15,8 @@ ImportManager::doImport(const std::string& file)
             [this, 
              file]() -> tl::expected<void, Error>
             {
-                const auto format = std::filesystem::u8path(file).extension();
+                // remove "."
+                const auto format = std::filesystem::u8path(file).extension().string().substr(PERIOD_INDEX);
                 if (auto ret = ExporterImporterFactory::getInstance().createImporter(format); ret) {
                     auto importer = std::move(ret.value());
                     auto loader = importer->loadFromFile(file);
