@@ -88,7 +88,7 @@ void DatabaseManager::remove(std::shared_ptr<const Data> data)
     }
 }
 
-void DatabaseManager::update(std::shared_ptr<const Data> data)
+bool DatabaseManager::update(std::shared_ptr<const Data> data)
 {
     if (!taskQueue.enqueue([this, data](){
                             this->logger->debug("Process update task for year {}.", data->year);
@@ -96,6 +96,10 @@ void DatabaseManager::update(std::shared_ptr<const Data> data)
                         })) {
         logger->error("Enqueue update database year {} task fail.", data->year);
     }
+
+    // request this year so the cache will be updated
+    // doing this way to avoid using lock
+    return request(data->year);
 }
 
 bool DatabaseManager::request(int year)
