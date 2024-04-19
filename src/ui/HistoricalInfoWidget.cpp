@@ -43,6 +43,7 @@ int HistoricalInfoWidget::historyInfo(int year)
 
     if (cache) {
         if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
+            startYear = endYear = currentYear;
             ImGui::OpenPopup(POPUP_WINDOW_NAME);
         }
         savePopupWindow();
