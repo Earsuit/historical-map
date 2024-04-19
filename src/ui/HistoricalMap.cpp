@@ -21,7 +21,7 @@ namespace ui {
 
 constexpr int WINDOW_WIDTH = 1080 * 1.5;
 constexpr int WINDOW_HEIGHT = 1080;
-constexpr float MAP_WIDGET_HORIZONTAL_RATIO = 4.0f/5.0f;
+constexpr float MAP_WIDGET_HORIZONTAL_RATIO = 3.6f/5.0f;
 constexpr float MAP_WIDGET_VERTICAL_RATIO = 2.0f/3.0f;
 constexpr ImVec4 backgroundColor = {0.45f, 0.55f, 0.60f, 1.00f};
 
