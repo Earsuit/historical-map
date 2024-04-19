@@ -3,6 +3,7 @@
 #include "src/ui/IInfoWidget.h"
 #include "src/ui/HistoricalInfoWidget.h"
 #include "src/ui/ExportWidget.h"
+#include "src/ui/ImportWidget.h"
 
 #include "external/imgui/imgui.h"
 #include "external/imgui/imgui_internal.h"
@@ -127,11 +128,14 @@ void HistoricalMap::start()
         if (ImGui::BeginMainMenuBar()) {
             if (ImGui::BeginMenu("File")) {
                 if (ImGui::MenuItem("Import")) {
-
+                    if (dynamic_cast<HistoricalInfoWidget*>(infoWidget.get()) != nullptr) {
+                        previousInfoWidget.swap(infoWidget);
+                        infoWidget = std::make_unique<ImportWidget>(previousInfoWidget->getYear());
+                    }
                 }
 
                 if (ImGui::MenuItem("Export")) {
-                    if (dynamic_cast<ExportWidget*>(infoWidget.get()) == nullptr) {
+                    if (dynamic_cast<HistoricalInfoWidget*>(infoWidget.get()) != nullptr) {
                         previousInfoWidget.swap(infoWidget);
                         infoWidget = std::make_unique<ExportWidget>(previousInfoWidget->getYear());
                     }
