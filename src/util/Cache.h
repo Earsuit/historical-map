@@ -20,6 +20,13 @@ public:
         lifetimeIndex.clear();
     }
 
+    void clear(T key)
+    {
+        cache.erase(key);
+        lifetime.erase(lifetimeIndex[key]);
+        lifetimeIndex.erase(key);
+    }
+
     Y& operator[](const T& key)
     {
         if (!cache.contains(key)) {

@@ -127,4 +127,8 @@ DatabaseManager& DatabaseManager::getInstance()
     return manager;
 }
 
+void DatabaseManager::clearCache(int year)
+{
+    cache.clear(year);
+}
 }

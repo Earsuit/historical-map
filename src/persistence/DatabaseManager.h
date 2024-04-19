@@ -27,6 +27,7 @@ public:
     std::shared_ptr<Data> load(int year);
     void remove(const std::shared_ptr<const Data> data);
     bool update(const std::shared_ptr<const Data> data);
+    void clearCache(int year);
 
     size_t getWorkLoad();
 

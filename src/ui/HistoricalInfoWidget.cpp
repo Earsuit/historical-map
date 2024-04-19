@@ -21,8 +21,12 @@ int HistoricalInfoWidget::historyInfo(int year)
 
     selected = std::nullopt;
 
-    if (ImGui::Button("Refresh") || !cache || cache->year != currentYear) {
+    if (auto pressed = ImGui::Button("Refresh"); pressed || !cache || cache->year != currentYear) {
         logger->debug("Load data of year {} from database.", currentYear);
+
+        if (pressed) {
+            database.clearCache(currentYear);
+        }
         
         remove = std::make_shared<persistence::Data>(currentYear);
         cache.reset();
