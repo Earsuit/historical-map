@@ -16,7 +16,6 @@ constexpr auto IMPORT_PROGRESS_POPUP_NAME = "Loading";
 constexpr auto DONE_BUTTON_LABEL = "Done";
 constexpr auto WRITE_TO_DATABASE_PROGRESS_POPUP = "Write to database";
 constexpr auto COMPLETE = 1.0f;
-constexpr auto PROGRESS_BAR_SIZE = ImVec2{400, 0};
 
 bool ImportWidget::complete() const noexcept
 {
@@ -166,19 +165,15 @@ void ImportWidget::doImport()
         alignForWidth(ImGui::CalcTextSize(importProgressMessage.c_str()).x);
         ImGui::Text("%s", importProgressMessage.c_str());
 
-        alignForWidth(ImGui::CalcTextSize(DONE_BUTTON_LABEL).x);
-        if(importTask.valid()) {
-            ImGui::BeginDisabled();
-        }
-        if (ImGui::Button(DONE_BUTTON_LABEL)) {
-            if (importFail) {
-                isComplete = true;
-            }
-            ImGui::CloseCurrentPopup();
-        }
-        if(importTask.valid()) {
-            ImGui::EndDisabled();
-        }
+        centeredEnableableButton(DONE_BUTTON_LABEL,
+                                 [this](){
+                                    return !this->importTask.valid();
+                                 },
+                                 [this](){
+                                    if (this->importFail) {
+                                        this->isComplete = true;
+                                    }
+                                 });
 
         ImGui::EndPopup();
     }
@@ -209,20 +204,14 @@ void ImportWidget::writeToDatabase(const persistence::Selector& selector)
             writeToDatabaseTask.get();
         }
 
-        ImGui::ProgressBar(progress, PROGRESS_BAR_SIZE);
-
-        alignForWidth(ImGui::CalcTextSize(DONE_BUTTON_LABEL).x);
-
-        if(writeToDatabaseTask.valid()) {
-            ImGui::BeginDisabled();
-        }
-        if (ImGui::Button(DONE_BUTTON_LABEL)) {
-            isComplete = true;
-            ImGui::CloseCurrentPopup();
-        }
-        if(writeToDatabaseTask.valid()) {
-            ImGui::EndDisabled();
-        }
+        simpleProgressDisplayer(progress, 
+                                DONE_BUTTON_LABEL,
+                                [this]() -> bool {
+                                    return !this->writeToDatabaseTask.valid();
+                                },
+                                [this](){
+                                    this->isComplete = true;;
+                                });
 
         ImGui::EndPopup();
     }

@@ -102,20 +102,14 @@ void ExportWidget::checkExportProgress()
     }
 
     if (ImGui::BeginPopupModal(EXPORT_PROGRESS_POPUP_NAME, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::ProgressBar(exporter.getExportProgress(), PROGRESS_BAR_SIZE);
-
-        alignForWidth(ImGui::CalcTextSize(EXPORT_PROGRESS_DONE_BUTTON_LABEL).x);
-
-        if(!exportComplete) {
-            ImGui::BeginDisabled();
-        }
-        if (ImGui::Button(EXPORT_PROGRESS_DONE_BUTTON_LABEL)) {
-            isComplete = true;
-            ImGui::CloseCurrentPopup();
-        }
-        if(!exportComplete) {
-            ImGui::EndDisabled();
-        }
+        simpleProgressDisplayer(exporter.getExportProgress(),
+                                EXPORT_PROGRESS_DONE_BUTTON_LABEL,
+                                [exportComplete = this->exportComplete](){
+                                    return exportComplete;
+                                },
+                                [this](){
+                                    this->isComplete = true;
+                                });
 
         ImGui::EndPopup();
     }

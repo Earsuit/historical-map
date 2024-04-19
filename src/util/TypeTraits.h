@@ -23,6 +23,9 @@ struct is_const_iterator
 
 template<typename T>
 inline constexpr bool is_const_iterator_v = is_const_iterator<T>::value;
+
+template<typename F, typename R, typename... Args>
+concept Callable = std::same_as<std::invoke_result_t<F, Args...>, R>;
 }
 
 #endif
