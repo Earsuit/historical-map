@@ -245,10 +245,10 @@ void HistoricalInfoWidget::savePopupWindow()
         ImGui::InputInt("End", &endYear);
         
         if (ImGui::Button("Save##ForYears")) {
-            if (startYear <= currentYear && endYear >= currentYear) {
+            if (startYear <= endYear) {
                 saveInfoRange(startYear, endYear);
             } else {
-                logger->error("Year range must contain current year {}", currentYear);
+                logger->error("Start year must less than end year");
             }
         }
         
