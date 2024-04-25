@@ -5,7 +5,8 @@ SET(TILE_SRC
     TileLoader.cpp
     RasterTileEngine.cpp
     TileEngineFactory.cpp
+    StbImageImpl.cpp
 )
 
 add_library(libtile STATIC ${TILE_SRC})
-target_link_libraries(libtile PRIVATE CURL::libcurl libstbImageImpl)
+target_link_libraries(libtile PRIVATE CURL::libcurl)
