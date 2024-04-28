@@ -1,6 +1,22 @@
 # Historical map
 
-## Comple on MacOS
+## Compile on Linux
+
+According to [Compiler support for C++20](https://en.cppreference.com/w/cpp/compiler_support/20),
+GCC > 10 is required to use Parenthesized initialization of aggregates .
+
+### Setup envirnment
+
+`sudo apt-get install libgl1-mesa-dev libglew-dev libglfw3-dev libcurl4-openssl-dev libgtk-3-dev -y`
+
+### Compile
+
+1. `mkdir build && cd build`
+2. `cmake ..` or `cmake -DGTEST_ENABLE=ON ..` if you want to enable test
+3. `make -j`
+4. `ctest` if you want to run test
+
+## Compile on MacOS
 
 According to [Compiler support for C++20](https://en.cppreference.com/w/cpp/compiler_support/20), 
 the Apple clang doesn't support Parenthesized initialization of aggregates, so we have to install
@@ -18,4 +34,4 @@ clang (>16) from Homebrew or MacPort.
 1. `mkdir build && cd build`
 2. `cmake ..` or `cmake -DGTEST_ENABLE=ON ..` if you want to enable test
 3. `make -j`
-4. `ctest -j` if you want to run test
+4. `ctest` if you want to run test
