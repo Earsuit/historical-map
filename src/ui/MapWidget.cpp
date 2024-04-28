@@ -20,10 +20,6 @@ constexpr auto AXIS_FLAGS = ImPlotAxisFlags_NoLabel | ImPlotAxisFlags_NoGridLine
 
 constexpr ImVec4 OVERLAY_BACKGROUND_COLOR = {0.0f, 0.0f, 0.0f, 0.35f};
 constexpr float OVERLAY_PAD = 10.0f;
-constexpr float MAX_LONGITUDE = 180.0f;
-constexpr float MIN_LONGITUDE = -180.0f;
-constexpr float MAX_LATITUDE = 85.05112878f;
-constexpr float MIN_LATITUDE = -85.05112878f;
 
 constexpr float POINT_SIZE = 2.0f;
 constexpr float SELECTED_POINT_SIZE = 4.0f;
@@ -70,8 +66,8 @@ void MapWidget::paint(IInfoWidget& infoWidget)
     const auto hovered = infoWidget.getHovered();
 
     for (auto [info, name] : infos) {
-        const auto [bbox, mousePos] = renderMap(infoWidget, singleMapWindowSize, name, info, hovered);
-        renderOverlay(name, overlayOffset, bbox, mousePos);
+        const auto mousePos = renderMap(infoWidget, singleMapWindowSize, name, info, hovered);
+        renderOverlay(name, overlayOffset, mousePos);
         overlayOffset += singleMapWindowSize.x + ImPlot::GetStyle().PlotPadding.x - ImPlot::GetStyle().PlotBorderSize * 2;
         ImGui::SameLine();
     }
@@ -79,13 +75,12 @@ void MapWidget::paint(IInfoWidget& infoWidget)
     ImGui::End();
 }
 
-std::pair<tile::BoundingBox, std::optional<ImPlotPoint>> MapWidget::renderMap(IInfoWidget& infoWidget,
-                                                                              ImVec2 size, 
-                                                                              const std::string& name, 
-                                                                              HistoricalInfo historicalInfo, 
-                                                                              std::optional<persistence::Coordinate> hovered)
+std::optional<ImPlotPoint> MapWidget::renderMap(IInfoWidget& infoWidget,
+                                                ImVec2 size, 
+                                                const std::string& name, 
+                                                HistoricalInfo historicalInfo, 
+                                                std::optional<persistence::Coordinate> hovered)
 {
-    tile::BoundingBox bbox;
     std::optional<ImPlotPoint> mousePos;
     std::string plotName = "##" + name; 
 
@@ -106,39 +101,18 @@ std::pair<tile::BoundingBox, std::optional<ImPlotPoint>> MapWidget::renderMap(II
             mousePos = cursor;
         }
 
-        const auto west = tile::x2Longitude(plotLimits.X.Min, BBOX_ZOOM_LEVEL);
-        const auto east = tile::x2Longitude(plotLimits.X.Max, BBOX_ZOOM_LEVEL);
-        const auto north = tile::y2Latitude(plotLimits.Y.Min, BBOX_ZOOM_LEVEL);
-        const auto south = tile::y2Latitude(plotLimits.Y.Max, BBOX_ZOOM_LEVEL);
-        bbox = {west, south, east, north};
-
         logger->trace("Plot limit X [{}, {}], Y [{}, {}]", plotLimits.X.Min, plotLimits.X.Max, plotLimits.Y.Min, plotLimits.Y.Max);
         logger->trace("Plot size x={}, y={} pixels", plotSize.x, plotSize.y);
-        logger->trace("west={}, north={}, east={}, south={}", west, north, east, south);
 
-        const auto zoom = std::clamp(bestZoomLevel(bbox, 0, plotSize.x, plotSize.y), tile::MIN_ZOOM_LEVEL, tile::MAX_ZOOM_LEVEL);
+        const auto tiles = presenter.getTiles({static_cast<float>(plotLimits.X.Min), static_cast<float>(plotLimits.X.Max)},
+                                              {static_cast<float>(plotLimits.Y.Min), static_cast<float>(plotLimits.Y.Max)},
+                                              {plotSize.x, plotSize.y});
 
-        const auto limit = (1 << zoom) - 1;
-        const auto xMin = std::clamp(static_cast<int>(tile::longitude2X(west, zoom)), 0, limit);
-        const auto xMax = std::clamp(static_cast<int>(tile::longitude2X(east, zoom)), 0, limit);
-        const auto yMin = std::clamp(static_cast<int>(tile::latitude2Y(north, zoom)), 0, limit);
-        const auto yMax = std::clamp(static_cast<int>(tile::latitude2Y(south, zoom)), 0, limit);
-
-        logger->trace("Zoom {} tile X from [{}, {}], Y from [{}, {}]", zoom, xMin, xMax, yMin, yMax);
-
-        ImVec2 bMax = {0, 0};
-        ImVec2 bMin = {0, 0};
-
-        for (auto x = xMin; x <= xMax; x++) {
-            bMax.x = tile::computeTileBound(x+1, zoom);
-            bMin.x = tile::computeTileBound(x, zoom);
-            for (auto y = yMin; y <= yMax; y++) {
-                bMax.y = tile::computeTileBound(y+1, zoom);
-                bMin.y = tile::computeTileBound(y, zoom);
-                if (auto tile = tileLoader.loadTile({x, y, zoom}); tile) {
-                    ImPlot::PlotImage("##", (*tile)->getTexture(), bMin, bMax);
-                }
-            }
+        for (const auto tile : tiles) {
+            const auto coord = tile->getCoordinate();
+            const ImVec2 bMax = {presenter.computeTileBound(coord.x+1), presenter.computeTileBound(coord.y+1)};
+            const ImVec2 bMin = {presenter.computeTileBound(coord.x), presenter.computeTileBound(coord.y)};
+            ImPlot::PlotImage("##", tile->getTexture(), bMin, bMax);
         }
 
         renderHistoricalInfo(historicalInfo, hovered);
@@ -149,18 +123,18 @@ std::pair<tile::BoundingBox, std::optional<ImPlotPoint>> MapWidget::renderMap(II
     if (ImGui::BeginPopupContextItem(plotName.c_str())) {
         static float longitue = 0, latitude = 0;
         if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && mousePos) {
-            longitue = tile::x2Longitude(mousePos->x, BBOX_ZOOM_LEVEL);
-            latitude = tile::y2Latitude(mousePos->y, BBOX_ZOOM_LEVEL);
+            longitue = presenter.x2Longitude(mousePos->x);
+            latitude = presenter.y2Latitude(mousePos->y);
         }
 
         infoWidget.drawRightClickMenu(longitue, latitude);
         ImGui::EndPopup();
     }
 
-    return {bbox, mousePos};
+    return mousePos;
 }
 
-void MapWidget::renderOverlay(const std::string& name, int offset, const tile::BoundingBox& bbox, const std::optional<ImPlotPoint>& mousePos)
+void MapWidget::renderOverlay(const std::string& name, int offset, const std::optional<ImPlotPoint>& mousePos)
 {
     const ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoMove |
                                          ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | 
@@ -180,11 +154,13 @@ void MapWidget::renderOverlay(const std::string& name, int offset, const tile::B
     if (ImGui::Begin((name + "##Overlay").c_str(), nullptr, windowFlags)) {
         if (mousePos) {
             ImGui::Text("Cursor at: lon %.2f, lat %.2f", 
-                        std::clamp(tile::x2Longitude(mousePos->x, BBOX_ZOOM_LEVEL), MIN_LONGITUDE, MAX_LONGITUDE), 
-                        std::clamp(tile::y2Latitude(mousePos->y, BBOX_ZOOM_LEVEL), MIN_LATITUDE, MAX_LATITUDE));
+                        presenter.x2Longitude(mousePos->x), 
+                        presenter.y2Latitude(mousePos->y));
         } else {
             ImGui::Text("Cursor at: ");
         }
+
+        const auto bbox = presenter.getBoundingBox();
 
         ImGui::Text("View range: west %.2f, east %.2f, \n\t\t\tnorth %.2f, south %.2f", bbox.west, bbox.east, bbox.north, bbox.south);
     }
@@ -242,11 +218,6 @@ void MapWidget::renderHistoricalInfo(HistoricalInfo historicalInfo, std::optiona
         },
         historicalInfo
     );    
-}
-
-tile::TileLoader& MapWidget::getTileLoader()
-{
-    return tileLoader;
 }
 
 }

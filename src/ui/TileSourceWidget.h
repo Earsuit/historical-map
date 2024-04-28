@@ -14,7 +14,7 @@ constexpr auto TILE_SOURCE_WIDGET_NAME = "Tile source";
 
 class TileSourceWidget {
 public:
-    TileSourceWidget(tile::TileLoader& tileLoader);
+    TileSourceWidget();
 
     void paint();
 

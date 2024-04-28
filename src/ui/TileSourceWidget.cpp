@@ -15,9 +15,9 @@ constexpr const char* TILE_ENGINES[] = {tile::RASTER_TILE_ENGINE_NAME};
 constexpr auto TRANSPARENT = IM_COL32(0, 0, 0, 0);
 constexpr auto DEFAULT_TILE_ENGINE = TILE_ENGINES[0];
 
-TileSourceWidget::TileSourceWidget(tile::TileLoader& tileLoader):
+TileSourceWidget::TileSourceWidget():
     logger{spdlog::get(logger::LOGGER_NAME)},
-    tileLoader{tileLoader},
+    tileLoader{tile::TileLoader::getInstance()},
     showConfigWidget{[this](){this->showTileSourceUrlConfig();}}
 {
     tileLoader.setTileEngine(tile::TileEngineFactory::createInstance(DEFAULT_TILE_ENGINE));

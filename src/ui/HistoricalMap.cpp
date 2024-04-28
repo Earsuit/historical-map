@@ -36,7 +36,7 @@ static void glfwErrorCallback(int error, const char* description)
 HistoricalMap::HistoricalMap():
     infoWidget{std::make_unique<HistoricalInfoWidget>()},
     mapWidget{},
-    tileSourceWidget{mapWidget.getTileLoader()}
+    tileSourceWidget{}
 {
     glfwSetErrorCallback(glfwErrorCallback);
     if (!glfwInit()) {

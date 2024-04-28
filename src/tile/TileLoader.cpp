@@ -15,6 +15,12 @@ TileLoader::TileLoader():
 {
 }
 
+TileLoader& TileLoader::getInstance()
+{
+    static TileLoader loader;
+    return loader;
+}
+
 void TileLoader::request(const Coordinate& coord)
 {
     if (!tileSource) {

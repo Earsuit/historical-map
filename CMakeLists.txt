@@ -100,9 +100,9 @@ add_executable(HistoricalMap main.cpp)
 if (APPLE)
 # On macos we have to specify glfw GLEW::GLEW when compiling main.cpp because it includes HistoricalMap.h
 # which includes glfw and glew
-target_link_libraries(HistoricalMap PRIVATE glfw GLEW::GLEW libui libtile  -Wl,-force_load libpersistence liblogger)
+target_link_libraries(HistoricalMap PRIVATE glfw GLEW::GLEW libui libpresentation  -Wl,-force_load libpersistence liblogger)
 else()
-target_link_libraries(HistoricalMap PRIVATE libui libtile -Wl,--whole-archive libpersistence -Wl,--no-whole-archive liblogger)
+target_link_libraries(HistoricalMap PRIVATE libui libpresentation -Wl,--whole-archive libpersistence -Wl,--no-whole-archive liblogger)
 endif()
 
 add_subdirectory(src)

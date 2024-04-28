@@ -21,7 +21,7 @@
 namespace tile {
 class TileLoader {
 public:
-    TileLoader();
+    static TileLoader& getInstance();
 
     void setTileSource(std::shared_ptr<TileSource> tileSource);
     void setTileEngine(std::shared_ptr<TileEngine> tileDataProcessor);
@@ -29,6 +29,8 @@ public:
     std::optional<std::shared_ptr<Tile>> loadTile(const Coordinate& coord);
 
 private:
+    TileLoader();
+
     std::shared_ptr<spdlog::logger> logger;
     std::shared_ptr<TileSource> tileSource;
     std::shared_ptr<TileEngine> tileEngine;
