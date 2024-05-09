@@ -39,7 +39,96 @@ public:
         conn.execute("PRAGMA foreign_keys = ON;");
     }
 
-    Data load(int year) {
+    std::vector<std::string> loadCountryList(int year) 
+    {
+        std::vector<std::string> countries;
+
+        if (const auto& years = request<table::Years>(YEARS.year == year, YEARS.id); !years.empty()) {
+            const auto yearId = years.front().id;
+
+            for (const auto& row : request<table::YearCountries>(YEAR_COUNTRIES.yearId == yearId)) {
+                const auto countryName = request<table::Countries>(COUNTRIES.id == row.countryId, COUNTRIES.name).front().name;
+
+                countries.emplace_back(countryName);
+            }
+        }
+
+        return countries;
+    }
+
+    std::vector<std::string> loadCityList(int year)
+    {
+        std::vector<std::string> cities;
+
+        if (const auto& years = request<table::Years>(YEARS.year == year, YEARS.id); !years.empty()) {
+            const auto yearId = years.front().id;
+
+            for (const auto& row : request<table::YearCities>(YEAR_CITIES.yearId == yearId, YEAR_CITIES.cityId)) {
+                const auto& cityRows = request<table::Cities>(CITIES.id == row.cityId);
+                const auto& city = cityRows.front();
+
+                cities.emplace_back(city.name);
+            }
+        }
+
+        return cities;
+    }
+
+    Note loadNote(int year)
+    {
+        Note note;
+
+        if (const auto& years = request<table::Years>(YEARS.year == year, YEARS.id); !years.empty()) {
+            const auto yearId = years.front().id;
+
+            if (const auto& ret = request<table::YearNotes>(YEAR_NOTES.yearId == yearId, YEAR_NOTES.noteId); !ret.empty()) {
+                note.text = request<table::Notes>(NOTES.id == ret.front().noteId, NOTES.text).front().text;
+            }
+        }
+
+        return note;
+    }
+
+    std::optional<Country> loadCountry(int year, const std::string& name)
+    {
+        if (const auto& years = request<table::Years>(YEARS.year == year, YEARS.id); !years.empty()) {
+            const auto yearId = years.front().id;
+
+            if (const auto& country = request<table::Countries>(COUNTRIES.name == name, COUNTRIES.id); !country.empty()) {
+                const auto countryId = country.front().id;
+
+                const auto borderId = request<table::YearCountries>(YEAR_COUNTRIES.yearId == yearId && YEAR_COUNTRIES.countryId == countryId,
+                                                                  YEAR_COUNTRIES.borderId).front().borderId;
+                const auto& borderRows = request<table::Borders>(BORDERS.id == borderId, BORDERS.contour);
+                const auto& borderContour = borderRows.front().contour;
+                const auto& contour = deserializeContour(Stream{borderContour.blob, borderContour.len});
+
+                return Country{name, contour};
+            }
+        }
+
+        return std::nullopt;
+    }
+
+    std::optional<City> loadCity(int year, const std::string& name)
+    {
+        if (const auto& years = request<table::Years>(YEARS.year == year, YEARS.id); !years.empty()) {
+            const auto yearId = years.front().id;
+
+            if (const auto& ret = request<table::Cities>(CITIES.name == name); !ret.empty()) {
+                const auto& city = ret.front();
+
+                if (const auto& ret = request<table::YearCities>(YEAR_CITIES.yearId == yearId && YEAR_CITIES.cityId == city.id); !ret.empty()) {
+                    return City{city.name, Coordinate{static_cast<float>(city.latitude), static_cast<float>(city.longitude)}};
+                }
+            }
+        }
+
+        return std::nullopt;
+    }
+
+    Data load(int year) 
+    {
         Data data{.year = year};
 
         if (const auto& years = request<table::Years>(YEARS.year == year, YEARS.id); !years.empty()) {

@@ -550,4 +550,75 @@ TEST_F(DatabaseTest, InsertAllTogether)
     EXPECT_EQ(database.load(year), data);
 }
 
+TEST_F(DatabaseTest, LoadCountryList)
+{
+    int year = 1900;
+    std::string name1 = "one";
+    std::string name2 = "two";
+    const persistence::Country country1{name1, {persistence::Coordinate{1,2}, persistence::Coordinate{3,4}}};
+    const persistence::Country country2{name2, {persistence::Coordinate{5,6}, persistence::Coordinate{7,8}}};
+    persistence::Data data{year, {country1, country2}};
+    database.upsert(data);
+    std::vector<std::string> expected{name1, name2};
+
+    EXPECT_EQ(database.loadCountryList(year), expected);
+}
+
+TEST_F(DatabaseTest, LoadCityList)
+{
+    int year = 1900;
+    std::string name1 = "One";
+    std::string name2 = "Two";
+    const persistence::City city1{name1, {1,2}};
+    const persistence::City city2{name2, {3,4}};
+    persistence::Data data{year, {}, {city1, city2}};
+    database.upsert(data);
+    std::vector<std::string> expected{name1, name2};
+
+    EXPECT_EQ(database.loadCityList(year), expected);
+}
+
+TEST_F(DatabaseTest, LoadNote)
+{
+    int year = 1900;
+    const persistence::Note note{"Test"};
+    persistence::Data data{year, {}, {}, note};
+    database.upsert(data);
+
+    EXPECT_EQ(database.loadNote(year), note);
+}
+
+TEST_F(DatabaseTest, LoadCountry)
+{
+    int year = 1900;
+    std::string name1 = "one";
+    std::string name2 = "two";
+    const persistence::Country country1{name1, {persistence::Coordinate{1,2}, persistence::Coordinate{3,4}}};
+    const persistence::Country country2{name2, {persistence::Coordinate{5,6}, persistence::Coordinate{7,8}}};
+    persistence::Data data{year, {country1, country2}};
+    database.upsert(data);
+
+    const auto ret = database.loadCountry(year, name2);
+
+    EXPECT_TRUE(ret);
+
+    EXPECT_EQ(*ret, country2);
+}
+
+TEST_F(DatabaseTest, LoadCity)
+{
+    int year = 1900;
+    std::string name1 = "One";
+    std::string name2 = "Two";
+    const persistence::City city1{name1, {1,2}};
+    const persistence::City city2{name2, {3,4}};
+    persistence::Data data{year, {}, {city1, city2}};
+    database.upsert(data);
+
+    const auto ret = database.loadCity(year, name2);
+
+    EXPECT_TRUE(ret);
+
+    EXPECT_EQ(*ret, city2);
+}
 }
