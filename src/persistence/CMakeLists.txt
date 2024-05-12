@@ -40,6 +40,8 @@ set(PERSISTENCE_SRC
   exporterImporter/IExporterImporter.cpp
   exporterImporter/ImportManager.cpp
   exporterImporter/ImportManager.h
+  HistoricalStorage.h
+  HistoricalStorage.cpp
 )
 
 add_library(libpersistence STATIC ${PERSISTENCE_SRC})
