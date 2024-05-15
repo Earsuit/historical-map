@@ -5,163 +5,136 @@
 #include "external/imgui/misc/cpp/imgui_stdlib.h"
 
 namespace ui {
-constexpr int MIN_YEAR = -3000;
-constexpr int MAX_YEAR = 1911;
 constexpr int SLIDER_WIDTH = 40;
 constexpr int NAME_INPUT_WIDTH = 100;
 constexpr auto POPUP_WINDOW_NAME = "Save for years";
+constexpr auto PROGRESS_POPUP_WINDOW_NAME = "Saving";
+constexpr float STEP = 0;
+constexpr float STEP_FAST = 0;
+constexpr auto DECIMAL_PRECISION = "%.2f";
 
-int HistoricalInfoWidget::historyInfo(int year)
+void HistoricalInfoWidget::historyInfo(int year)
 {
-    currentYear = year;
-
-    if (database.getWorkLoad() != 0) {
-        displaySaveProgress();
+    if (currentYear != year) {
+        currentYear = year;
+        countryNewCoordinate.clear();
     }
 
-    selected = std::nullopt;
+    if (ImGui::Button("Refresh")) {
+        logger->debug("Refresh data of year {} from database.", year);
 
-    if (auto pressed = ImGui::Button("Refresh"); pressed || !cache || cache->year != currentYear) {
-        logger->debug("Load data of year {} from database.", currentYear);
-
-        if (pressed) {
-            database.clearCache(currentYear);
-        }
-        
-        remove = std::make_shared<persistence::Data>(currentYear);
-        cache.reset();
-
-        countryInfoWidgets.clear();
-
-        if (cache = database.load(currentYear); cache) {
-            for (auto it = cache->countries.begin(); it != cache->countries.end(); it++) {
-                countryInfoWidgets.emplace_back(it);
-            }
-        }
+        databaseAccessPresenter.handleRefresh();        
     }
     ImGui::SameLine();
 
-    if (ImGui::Button("Save") && cache) {
-        saveInfoRange(cache->year, cache->year);
+    if (ImGui::Button("Save")) {
+        databaseAccessPresenter.handleSave(year, year);
     }
 
-    if (cache) {
-        if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
-            startYear = endYear = currentYear;
-            ImGui::OpenPopup(POPUP_WINDOW_NAME);
-        }
-        savePopupWindow();
-
-        ImGui::SameLine();
-        helpMarker("Right click \"Save\" button to save for several years.");
-
-        ImGui::SeparatorText("Countries");
-        countryInfo();
-
-        ImGui::SeparatorText("Cities");
-        cityInfo();
-
-        ImGui::SeparatorText("Note");
-        displayNote();
+    if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
+        startYear = endYear = year;
+        ImGui::OpenPopup(POPUP_WINDOW_NAME);
     }
+    savePopupWindow();
+    saveProgressPopUp();
 
-    return currentYear;
+    infoPresenter.clearHoveredCoord();
+
+    ImGui::SameLine();
+    helpMarker("Right click \"Save\" button to save for several years.");
+
+    ImGui::SeparatorText("Countries");
+    displayCountryInfo();
+
+    ImGui::SeparatorText("Cities");
+    displayCityInfo();
+
+    ImGui::SeparatorText("Note");
+    displayNote();
 }
 
-void HistoricalInfoWidget::countryInfo()
+void HistoricalInfoWidget::displayCountryInfo()
 {
-    static std::string countryName;
-
-    countryInfoWidgets.remove_if([this](auto& countryInfoWidget){
-        bool remove = false;
-        if (ImGui::TreeNode((countryInfoWidget.getName() + "##country").c_str())) {
-            countryInfoWidget.paint(this->selected);
-
-            if (this->selected) {
-                this->logger->trace("Select coordinate lat {}, lon {} for country {}", this->selected->latitude, this->selected->longitude, countryInfoWidget.getName());
-            }
-            
-            if (ImGui::Button("Delete country")) {
-                this->remove->countries.emplace_back(*countryInfoWidget.getCountryIterator());
-                this->cache->countries.erase(countryInfoWidget.getCountryIterator());
-                this->logger->debug("Delete country {}, current country num in cache: {}", countryInfoWidget.getName(), this->cache->countries.size());
-                remove = true;
-            }
-            ImGui::TreePop();
-            ImGui::Spacing();
-        }
-
-        return remove;
-    });
+    infoPresenter.handleDisplayCountries();
     ImGui::PushItemWidth(NAME_INPUT_WIDTH);
     ImGui::InputTextWithHint("##Country name", "Country name", &countryName);
     ImGui::PopItemWidth();
     ImGui::SameLine();
     if (ImGui::Button("Add country") && !countryName.empty()) {
-        for (const auto& country : cache->countries) {
-            if (countryName == country.name) {
-                logger->error("Failed to add a new country {}: country already exists in year {}.", countryName, cache->year);
-                return;
-            }
-        }
-
-        cache->countries.emplace_back(countryName, std::list<persistence::Coordinate>{});
-        countryInfoWidgets.emplace_back(--cache->countries.end());
-        logger->debug("Add country {}, current country num in cache: {}", countryName, this->cache->countries.size());
+        logger->debug("Add country button pressed to add country {} at year {}", countryName, currentYear);
+        infoPresenter.handleAddCountry(countryName);
         countryName.clear();
     }
 }
 
-std::vector<HistoricalInfoPack> HistoricalInfoWidget::getInfos() const
+void HistoricalInfoWidget::displayCountry(const std::string& name)
 {
-    return {HistoricalInfoPack(cache, "Historical Info")};
-}
+    if (ImGui::TreeNode((name + "##country").c_str())) {
+        infoPresenter.handleDisplayCountry(name);
 
-void HistoricalInfoWidget::drawRightClickMenu(float longitude, float latitude)
-{
-    if (ImGui::BeginMenu("Add to"))
-    {
-        if (cache) {
-            for (auto& country : cache->countries) {
-                if (ImGui::MenuItem(country.name.c_str())) {
-                    country.borderContour.emplace_back(latitude, longitude);
-                }
-            }
+        if (!countryNewCoordinate.contains(name)) {
+            countryNewCoordinate.emplace(std::make_pair(name, std::make_pair(std::string{}, std::string{})));
         }
 
-        ImGui::EndMenu();
+        auto& [latitude, longitude] = countryNewCoordinate[name];
+
+        ImGui::PushItemWidth(COORDINATE_INPUT_WIDTH);
+        // input filed for new coordinate
+        ImGui::InputText("Latitude", &latitude);
+        ImGui::SameLine();
+        ImGui::InputText("Longitude", &longitude);
+        ImGui::PopItemWidth();
+        ImGui::SameLine();
+
+        if (ImGui::Button("Add") && !latitude.empty() && !longitude.empty()) {
+            float lat, lon;
+            try {
+                lat = std::stod(latitude);
+                lon = std::stod(longitude);
+            }
+            catch (const std::exception &exc) {
+                logger->error("Invalid value for new coordinate for country {}.", name);
+                return;
+            }
+
+            logger->debug("Add coordinate lat={}, lon={}.", latitude, longitude);
+            infoPresenter.handleExtendContour(name, persistence::Coordinate{lat, lon});
+            latitude.clear();
+            longitude.clear();
+        }
+
+        if (ImGui::Button("Delete country")) {
+            this->logger->debug("Delete country {}", name);
+            infoPresenter.handleRemoveCountry(name);
+        }
+
+        ImGui::TreePop();
+        ImGui::Spacing();
     }
 }
 
-bool HistoricalInfoWidget::complete() const noexcept
+persistence::Coordinate HistoricalInfoWidget::displayCoordinate(const persistence::Coordinate& coord)
 {
-    // This widget is the default one, so it always alive if no other widgets take place.
-    return false;
+    ImGui::PushItemWidth(COORDINATE_INPUT_WIDTH);
+
+    auto latitude = coord.latitude;
+    auto longitude = coord.longitude;
+    ImGui::InputFloat("latitude", &latitude, STEP, STEP_FAST, DECIMAL_PRECISION);
+    if (ImGui::IsItemHovered()) {
+        infoPresenter.setHoveredCoord(coord);
+    }
+    ImGui::SameLine();
+    ImGui::InputFloat("longitude", &longitude, STEP, STEP_FAST, DECIMAL_PRECISION);
+    if (ImGui::IsItemHovered()) {
+        infoPresenter.setHoveredCoord(coord);
+    }
+
+    return persistence::Coordinate{latitude, longitude};
 }
 
-void HistoricalInfoWidget::cityInfo()
+void HistoricalInfoWidget::displayCityInfo()
 {
-    cache->cities.remove_if([this](auto& city){
-        bool remove = false;
-
-        if (ImGui::TreeNode((city.name + "##city").c_str())) {
-            if (const auto& ret = paintInfo(city); ret) {
-                this->selected = ret;
-            }
-
-            ImGui::SameLine();
-            if (ImGui::Button("Remove")) {
-                this->remove->cities.emplace_back(city);
-                this->logger->debug("Delete city {}, current city num in cache: {}", city.name, this->cache->cities.size());
-                remove = true;
-            }
-
-            ImGui::TreePop();
-            ImGui::Spacing();
-        }
-        
-        return remove;
-    });
+    infoPresenter.handleDisplayCities();
 
     ImGui::PushItemWidth(NAME_INPUT_WIDTH);
     ImGui::InputTextWithHint("##City name", "City name", &newCityName);
@@ -169,77 +142,56 @@ void HistoricalInfoWidget::cityInfo()
 
     ImGui::SameLine();
     ImGui::PushItemWidth(COORDINATE_INPUT_WIDTH);
-    ImGui::InputTextWithHint("##CityLatitude" ,"Lat", &cityLatitude);
+    ImGui::InputTextWithHint("##CityLatitude" ,"Lat", &newCityLatitude);
     ImGui::SameLine();
-    ImGui::InputTextWithHint("##CityLongitude", "Lon", &cityLongitude);
+    ImGui::InputTextWithHint("##CityLongitude", "Lon", &newCityLongitude);
     ImGui::PopItemWidth();
-    if (ImGui::Button("Add city") && !newCityName.empty() && !cityLongitude.empty() && !cityLatitude.empty()) {
+    if (ImGui::Button("Add city") && !newCityName.empty() && !newCityLongitude.empty() && !newCityLatitude.empty()) {
         float lat, lon;
         try {
-            lat = std::stod(cityLatitude);
-            lon = std::stod(cityLongitude);
+            lat = std::stod(newCityLatitude);
+            lon = std::stod(newCityLongitude);
         }
         catch (const std::exception &exc) {
             logger->error("Invalid value of new coordinate for city {}.", newCityName);
             return;
         }
 
-        for (const auto& city : cache->cities) {
-            if (newCityName == city.name) {
-                logger->error("Failed to add a new city {}: city already exists in year {}.", newCityName, cache->year);
-                return;
-            }
-        }
-
-        cache->cities.emplace_back(newCityName, persistence::Coordinate{lat, lon});
-        logger->debug("Add city {}, current city num in cache: {}", newCityName, this->cache->cities.size());
+        infoPresenter.handleAddCity(newCityName, persistence::Coordinate{lat, lon});
+        logger->debug("Add city {}", newCityName);
         newCityName.clear();
-        cityLongitude.clear();
-        cityLatitude.clear();
+        newCityLatitude.clear();
+        newCityLongitude.clear();
+    }
+}
+
+void HistoricalInfoWidget::displayCity(const std::string& name)
+{
+    if (ImGui::TreeNode((name + "##city").c_str())) {
+        infoPresenter.handleDisplayCity(name);
+
+        ImGui::TreePop();
+        ImGui::Spacing();
+    }
+
+    ImGui::SameLine();
+    if (ImGui::Button("Remove")) {
+        this->logger->debug("Delete city {}", name);
+        infoPresenter.handleRemoveCity(name);
     }
 }
 
 void HistoricalInfoWidget::displayNote()
 {
-    if (ImGui::Button("Clear")) {
-        cache->note.text.clear();
+    if (auto note = infoPresenter.handleGetNote(); note) {
+        if (ImGui::Button("Clear")) {
+            infoPresenter.handleUpdateNote("");
+        }
+
+        if (ImGui::InputTextMultiline("##note", &(*note), ImGui::GetContentRegionAvail(), ImGuiInputTextFlags_AllowTabInput)) {
+            infoPresenter.handleUpdateNote(*note);
+        }
     }
-
-    paintInfo(cache->note);
-}
-
-void HistoricalInfoWidget::saveInfo(int saveForYear)
-{
-    std::shared_ptr<persistence::Data> toUpdate;
-    std::shared_ptr<persistence::Data> toRemove;
-
-    if (saveForYear == currentYear) {
-        toUpdate = cache;
-        toRemove = remove;
-    } else {
-        toUpdate = std::make_shared<persistence::Data>(*cache);
-        toRemove = std::make_shared<persistence::Data>(*remove);
-
-        toUpdate->year = saveForYear;
-        toRemove->year = saveForYear;
-    }
-
-    logger->debug("Remove {} countries, {} cities, {} event for year {}", toRemove->countries.size(), toRemove->cities.size(), toRemove->note.text, saveForYear);
-    logger->debug("Save {} countries, {} cities, {} event for year {}", toUpdate->countries.size(), toUpdate->cities.size(), toUpdate->note.text, saveForYear);
-    database.remove(toRemove);
-    database.update(toUpdate);
-}
-
-void HistoricalInfoWidget::saveInfoRange(int startYear, int endYear)
-{
-    for (int y = startYear; y <= endYear; y++) {
-        saveInfo(y);
-    }
-
-    // don't clear cache because the user may continue editing
-    remove = std::make_shared<persistence::Data>(currentYear);
-
-    totalWorkLoad = static_cast<float>(database.getWorkLoad());
 }
 
 void HistoricalInfoWidget::savePopupWindow()
@@ -250,11 +202,9 @@ void HistoricalInfoWidget::savePopupWindow()
         ImGui::InputInt("End", &endYear);
         
         if (ImGui::Button("Save##ForYears")) {
-            if (startYear <= endYear) {
-                saveInfoRange(startYear, endYear);
+            if (databaseAccessPresenter.handleSave(startYear, endYear)) {
                 ImGui::CloseCurrentPopup();
-            } else {
-                logger->error("Start year must less than end year");
+                ImGui::OpenPopup(PROGRESS_POPUP_WINDOW_NAME);
             }
         }
         
@@ -262,20 +212,13 @@ void HistoricalInfoWidget::savePopupWindow()
     }
 }
 
-void HistoricalInfoWidget::displaySaveProgress()
+void HistoricalInfoWidget::saveProgressPopUp()
 {
-    const auto left = database.getWorkLoad();
-    ImGui::ProgressBar((totalWorkLoad - left) / totalWorkLoad, ImVec2(0.f, 0.f));
-    logger->trace("Total workload {}, current left {}", totalWorkLoad, left);
-
-    if (database.getWorkLoad() == 0) {
-        totalWorkLoad  = 0;
+    if (ImGui::BeginPopupModal(PROGRESS_POPUP_WINDOW_NAME)) {
+        simpleProgressDisplayer(databaseAccessPresenter.getProgress(),
+                                "Done",
+                                databaseAccessPresenter.isSaveComplete(),
+                                [](){});
     }
 }
-
-std::optional<persistence::Coordinate> HistoricalInfoWidget::getHovered() const noexcept
-{
-    return selected;
-}
-
 }

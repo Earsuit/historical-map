@@ -4,46 +4,32 @@
 #include "external/imgui/imgui.h"
 
 namespace ui {
-constexpr int MIN_YEAR = -3000;
-constexpr int MAX_YEAR = 1911;
-
 void IInfoWidget::paint()
 {
+    int year = presenter.getYear();
     ImGui::Begin(INFO_WIDGET_NAME, nullptr,  ImGuiWindowFlags_NoTitleBar);
 
     // there is no year 0
-    ImGui::SliderInt("##", &year, MIN_YEAR, MAX_YEAR, "Year %d", ImGuiSliderFlags_AlwaysClamp);
-    if (year == 0) {
-        year = 1;
+    if (ImGui::SliderInt("##", &year, presenter.getMinYear(), presenter.getMaxYear(), "Year %d", ImGuiSliderFlags_AlwaysClamp)) {
+        presenter.handleSetYear(year);
     }
+    
     ImGui::SameLine();
     ImGui::PushButtonRepeat(true);
     if (ImGui::ArrowButton("##left", ImGuiDir_Left)) {
-        year--;
-        if (year == 0) {
-            year = -1;
-        }
+        presenter.handleMoveYearBackward();
     }
     ImGui::SameLine();
     if (ImGui::ArrowButton("##right", ImGuiDir_Right)) {
-        year++;
-        if (year == 0) {
-            year = 1;
-        }
+        presenter.handleMoveYearForward();
     }
     ImGui::PopButtonRepeat();
 
     ImGui::SameLine();
     helpMarker("Ctrl + click to maually set the year");
 
-    // the derived class may change the year
-    year = historyInfo(year);
+    historyInfo(year);
 
     ImGui::End();
-}
-
-int IInfoWidget::getYear() const noexcept
-{
-    return year;
 }
 }

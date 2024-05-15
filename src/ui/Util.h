@@ -19,33 +19,33 @@ constexpr auto PROGRESS_BAR_SIZES = ImVec2{400, 0};
 void helpMarker(const char* message);
 void alignForWidth(float width, float alignment = 0.5f);
 
-template<util::Callable<bool> T, util::Callable<void> Y>
+template<util::Callable<void> T>
 void centeredEnableableButton(std::string_view buttonLabel, 
-                    T&& enable,
-                    Y&& completeCallback)
+                              bool enable,
+                              T&& completeCallback)
 {
     alignForWidth(ImGui::CalcTextSize(buttonLabel.data()).x);
-    if(!enable()) {
+    if(!enable) {
         ImGui::BeginDisabled();
     }
     if (ImGui::Button(buttonLabel.data())) {
         completeCallback();
         ImGui::CloseCurrentPopup();
     }
-    if(!enable()) {
+    if(!enable) {
         ImGui::EndDisabled();
     }
 }
 
-template<util::Callable<bool> T, util::Callable<void> Y>
+template<util::Callable<void> T>
 void simpleProgressDisplayer(float progress, 
-                       std::string_view buttonLabel, 
-                       T&& isComplete,
-                       Y&& completeCallback)
+                             std::string_view buttonLabel, 
+                             bool isComplete,
+                             T&& completeCallback)
 {
     ImGui::ProgressBar(progress, PROGRESS_BAR_SIZES);
 
-    centeredEnableableButton(buttonLabel, std::forward<T>(isComplete), std::forward<Y>(completeCallback));
+    centeredEnableableButton(buttonLabel, isComplete, std::forward<T>(completeCallback));
 }
 
 // we are not so care about the error of floating comparison 

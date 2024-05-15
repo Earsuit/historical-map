@@ -2,6 +2,7 @@
 #define SRC_UI_MAP_PLOT_H
 
 #include "src/presentation/MapWidgetPresenter.h"
+#include "src/presentation/MapWidgetInterface.h"
 #include "src/logger/Util.h"
 #include "src/persistence/Data.h"
 #include "src/ui/IInfoWidget.h"
@@ -15,52 +16,38 @@
 #include <optional>
 
 namespace ui {
-
 constexpr auto MAP_WIDGET_NAME = "Map plot";
 
-class MapWidget {
+class MapWidget: presentation::MapWidgetInterface {
 public:
-    MapWidget(): 
-        logger{spdlog::get(logger::LOGGER_NAME)}
+    MapWidget(const std::string& source): 
+        logger{spdlog::get(logger::LOGGER_NAME)},
+        presenter{*this, source},
+        source{source}
     {}
 
-    void paint(IInfoWidget& infoWidget);
+    void paint();
+
+    virtual void renderAnnotation(const model::Vec2& coordinate, const std::string& name, const presentation::Color& color) override;
+    virtual model::Vec2 renderPoint(const model::Vec2& coordinate, float size, const presentation::Color& color) override;
+    virtual void renderContour(const std::string& name, const std::vector<model::Vec2>& contour, const presentation::Color& color) override;
+    virtual model::Range getAxisRangeX() const noexcept override;
+    virtual model::Range getAxisRangeY() const noexcept override;
+    virtual model::Vec2 getPlotSize() const noexcept override;
+    virtual void renderTile(void* texture, const model::Vec2& bMin, const model::Vec2& bMax) override;
+    virtual std::optional<model::Vec2> getMousePos() const override;
 
 private:
     std::shared_ptr<spdlog::logger> logger;
     presentation::MapWidgetPresenter presenter;
+    std::string source;
+    size_t dragPointId = 0;
+    ImPlotRect plotRect;
+    ImVec2 plotSize;
+    std::optional<ImPlotPoint> mousePos;
 
-    std::optional<ImPlotPoint> renderMap(IInfoWidget& infoWidget, 
-                                         ImVec2 size, 
-                                         const std::string& name, 
-                                         HistoricalInfo historicalInfo, 
-                                         std::optional<persistence::Coordinate> hovered);
-    void renderOverlay(const std::string& name, int offset, const std::optional<ImPlotPoint>& mousePos);
-    void renderHistoricalInfo(HistoricalInfo historicalInfo, std::optional<persistence::Coordinate> hovered);
-    
-    template<typename T>
-    std::pair<double, double> renderCoordinate(T& coordinate, const ImVec4& color, float size, int id)
-    {
-        double x = presenter.longitude2X(coordinate.longitude);
-        double y = presenter.latitude2Y(coordinate.latitude);
-        
-        if constexpr (std::is_const_v<T>) {
-            ImPlot::DragPoint(id, &x, &y, color, size, ImPlotDragToolFlags_NoInputs);
-        } else {
-            if (ImPlot::DragPoint(id, &x, &y, color, size)) {
-                coordinate.latitude = presenter.y2Latitude(static_cast<float>(y));
-                coordinate.longitude = presenter.x2Longitude(static_cast<float>(x));
-            }
-        }
-
-        logger->trace("Lon {}, lat {} at [{}, {}]",
-                    coordinate.longitude,
-                    coordinate.latitude,
-                    x,
-                    y);
-
-        return {x, y};
-    }
+    void renderMap();
+    void renderOverlay();
 };
 }
 

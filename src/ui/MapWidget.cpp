@@ -40,51 +40,89 @@ constexpr auto INIT_X_LIMIT_MAX = 0.9349;
 constexpr auto INIT_Y_LIMIT_MIN = 0.3162;
 constexpr auto INIT_Y_LIMIT_MAX = 0.4779;
 
-ImVec4 computeColor(const std::string& val)
-{
-    const auto hash = std::hash<std::string>{}(val);
-
-    float r = static_cast<float>((hash & MASK) / NORMALIZE);
-    float g = static_cast<float>(((hash >> 8) & MASK) / NORMALIZE);
-    float b = static_cast<float>(((hash >> 16) & MASK) / NORMALIZE);
-
-    return ImVec4(r, g, b, DEFAULT_ALPHA);
-}
-
-void MapWidget::paint(IInfoWidget& infoWidget)
+void MapWidget::paint()
 {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding,  ImVec2(0, 0));
-    ImGui::Begin(MAP_WIDGET_NAME);
-    ImGui::PopStyleVar(2);
+    if (ImGui::Begin(MAP_WIDGET_NAME)) {
+        ImGui::PopStyleVar(2);
 
-    const auto area = ImGui::GetContentRegionAvail();
-    const auto infos = infoWidget.getInfos();
+        renderMap();
+        renderOverlay();
 
-    const ImVec2 singleMapWindowSize = {area.x / infos.size(), area.y};
-    int overlayOffset = 0;
-    const auto hovered = infoWidget.getHovered();
-
-    for (auto [info, name] : infos) {
-        const auto mousePos = renderMap(infoWidget, singleMapWindowSize, name, info, hovered);
-        renderOverlay(name, overlayOffset, mousePos);
-        overlayOffset += singleMapWindowSize.x + ImPlot::GetStyle().PlotPadding.x - ImPlot::GetStyle().PlotBorderSize * 2;
-        ImGui::SameLine();
-    }
-
-    ImGui::End();
+        ImGui::End();
+    } 
 }
 
-std::optional<ImPlotPoint> MapWidget::renderMap(IInfoWidget& infoWidget,
-                                                ImVec2 size, 
-                                                const std::string& name, 
-                                                HistoricalInfo historicalInfo, 
-                                                std::optional<persistence::Coordinate> hovered)
+void MapWidget::renderAnnotation(const model::Vec2& coordinate, const std::string& name, const presentation::Color& color)
 {
-    std::optional<ImPlotPoint> mousePos;
-    std::string plotName = "##" + name; 
+    ImPlot::Annotation(static_cast<double>(coordinate.x), static_cast<double>(coordinate.y), 
+                       ImVec4{color.red, color.green, color.blue, color.alpha}, 
+                       COUNTRY_ANNOTATION_OFFSET, 
+                       false, 
+                       "%s", 
+                       name.c_str());
+}
 
-    if (ImPlot::BeginPlot(plotName.c_str(), size, (ImPlotFlags_CanvasOnly ^ ImPlotFlags_NoLegend) | ImPlotFlags_Equal)) {
+model::Vec2 MapWidget::renderPoint(const model::Vec2& coordinate, float size, const presentation::Color& color)
+{
+    double x = coordinate.x;
+    double y = coordinate.y;
+    ImPlot::DragPoint(dragPointId++, &x, &y, ImVec4{color.red, color.green, color.blue, color.alpha}, size);
+
+    return {static_cast<float>(x), static_cast<float>(y)};
+}
+
+void MapWidget::renderContour(const std::string& name, const std::vector<model::Vec2>& contour, const presentation::Color& color)
+{
+    ImPlot::SetNextFillStyle(ImVec4{color.red, color.green, color.blue, color.alpha});
+    if (ImPlot::BeginItem(name.c_str(), ImPlotItemFlags_None, ImPlotCol_Fill)){
+        std::vector<ImVec2> points;
+        points.reserve(contour.size());
+
+        for (const auto& [x, y] : contour) {
+            points.emplace_back(ImPlot::PlotToPixels(ImPlotPoint(x, y)));
+        }
+
+        ImPlot::GetPlotDrawList()->AddConvexPolyFilled(points.data(), 
+                                                       points.size(), 
+                                                       IM_COL32(color.red * NORMALIZE, color.green * NORMALIZE, color.blue * NORMALIZE, FILLED_ALPHA));
+        ImPlot::EndItem();
+    }
+}
+
+model::Range MapWidget::getAxisRangeX() const noexcept
+{
+    return {static_cast<float>(plotRect.X.Min), static_cast<float>(plotRect.X.Max)};
+}
+
+model::Range MapWidget::getAxisRangeY() const noexcept
+{
+    return {static_cast<float>(plotRect.Y.Min), static_cast<float>(plotRect.Y.Max)};
+}
+
+model::Vec2 MapWidget::getPlotSize() const noexcept
+{
+    return {plotSize.x, plotSize.y};
+}
+
+void MapWidget::renderTile(void* texture, const model::Vec2& bMin, const model::Vec2& bMax)
+{
+    ImPlot::PlotImage("##", texture, ImVec2{bMin.x, bMin.y}, ImVec2{bMax.x, bMax.y});
+}
+
+std::optional<model::Vec2> MapWidget::getMousePos() const
+{
+    if (mousePos) {
+        return model::Vec2{static_cast<float>(mousePos->x), static_cast<float>(mousePos->y)};
+    } 
+
+    return std::nullopt;
+}
+
+void MapWidget::renderMap()
+{
+    if (ImPlot::BeginPlot("##", ImGui::GetContentRegionAvail(), (ImPlotFlags_CanvasOnly ^ ImPlotFlags_NoLegend) | ImPlotFlags_Equal)) {
         ImPlot::SetupLegend(ImPlotLocation_NorthEast, ImPlotLegendFlags_NoButtons);
         ImPlot::SetupAxis(ImAxis_X1, nullptr, AXIS_FLAGS);
         ImPlot::SetupAxis(ImAxis_Y1, nullptr, AXIS_FLAGS | ImPlotAxisFlags_Invert);
@@ -93,48 +131,28 @@ std::optional<ImPlotPoint> MapWidget::renderMap(IInfoWidget& infoWidget,
         ImPlot::SetupAxisLimits(ImAxis_X1, INIT_X_LIMIT_MIN, INIT_X_LIMIT_MAX);
         ImPlot::SetupAxisLimits(ImAxis_Y1, INIT_Y_LIMIT_MIN, INIT_Y_LIMIT_MAX);
         
-        const auto plotSize = ImPlot::GetPlotSize();
-        const auto plotLimits = ImPlot::GetPlotLimits(ImAxis_X1, ImAxis_Y1);
+        plotSize = ImPlot::GetPlotSize();
+        plotRect = ImPlot::GetPlotLimits(ImAxis_X1, ImAxis_Y1);
         if (const auto cursor = ImPlot::GetPlotMousePos(); 
-            inBound(cursor.x, plotLimits.X.Min, plotLimits.X.Max) &&
-            inBound(cursor.y, plotLimits.Y.Min, plotLimits.Y.Max)) {
+            inBound(cursor.x, plotRect.X.Min, plotRect.X.Max) &&
+            inBound(cursor.y, plotRect.Y.Min, plotRect.Y.Max)) {
             mousePos = cursor;
+        } else {
+            mousePos = std::nullopt;
         }
 
-        logger->trace("Plot limit X [{}, {}], Y [{}, {}]", plotLimits.X.Min, plotLimits.X.Max, plotLimits.Y.Min, plotLimits.Y.Max);
+        logger->trace("Plot limit X [{}, {}], Y [{}, {}]", plotRect.X.Min, plotRect.X.Max, plotRect.Y.Min, plotRect.Y.Max);
         logger->trace("Plot size x={}, y={} pixels", plotSize.x, plotSize.y);
 
-        const auto tiles = presenter.getTiles({static_cast<float>(plotLimits.X.Min), static_cast<float>(plotLimits.X.Max)},
-                                              {static_cast<float>(plotLimits.Y.Min), static_cast<float>(plotLimits.Y.Max)},
-                                              {plotSize.x, plotSize.y});
-
-        for (const auto tile : tiles) {
-            const auto coord = tile->getCoordinate();
-            const ImVec2 bMax = {presenter.computeTileBound(coord.x+1), presenter.computeTileBound(coord.y+1)};
-            const ImVec2 bMin = {presenter.computeTileBound(coord.x), presenter.computeTileBound(coord.y)};
-            ImPlot::PlotImage("##", tile->getTexture(), bMin, bMax);
-        }
-
-        renderHistoricalInfo(historicalInfo, hovered);
+        presenter.handleRenderTiles();
+        presenter.handleRenderCountry();
+        presenter.handleRenderCity();
 
         ImPlot::EndPlot();
     }
-
-    if (ImGui::BeginPopupContextItem(plotName.c_str())) {
-        static float longitue = 0, latitude = 0;
-        if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && mousePos) {
-            longitue = presenter.x2Longitude(mousePos->x);
-            latitude = presenter.y2Latitude(mousePos->y);
-        }
-
-        infoWidget.drawRightClickMenu(longitue, latitude);
-        ImGui::EndPopup();
-    }
-
-    return mousePos;
 }
 
-void MapWidget::renderOverlay(const std::string& name, int offset, const std::optional<ImPlotPoint>& mousePos)
+void MapWidget::renderOverlay()
 {
     const ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoMove |
                                          ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | 
@@ -144,80 +162,17 @@ void MapWidget::renderOverlay(const std::string& name, int offset, const std::op
 
     ImVec2 work_pos = viewport->WorkPos; // Use work area to avoid menu-bar/task-bar, if any!
     ImVec2 window_pos;
-    window_pos.x = work_pos.x + OVERLAY_PAD + offset;
+    window_pos.x = work_pos.x + OVERLAY_PAD;
     window_pos.y = work_pos.y + OVERLAY_PAD;
     ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always);
     ImGui::SetNextWindowViewport(viewport->ID);
 
     ImGui::PushStyleColor(ImGuiCol_TitleBg, OVERLAY_BACKGROUND_COLOR);
     ImGui::PushStyleColor(ImGuiCol_WindowBg, OVERLAY_BACKGROUND_COLOR);
-    if (ImGui::Begin((name + "##Overlay").c_str(), nullptr, windowFlags)) {
-        if (mousePos) {
-            ImGui::Text("Cursor at: lon %.2f, lat %.2f", 
-                        presenter.x2Longitude(mousePos->x), 
-                        presenter.y2Latitude(mousePos->y));
-        } else {
-            ImGui::Text("Cursor at: ");
-        }
-
-        const auto bbox = presenter.getBoundingBox();
-
-        ImGui::Text("View range: west %.2f, east %.2f, \n\t\t\tnorth %.2f, south %.2f", bbox.west, bbox.east, bbox.north, bbox.south);
+    if (ImGui::Begin((source + "##Overlay").c_str(), nullptr, windowFlags)) {
+        ImGui::Text("%s", presenter.handleGetOverlayText().c_str());
     }
     ImGui::PopStyleColor(2);
     ImGui::End();
 }
-
-void MapWidget::renderHistoricalInfo(HistoricalInfo historicalInfo, std::optional<persistence::Coordinate> hovered)
-{
-    std::visit(
-        [&hovered, this](auto& data){
-            if (data) {
-                int dragPointId = 0;
-                for (auto& country : data->countries) {
-                    std::vector<ImVec2> points;
-                    mapbox::geometry::polygon<double> polygon{mapbox::geometry::linear_ring<double>{}};
-                    const auto color = computeColor(country.name);
-
-                    points.reserve(country.borderContour.size());
-                    for (auto& coordinate : country.borderContour) {
-                        float size = POINT_SIZE;
-
-                        if (hovered && coordinate == *hovered) {
-                            size = SELECTED_POINT_SIZE;
-                        }
-
-                        const auto [x, y] = this->renderCoordinate(coordinate, color, size, dragPointId++);
-                        polygon.back().emplace_back(x, y);
-                        points.emplace_back(ImPlot::PlotToPixels(ImPlotPoint(x, y)));
-                    }
-
-                    if (country.borderContour.size() >= MINIMAL_POINTS_OF_POLYGON) {
-                        const auto visualCenter = mapbox::polylabel(polygon, VISUAL_CENTER_PERCISION);
-                        ImPlot::Annotation(visualCenter.x, visualCenter.y, color, COUNTRY_ANNOTATION_OFFSET, false, "%s", country.name.c_str());
-                        ImPlot::SetNextFillStyle(color);
-                        if (ImPlot::BeginItem(country.name.c_str(), ImPlotItemFlags_None, ImPlotCol_Fill)){
-                            ImPlot::GetPlotDrawList()->AddConvexPolyFilled(points.data(), points.size(), IM_COL32(color.x * NORMALIZE, color.y * NORMALIZE, color.z * NORMALIZE, FILLED_ALPHA));
-                            ImPlot::EndItem();
-                        }
-                    }
-                }
-
-                for (auto& city : data->cities) {
-                    const auto color = computeColor(city.name);
-                    float size = POINT_SIZE;
-
-                    if (hovered && city.coordinate == *hovered) {
-                        size = SELECTED_POINT_SIZE;
-                    }
-
-                    const auto [x, y] = this->renderCoordinate(city.coordinate, color, size, dragPointId++);
-                    ImPlot::Annotation(x, y, color, CITY_ANNOTATION_OFFSET, true, "%s", city.name.c_str());
-                }
-            }
-        },
-        historicalInfo
-    );    
-}
-
 }

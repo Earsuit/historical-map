@@ -2,8 +2,6 @@
 #include "src/logger/Util.h"
 #include "src/ui/IInfoWidget.h"
 #include "src/ui/HistoricalInfoWidget.h"
-#include "src/ui/ExportWidget.h"
-#include "src/ui/ImportWidget.h"
 
 #include "external/imgui/imgui.h"
 #include "external/imgui/imgui_internal.h"
@@ -35,7 +33,7 @@ static void glfwErrorCallback(int error, const char* description)
 
 HistoricalMap::HistoricalMap():
     infoWidget{std::make_unique<HistoricalInfoWidget>()},
-    mapWidget{},
+    mapWidget{"Database"},
     tileSourceWidget{}
 {
     glfwSetErrorCallback(glfwErrorCallback);
@@ -128,17 +126,17 @@ void HistoricalMap::start()
         if (ImGui::BeginMainMenuBar()) {
             if (ImGui::BeginMenu("File")) {
                 if (ImGui::MenuItem("Import")) {
-                    if (dynamic_cast<HistoricalInfoWidget*>(infoWidget.get()) != nullptr) {
-                        previousInfoWidget.swap(infoWidget);
-                        infoWidget = std::make_unique<ImportWidget>(previousInfoWidget->getYear());
-                    }
+                    // if (dynamic_cast<HistoricalInfoWidget*>(infoWidget.get()) != nullptr) {
+                    //     previousInfoWidget.swap(infoWidget);
+                    //     infoWidget = std::make_unique<ImportWidget>(previousInfoWidget->getYear());
+                    // }
                 }
 
                 if (ImGui::MenuItem("Export")) {
-                    if (dynamic_cast<HistoricalInfoWidget*>(infoWidget.get()) != nullptr) {
-                        previousInfoWidget.swap(infoWidget);
-                        infoWidget = std::make_unique<ExportWidget>(previousInfoWidget->getYear());
-                    }
+                    // if (dynamic_cast<HistoricalInfoWidget*>(infoWidget.get()) != nullptr) {
+                    //     previousInfoWidget.swap(infoWidget);
+                    //     infoWidget = std::make_unique<ExportWidget>(previousInfoWidget->getYear());
+                    // }
                 }
 
                 ImGui::EndMenu();
@@ -151,7 +149,7 @@ void HistoricalMap::start()
 
         infoWidget->paint();
         tileSourceWidget.paint();
-        mapWidget.paint(*infoWidget);
+        mapWidget.paint();
         logWidget.paint();
 
         if (infoWidget->complete()) {

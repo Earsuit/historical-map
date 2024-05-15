@@ -1,10 +1,10 @@
 #ifndef SRC_UI_HISTORICAL_INFO_WIDGET_H
 #define SRC_UI_HISTORICAL_INFO_WIDGET_H
 
-#include "src/persistence/DatabaseManager.h"
-#include "src/persistence/Data.h"
+#include "src/presentation/HistoricalInfoWidgetInterface.h"
+#include "src/presentation/HistoricalInfoPresenter.h"
+#include "src/presentation/DatabaseAccessPresenter.h"
 #include "src/logger/Util.h"
-#include "src/ui/CountryInfoWidget.h"
 #include "src/ui/IInfoWidget.h"
 
 #include "spdlog/spdlog.h"
@@ -15,49 +15,45 @@
 #include <list>
 #include <memory>
 #include <utility>
+#include <map>
 
 namespace ui {
-constexpr int QIN_DYNASTY = -221;
-
-class HistoricalInfoWidget: public IInfoWidget {
+class HistoricalInfoWidget: public IInfoWidget, public presentation::HistoricalInfoWidgetInterface {
 public:
     HistoricalInfoWidget(): 
-        IInfoWidget{QIN_DYNASTY},
         logger{spdlog::get(logger::LOGGER_NAME)}, 
-        database{persistence::DatabaseManager::getInstance()},
-        remove{std::make_shared<persistence::Data>(QIN_DYNASTY)}
+        infoPresenter{*this, SOURCE},
+        databaseAccessPresenter{SOURCE}
     {
     }
 
-    std::vector<HistoricalInfoPack> getInfos() const override;
-    void drawRightClickMenu(float longitude, float latitude) override;
-    bool complete() const noexcept override;
-    virtual std::optional<persistence::Coordinate> getHovered() const noexcept override;
+    virtual void displayCountry(const std::string& name) override;
+    virtual void displayCity(const std::string& name) override;
+    virtual persistence::Coordinate displayCoordinate(const persistence::Coordinate& coord) override;
+    virtual bool complete() const noexcept override { return false; };
 
 private:
+    constexpr static auto SOURCE = "Database";
+
     std::shared_ptr<spdlog::logger> logger;
-    persistence::DatabaseManager& database;
-    std::shared_ptr<persistence::Data> cache;
-    std::shared_ptr<persistence::Data> remove;
-    std::optional<persistence::Coordinate> selected;
-    std::list<CountryInfoWidget<decltype(persistence::Data::countries)::iterator>> countryInfoWidgets;
-    std::string newCityName;
-    std::string cityLongitude;
-    std::string cityLatitude;
-    int currentYear;
+    presentation::HistoricalInfoPresenter infoPresenter;
+    presentation::DatabaseAccessPresenter databaseAccessPresenter;
     int startYear;
     int endYear;
-    float totalWorkLoad = 0;
+    int currentYear;
+    std::string countryName;
+    std::map<std::string, std::pair<std::string, std::string>> countryNewCoordinate;
+    std::string newCityName, newCityLatitude, newCityLongitude;
 
-    void countryInfo();
-    void cityInfo();
+    void displayCountryInfo();
+    void displayCityInfo();
     void displayNote();
     void saveInfo(int year);
     void saveInfoRange(int startYear, int endYear);
     void savePopupWindow();
-    void displaySaveProgress();
+    void saveProgressPopUp();
 
-    virtual int historyInfo(int year) override;
+    virtual void historyInfo(int year) override;
 };
 
 }

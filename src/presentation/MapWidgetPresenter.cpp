@@ -1,6 +1,11 @@
 #include "src/presentation/MapWidgetPresenter.h"
+#include "src/logger/Util.h"
+
+#include "mapbox/polylabel.hpp"
 
 #include <algorithm>
+#include <sstream>
+#include <iomanip>
 
 namespace presentation {
 constexpr int TILE_SIZE = 256;  
@@ -15,124 +20,171 @@ constexpr float MIN_LONGITUDE = -180.0f;
 constexpr float MAX_LATITUDE = 85.05112878f;
 constexpr float MIN_LATITUDE = -85.05112878f;
 constexpr float PI = M_PI;
+constexpr auto MINIMAL_POINTS_OF_POLYGON = 3;
+constexpr auto VISUAL_CENTER_PERCISION = 1.0;
+constexpr float POINT_SIZE = 2.0f;
+constexpr float HOVERED_POINT_SIZE = 4.0f;
+constexpr auto DEFAULT_ALPHA = 1.0f;
+constexpr auto NORMALIZE = 255.0f; 
+constexpr uint8_t MASK = 0xFF;
+constexpr auto TEXT_DECIMAL_PRECISION = 2;
 
-std::vector<std::shared_ptr<tile::Tile>> MapWidgetPresenter::getTiles(const Range& xAxis,
-                                                                      const Range& yAxis,
-                                                                      const Vec2& plotSize)
+Color computeColor(const std::string& val)
 {
-    std::vector<std::shared_ptr<tile::Tile>> tiles;
-    const auto west = x2Longitude(xAxis.min, BBOX_ZOOM_LEVEL);
-    const auto east = x2Longitude(xAxis.max, BBOX_ZOOM_LEVEL);
-    const auto north = y2Latitude(yAxis.min, BBOX_ZOOM_LEVEL);
-    const auto south = y2Latitude(yAxis.max, BBOX_ZOOM_LEVEL);
-    bbox = {west, south, east, north};
+    const auto hash = std::hash<std::string>{}(val);
 
-    logger->trace("west={}, north={}, east={}, south={}", west, north, east, south);
+    float r = static_cast<float>((hash & MASK) / NORMALIZE);
+    float g = static_cast<float>(((hash >> 8) & MASK) / NORMALIZE);
+    float b = static_cast<float>(((hash >> 16) & MASK) / NORMALIZE);
 
-    zoom = std::clamp(bestZoomLevel(bbox, plotSize.x, plotSize.y), MIN_ZOOM_LEVEL, MAX_ZOOM_LEVEL);
+    return Color(r, g, b, DEFAULT_ALPHA);
+}
 
-    const auto limit = (1 << zoom) - 1;
-    const auto xMin = std::clamp(static_cast<int>(longitude2X(west, zoom)), 0, limit);
-    const auto xMax = std::clamp(static_cast<int>(longitude2X(east, zoom)), 0, limit);
-    const auto yMin = std::clamp(static_cast<int>(latitude2Y(north, zoom)), 0, limit);
-    const auto yMax = std::clamp(static_cast<int>(latitude2Y(south, zoom)), 0, limit);
+MapWidgetPresenter::MapWidgetPresenter(MapWidgetInterface& view, const std::string& source):
+    logger{spdlog::get(logger::LOGGER_NAME)},
+    view{view},
+    tileModel{model::TileModel::getInstance()},
+    dynamicInfoModel{model::DynamicInfoModel::getInstance()},
+    source{source}
+{
+    startWorkerThread();
+}
 
-    logger->trace("Zoom {} tile X from [{}, {}], Y from [{}, {}]", zoom, xMin, xMax, yMin, yMax);
+MapWidgetPresenter::~MapWidgetPresenter()
+{
+    stopWorkerThread();
+}
 
-    for (auto x = xMin; x <= xMax; x++) {
-        for (auto y = yMin; y <= yMax; y++) {
-            if (auto tile = tileLoader.loadTile({x, y, zoom}); tile) {
-                tiles.emplace_back(*tile);
+void MapWidgetPresenter::startWorkerThread()
+{
+    runWorkerThread = true;
+    workerThread = std::thread(&MapWidgetPresenter::worker, this);
+}
+
+void MapWidgetPresenter::stopWorkerThread()
+{
+    runWorkerThread = false;
+
+    // enqueue an empty task to wake up the wait_dequeue if necessary
+    taskQueue.enqueue([](){});
+
+    if (workerThread.joinable()) {
+        workerThread.join();
+    }
+}
+
+void MapWidgetPresenter::worker()
+{
+    while (runWorkerThread) {
+        std::function<void()> task; 
+
+        taskQueue.wait_dequeue(task);
+
+        task();
+    }
+}
+
+void MapWidgetPresenter::handleRenderTiles()
+{
+    const auto xAxis = view.getAxisRangeX();
+    const auto yAxis = view.getAxisRangeY();
+    const auto plotSize = view.getPlotSize();
+    const auto tiles = tileModel.getTiles(xAxis, yAxis, plotSize);
+
+    for (const auto tile : tiles) {
+        const auto coord = tile->getCoordinate();
+        const auto bMax = tileModel.getTileBoundMax(tile);
+        const auto bMin = tileModel.getTileBoundMin(tile);
+        view.renderTile(tile->getTexture(), bMin, bMax);
+    }
+}
+
+void MapWidgetPresenter::handleRenderCountry()
+{
+    if (auto info = dynamicInfoModel.getHistoricalInfo(source); info) {
+        for (const auto& name : info->getCountryList()) {
+            // have to use double type here due to a compilation error in mapbox::polylabel if use float
+            mapbox::geometry::polygon<double> polygon{mapbox::geometry::linear_ring<double>{}};
+            std::vector<model::Vec2> points;
+            const auto color = computeColor(name);
+            auto& country = info->getCountry(name);
+
+            for (auto& coordinate : country.borderContour) {
+                const auto point = handleRenderCoordinate(coordinate, color);
+                polygon.back().emplace_back(point.x, point.y);
+                points.emplace_back(point);
+            }
+
+            if (points.size() >= MINIMAL_POINTS_OF_POLYGON) {
+                const auto visualCenter = mapbox::polylabel<double>(polygon, VISUAL_CENTER_PERCISION);
+                view.renderAnnotation(model::Vec2{static_cast<float>(visualCenter.x), static_cast<float>(visualCenter.y)}, 
+                                    country.name, 
+                                    color);
+                view.renderContour(country.name, points, color);
             }
         }
+    }   
+}
+
+void MapWidgetPresenter::handleRenderCity()
+{
+    if (auto info = dynamicInfoModel.getHistoricalInfo(source); info) {
+        for (const auto& name : info->getCityList()) {
+            const auto color = computeColor(name);
+            auto& city = info->getCity(name);
+            const auto point = handleRenderCoordinate(city.coordinate, color);
+            view.renderAnnotation(point, city.name, color);
+        }
+    }
+}
+
+model::Vec2 MapWidgetPresenter::handleRenderCoordinate(persistence::Coordinate& coordinate,
+                                                                       const Color& color)
+{
+    bool changed = false;
+    const auto hovered = dynamicInfoModel.getHoveredCoord();
+    const model::Vec2 point{model::longitude2X(coordinate.longitude, BBOX_ZOOM_LEVEL), 
+                            model::latitude2Y(coordinate.latitude, BBOX_ZOOM_LEVEL)};
+
+    float size = POINT_SIZE;
+    if (hovered && coordinate == *hovered) {
+        size = HOVERED_POINT_SIZE;
     }
 
-    return tiles;
+    const auto newPoint = view.renderPoint(point, size, color);
+
+    if (newPoint != point) {
+        coordinate.latitude = model::y2Latitude(point.x, BBOX_ZOOM_LEVEL);
+        coordinate.longitude = model::x2Longitude(point.y, BBOX_ZOOM_LEVEL);
+    }
+
+    return newPoint;
 }
 
-float MapWidgetPresenter::longitude2X(float longitude) const noexcept
+std::string MapWidgetPresenter::handleGetOverlayText() const
 {
-    return longitude2X(longitude, BBOX_ZOOM_LEVEL);
-}
+    std::stringstream text;
+    const auto bbox = tileModel.getBoundingBox();
 
-float MapWidgetPresenter::latitude2Y(float latitude) const
-{
-    return latitude2Y(latitude, BBOX_ZOOM_LEVEL);
-}
+    text << std::fixed << std::setprecision(TEXT_DECIMAL_PRECISION);
 
-float MapWidgetPresenter::longitude2X(float longitude, int zoom) const noexcept
-{
-    const auto n = 1 << zoom;
+    text << "Cursor at: ";
+    if (auto mouse = view.getMousePos(); mouse) {
+        text << "lon " 
+             << std::clamp(model::x2Longitude(mouse->x, BBOX_ZOOM_LEVEL), MIN_LONGITUDE, MAX_LONGITUDE)
+             << ", lat " 
+             << std::clamp(model::y2Latitude(mouse->y, BBOX_ZOOM_LEVEL), MIN_LATITUDE, MAX_LATITUDE);
+    }
+    text << "\n"
+         << "View range: west "
+         << bbox.west
+         << ", east "
+         << bbox.east
+         << ", \n\t\t\tnorth "
+         << bbox.north
+         << ", south "
+         << bbox.south;
 
-    return n * (longitude + HALF_PI_DEG) / PI_DEG;
-}
-
-float MapWidgetPresenter::latitude2Y(float latitude, int zoom) const
-{
-    const auto n = 1 << zoom;
-
-    latitude = latitude * PI / HALF_PI_DEG;
-    return n * (1 - (std::asinh(std::tan(latitude)) / PI)) / 2;
-}
-
-float MapWidgetPresenter::x2Longitude(float x) const noexcept
-{
-    return x2Longitude(x, BBOX_ZOOM_LEVEL);
-}
-
-float MapWidgetPresenter::x2Longitude(float x, int zoom) const noexcept
-{
-    const auto n = 1 << zoom;
-
-    return std::clamp(PI_DEG * x / n - HALF_PI_DEG, MIN_LONGITUDE, MAX_LONGITUDE);
-}
-
-float MapWidgetPresenter::y2Latitude(float y) const
-{
-    return y2Latitude(y, BBOX_ZOOM_LEVEL);
-}
-
-float MapWidgetPresenter::y2Latitude(float y, int zoom) const
-{
-    const auto n = 1 << zoom;
-
-    return std::clamp(std::atanf(std::sinh(PI * (1- 2*y/n))) * HALF_PI_DEG / PI,
-                      MIN_LATITUDE,
-                      MAX_LATITUDE);
-}
-
-float MapWidgetPresenter::deg2Rad(float degree) const noexcept
-{
-    return degree * PI / HALF_PI_DEG;
-}
-
-float MapWidgetPresenter::rad2Deg(float radius) const noexcept
-{
-    return radius * HALF_PI_DEG / PI;
-}
-
-float MapWidgetPresenter::computeTileBound(int coord) const noexcept
-{
-    return static_cast<float>(coord) / (1<<zoom);
-}
-
-int MapWidgetPresenter::bestZoomLevel(const BoundingBox& bbox, int mapWidth, int mapHeight) const
-{
-    const float longitudeDelta = bbox.east > bbox.west ? 
-                                 bbox.east - bbox.west : 
-                                 PI_DEG - (bbox.west - bbox.east);
-    const float resolutionHorizontal = longitudeDelta / (mapWidth - PADDING * 2);
-
-    const float ry1 = std::log((std::sin(deg2Rad(bbox.south)) + 1) / std::cos(deg2Rad(bbox.south)));
-    const float ry2 = std::log((std::sin(deg2Rad(bbox.north)) + 1) / std::cos(deg2Rad(bbox.north)));
-    const float centerLat = rad2Deg(std::atan(std::sinh((ry1 + ry2) / 2)));
-    const float vy0 = std::log(tanf(PI * (0.25f + centerLat / PI_DEG)));
-    const float vy1 = std::log(tanf(PI * (0.25f + bbox.north / PI_DEG)));
-    const float zoomFactorPowered = (mapHeight * 0.5f - PADDING) / (40.7436654315252 * (vy1 - vy0));
-    const float resolutionVertical = PI_DEG / (zoomFactorPowered * TILE_SIZE);
-
-    const float resolution = std::max(resolutionVertical, resolutionHorizontal);
-
-    return static_cast<int>(std::log2(PI_DEG / (resolution * TILE_SIZE)));
+    return text.str();
 }
 }
