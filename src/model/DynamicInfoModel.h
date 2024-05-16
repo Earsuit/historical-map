@@ -33,10 +33,12 @@ public:
     {
         std::lock_guard lk(cacheLock);
         if (cache.contains(source)) {
+            logger->debug("Upsert DynamicInfoModel cache for source {} at year {}", source, info.year);
             cache[source] = std::make_shared<persistence::HistoricalStorage>(std::forward<T>(info));
             return true;
         }
 
+        logger->error("Failed to upsert DynamicInfoModel cache for source {} at year {}, please add source first.", source, info.year);
         return false;
     }
 

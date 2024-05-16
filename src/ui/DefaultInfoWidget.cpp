@@ -23,12 +23,13 @@ void DefaultInfoWidget::historyInfo(int year)
     if (ImGui::Button("Refresh")) {
         logger->debug("Refresh data of year {} from database.", year);
 
-        databaseAccessPresenter.handleRefresh();        
+        databaseAccessPresenter.handleRefresh();
     }
     ImGui::SameLine();
 
     if (ImGui::Button("Save")) {
         databaseAccessPresenter.handleSave(year, year);
+        ImGui::OpenPopup(PROGRESS_POPUP_WINDOW_NAME);
     }
 
     if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
@@ -130,7 +131,7 @@ void DefaultInfoWidget::displayCountry(const std::string& name)
 }
 
 persistence::Coordinate DefaultInfoWidget::displayCoordinate(const std::string& uniqueId,
-                                                                const persistence::Coordinate& coord)
+                                                             const persistence::Coordinate& coord)
 {
     ImGui::PushItemWidth(COORDINATE_INPUT_WIDTH);
 
