@@ -11,7 +11,7 @@
 namespace presentation {
 class MapWidgetInterface {
 public:
-    virtual void renderAnnotation(const model::Vec2& coordinate, const std::string& name, const Color& color) = 0;
+    virtual void renderAnnotation(const model::Vec2& coordinate, const std::string& name, const Color& color, const model::Vec2& offset) = 0;
     virtual model::Vec2 renderPoint(const model::Vec2& coordinate, float size, const Color& color) = 0;
     virtual void renderContour(const std::string& name, const std::vector<model::Vec2>& contour, const Color& color) = 0;
     virtual model::Range getAxisRangeX() const noexcept = 0;

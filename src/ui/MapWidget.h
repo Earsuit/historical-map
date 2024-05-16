@@ -30,7 +30,10 @@ public:
 
     void paint();
 
-    virtual void renderAnnotation(const model::Vec2& coordinate, const std::string& name, const presentation::Color& color) override;
+    virtual void renderAnnotation(const model::Vec2& coordinate, 
+                                  const std::string& name, 
+                                  const presentation::Color& color, 
+                                  const model::Vec2& offset) override;
     virtual model::Vec2 renderPoint(const model::Vec2& coordinate, float size, const presentation::Color& color) override;
     virtual void renderContour(const std::string& name, const std::vector<model::Vec2>& contour, const presentation::Color& color) override;
     virtual model::Range getAxisRangeX() const noexcept override;

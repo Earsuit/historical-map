@@ -29,6 +29,8 @@ constexpr auto DEFAULT_ALPHA = 1.0f;
 constexpr auto NORMALIZE = 255.0f; 
 constexpr uint8_t MASK = 0xFF;
 constexpr auto TEXT_DECIMAL_PRECISION = 2;
+constexpr auto CITY_ANNOTATION_OFFSET = model::Vec2(-15, 15);
+constexpr auto COUNTRY_ANNOTATION_OFFSET = model::Vec2(0, 0);
 
 Color computeColor(const std::string& val)
 {
@@ -130,7 +132,8 @@ void MapWidgetPresenter::handleRenderCountry()
                 const auto visualCenter = mapbox::polylabel<double>(polygon, VISUAL_CENTER_PERCISION);
                 view.renderAnnotation(model::Vec2{static_cast<float>(visualCenter.x), static_cast<float>(visualCenter.y)}, 
                                     country.name, 
-                                    color);
+                                    color,
+                                    COUNTRY_ANNOTATION_OFFSET);
                 view.renderContour(country.name, points, color);
             }
         }
@@ -144,7 +147,7 @@ void MapWidgetPresenter::handleRenderCity()
             const auto color = computeColor(name);
             auto& city = info->getCity(name);
             const auto point = handleRenderCoordinate(city.coordinate, color);
-            view.renderAnnotation(point, city.name, color);
+            view.renderAnnotation(point, city.name, color, CITY_ANNOTATION_OFFSET);
         }
     }
 }

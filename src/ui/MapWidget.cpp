@@ -23,8 +23,6 @@ constexpr float OVERLAY_PAD = 10.0f;
 
 constexpr float POINT_SIZE = 2.0f;
 constexpr float SELECTED_POINT_SIZE = 4.0f;
-constexpr auto CITY_ANNOTATION_OFFSET = ImVec2(-15, 15);
-constexpr auto COUNTRY_ANNOTATION_OFFSET = ImVec2(0, 0);
 constexpr auto VISUAL_CENTER_PERCISION = 1.0;
 constexpr auto MINIMAL_POINTS_OF_POLYGON = 3;
 
@@ -60,11 +58,11 @@ void MapWidget::paint()
     } 
 }
 
-void MapWidget::renderAnnotation(const model::Vec2& coordinate, const std::string& name, const presentation::Color& color)
+void MapWidget::renderAnnotation(const model::Vec2& coordinate, const std::string& name, const presentation::Color& color, const model::Vec2& offset)
 {
     ImPlot::Annotation(static_cast<double>(coordinate.x), static_cast<double>(coordinate.y), 
                        ImVec4{color.red, color.green, color.blue, color.alpha}, 
-                       COUNTRY_ANNOTATION_OFFSET, 
+                       ImVec2{offset.x, offset.y}, 
                        false, 
                        "%s", 
                        name.c_str());
