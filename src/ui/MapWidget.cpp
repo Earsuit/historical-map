@@ -50,6 +50,8 @@ void MapWidget::paint()
     if (ImGui::Begin(MAP_WIDGET_NAME)) {
         ImGui::PopStyleVar(2);
 
+        dragPointId = 0;
+
         renderMap();
         renderRightClickMenu();
         renderOverlay();

@@ -150,7 +150,7 @@ void MapWidgetPresenter::handleRenderCity()
 }
 
 model::Vec2 MapWidgetPresenter::handleRenderCoordinate(persistence::Coordinate& coordinate,
-                                                                       const Color& color)
+                                                       const Color& color)
 {
     bool changed = false;
     const auto hovered = dynamicInfoModel.getHoveredCoord();
@@ -165,8 +165,9 @@ model::Vec2 MapWidgetPresenter::handleRenderCoordinate(persistence::Coordinate& 
     const auto newPoint = view.renderPoint(point, size, color);
 
     if (newPoint != point) {
-        coordinate.latitude = model::y2Latitude(point.x, BBOX_ZOOM_LEVEL);
-        coordinate.longitude = model::x2Longitude(point.y, BBOX_ZOOM_LEVEL);
+        coordinate.latitude = y2Latitude(newPoint.y);
+        coordinate.longitude = x2Longitude(newPoint.x);
+        logger->debug("Moving point to lay {}, lon {}", coordinate.latitude, coordinate.longitude);
     }
 
     return newPoint;
