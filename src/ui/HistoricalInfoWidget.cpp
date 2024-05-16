@@ -170,14 +170,13 @@ void HistoricalInfoWidget::displayCity(const std::string& name)
     if (ImGui::TreeNode((name + "##city").c_str())) {
         infoPresenter.handleDisplayCity(name);
 
+        if (ImGui::Button("Remove")) {
+            this->logger->debug("Delete city {}", name);
+            infoPresenter.handleRemoveCity(name);
+        }
+
         ImGui::TreePop();
         ImGui::Spacing();
-    }
-
-    ImGui::SameLine();
-    if (ImGui::Button("Remove")) {
-        this->logger->debug("Delete city {}", name);
-        infoPresenter.handleRemoveCity(name);
     }
 }
 

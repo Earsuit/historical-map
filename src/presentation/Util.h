@@ -7,6 +7,8 @@
 #include <memory>
 
 namespace presentation {
+constexpr auto DEFAULT_HISTORICAL_INFO_SOURCE = "Database";
+
 struct Color {
     float red;
     float green;

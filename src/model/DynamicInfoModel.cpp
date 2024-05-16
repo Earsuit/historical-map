@@ -11,14 +11,12 @@ DynamicInfoModel& DynamicInfoModel::getInstance()
 
 void DynamicInfoModel::setHoveredCoord(persistence::Coordinate coord)
 {
-    logger->debug("Set hovered coordinate");
     std::lock_guard lk(hoveredLock);
     hovered = coord;
 }
 
 void DynamicInfoModel::clearHoveredCoord() noexcept
 {
-    logger->debug("Clear hovered coordinate");
     std::lock_guard lk(hoveredLock);
     hovered.reset();
 }

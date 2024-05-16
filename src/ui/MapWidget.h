@@ -23,8 +23,10 @@ public:
     MapWidget(const std::string& source): 
         logger{spdlog::get(logger::LOGGER_NAME)},
         presenter{*this, source},
-        source{source}
-    {}
+        source{source},
+        plotName{"##" + source}
+    {
+    }
 
     void paint();
 
@@ -45,9 +47,14 @@ private:
     ImPlotRect plotRect;
     ImVec2 plotSize;
     std::optional<ImPlotPoint> mousePos;
+    ImPlotPoint rightClickMenuPos;
+    std::string plotName;
+    std::string newCountryName;
+    std::string newCityName;
 
     void renderMap();
     void renderOverlay();
+    void renderRightClickMenu();
 };
 }
 

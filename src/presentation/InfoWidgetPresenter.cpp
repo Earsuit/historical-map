@@ -1,16 +1,15 @@
 #include "src/presentation/InfoWidgetPresenter.h"
+#include "src/presentation/Util.h"
 #include "src/logger/Util.h"
 
 namespace presentation {
-constexpr auto DEFAULT_SOURCE = "Database";
-
 InfoWidgetPresenter::InfoWidgetPresenter():
     logger{spdlog::get(logger::LOGGER_NAME)},
     databaseModel{model::DatabaseModel::getInstance()},
     dynamicInfoModel{model::DynamicInfoModel::getInstance()}
 {
-    if (!dynamicInfoModel.addSource(DEFAULT_SOURCE)) {
-        logger->critical("Failed to add source {}", DEFAULT_SOURCE);
+    if (!dynamicInfoModel.addSource(DEFAULT_HISTORICAL_INFO_SOURCE)) {
+        logger->critical("Failed to add source {}", DEFAULT_HISTORICAL_INFO_SOURCE);
     }
     startWorkerThread();
     updateInfo();
@@ -71,7 +70,7 @@ void InfoWidgetPresenter::worker()
 void InfoWidgetPresenter::updateInfo()
 {
     if (!taskQueue.enqueue([this](){
-                                this->dynamicInfoModel.upsert(DEFAULT_SOURCE, 
+                                this->dynamicInfoModel.upsert(DEFAULT_HISTORICAL_INFO_SOURCE, 
                                                               this->databaseModel.loadHistoricalInfo());
                             })) {
         logger->error("Enqueue update historical info from database for year {} task fail.", databaseModel.getYear());

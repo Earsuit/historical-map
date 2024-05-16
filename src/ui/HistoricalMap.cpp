@@ -2,6 +2,7 @@
 #include "src/logger/Util.h"
 #include "src/ui/IInfoWidget.h"
 #include "src/ui/HistoricalInfoWidget.h"
+#include "src/presentation/Util.h"
 
 #include "external/imgui/imgui.h"
 #include "external/imgui/imgui_internal.h"
@@ -33,7 +34,7 @@ static void glfwErrorCallback(int error, const char* description)
 
 HistoricalMap::HistoricalMap():
     infoWidget{std::make_unique<HistoricalInfoWidget>()},
-    mapWidget{"Database"},
+    mapWidget{presentation::DEFAULT_HISTORICAL_INFO_SOURCE},
     tileSourceWidget{}
 {
     glfwSetErrorCallback(glfwErrorCallback);

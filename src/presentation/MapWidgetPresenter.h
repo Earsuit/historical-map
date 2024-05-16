@@ -32,6 +32,11 @@ public:
     void handleRenderCountry();
     void handleRenderCity();
     std::string handleGetOverlayText() const;
+    bool handleRequestHasRightClickMenu() const noexcept;
+    std::vector<std::string> handleRequestCountryList() const;
+    void handleExtendContour(const std::string& name, const model::Vec2& pos);
+    bool handleAddCountry(const std::string& name, const model::Vec2& pos);
+    bool handleAddCity(const std::string& name, const model::Vec2& pos);
 
 private:
     std::shared_ptr<spdlog::logger> logger;

@@ -40,6 +40,9 @@ constexpr auto INIT_X_LIMIT_MAX = 0.9349;
 constexpr auto INIT_Y_LIMIT_MIN = 0.3162;
 constexpr auto INIT_Y_LIMIT_MAX = 0.4779;
 
+const auto ADD_NEW_COUNTRY_POPUP_NAME = "Add new country";
+const auto ADD_NEW_CITY_POPUP_NAME = "Add new city";
+
 void MapWidget::paint()
 {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
@@ -48,6 +51,7 @@ void MapWidget::paint()
         ImGui::PopStyleVar(2);
 
         renderMap();
+        renderRightClickMenu();
         renderOverlay();
 
         ImGui::End();
@@ -122,7 +126,7 @@ std::optional<model::Vec2> MapWidget::getMousePos() const
 
 void MapWidget::renderMap()
 {
-    if (ImPlot::BeginPlot("##", ImGui::GetContentRegionAvail(), (ImPlotFlags_CanvasOnly ^ ImPlotFlags_NoLegend) | ImPlotFlags_Equal)) {
+    if (ImPlot::BeginPlot(plotName.c_str(), ImGui::GetContentRegionAvail(), (ImPlotFlags_CanvasOnly ^ ImPlotFlags_NoLegend) | ImPlotFlags_Equal)) {
         ImPlot::SetupLegend(ImPlotLocation_NorthEast, ImPlotLegendFlags_NoButtons);
         ImPlot::SetupAxis(ImAxis_X1, nullptr, AXIS_FLAGS);
         ImPlot::SetupAxis(ImAxis_Y1, nullptr, AXIS_FLAGS | ImPlotAxisFlags_Invert);
@@ -149,6 +153,71 @@ void MapWidget::renderMap()
         presenter.handleRenderCity();
 
         ImPlot::EndPlot();
+    }
+}
+
+void MapWidget::renderRightClickMenu()
+{
+    bool openAddNewCountryPopup = false;
+    bool openAddNewCityPopup = false;
+
+    if (presenter.handleRequestHasRightClickMenu() && ImGui::BeginPopupContextItem(plotName.c_str(), ImGuiMouseButton_Right)) {
+        if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && mousePos) {
+            rightClickMenuPos = *mousePos;
+        }
+
+        if (ImGui::MenuItem("Add new country")) {
+            openAddNewCountryPopup = true;
+        }
+        
+        if (ImGui::BeginMenu("Add to exist country")) {
+            const auto countries = presenter.handleRequestCountryList();
+            for (const auto& country : countries) {
+                if (ImGui::MenuItem(country.c_str())) {
+                    presenter.handleExtendContour(country, 
+                                                  model::Vec2{static_cast<float>(rightClickMenuPos.x), static_cast<float>(rightClickMenuPos.y)});
+                }
+            }
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::MenuItem("Add new city")) {
+            openAddNewCityPopup = true;
+        }
+
+        ImGui::EndPopup();
+    }
+
+    if (openAddNewCountryPopup) {
+        ImGui::OpenPopup(ADD_NEW_COUNTRY_POPUP_NAME);
+    }
+
+    if (openAddNewCityPopup) {
+        ImGui::OpenPopup(ADD_NEW_CITY_POPUP_NAME);
+    }
+
+    if (ImGui::BeginPopup(ADD_NEW_COUNTRY_POPUP_NAME)) {
+        ImGui::InputText("Name", &newCountryName);
+        if (ImGui::Button("Add") & !newCountryName.empty()) {
+            if (presenter.handleAddCountry(newCountryName, 
+                                           model::Vec2{static_cast<float>(rightClickMenuPos.x), static_cast<float>(rightClickMenuPos.y)})) {
+                newCountryName.clear();
+                ImGui::CloseCurrentPopup();
+            }
+        }
+        ImGui::EndPopup();
+    }
+
+    if (ImGui::BeginPopup(ADD_NEW_CITY_POPUP_NAME)) {
+        ImGui::InputText("Name", &newCityName);
+        if (ImGui::Button("Add") & !newCityName.empty()) {
+            if (presenter.handleAddCity(newCityName, 
+                                        model::Vec2{static_cast<float>(rightClickMenuPos.x), static_cast<float>(rightClickMenuPos.y)})) {
+                newCountryName.clear();
+                ImGui::CloseCurrentPopup();
+            }
+        }
+        ImGui::EndPopup();
     }
 }
 
