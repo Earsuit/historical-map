@@ -5,7 +5,6 @@
 #include "external/imgui/misc/cpp/imgui_stdlib.h"
 
 namespace ui {
-constexpr int SLIDER_WIDTH = 40;
 constexpr int NAME_INPUT_WIDTH = 100;
 constexpr auto POPUP_WINDOW_NAME = "Save for years";
 constexpr auto PROGRESS_POPUP_WINDOW_NAME = "Saving";
