@@ -17,7 +17,7 @@ void HistoricalInfoWidget::historyInfo(int year)
 {
     if (currentYear != year) {
         currentYear = year;
-        countryNewCoordinate.clear();
+        countryNewCoordinateCache.clear();
     }
 
     if (ImGui::Button("Refresh")) {
@@ -44,18 +44,21 @@ void HistoricalInfoWidget::historyInfo(int year)
     helpMarker("Right click \"Save\" button to save for several years.");
 
     ImGui::SeparatorText("Countries");
-    displayCountryInfo();
+    displayCountryInfos();
 
     ImGui::SeparatorText("Cities");
-    displayCityInfo();
+    displayCityInfos();
 
     ImGui::SeparatorText("Note");
     displayNote();
 }
 
-void HistoricalInfoWidget::displayCountryInfo()
+void HistoricalInfoWidget::displayCountryInfos()
 {
-    infoPresenter.handleDisplayCountries();
+    for (const auto& country : infoPresenter.handleRequestCountryList()) {
+        displayCountry(country);
+    }
+
     ImGui::PushItemWidth(NAME_INPUT_WIDTH);
     ImGui::InputTextWithHint("##Country name", "Country name", &countryName);
     ImGui::PopItemWidth();
@@ -70,13 +73,26 @@ void HistoricalInfoWidget::displayCountryInfo()
 void HistoricalInfoWidget::displayCountry(const std::string& name)
 {
     if (ImGui::TreeNode((name + "##country").c_str())) {
-        infoPresenter.handleDisplayCountry(name);
+        int idx = 0;
+        for (auto& coordinate : infoPresenter.handleRequestContour(name)) {
+            const auto newCoordinate = displayCoordinate(name + std::to_string(idx), coordinate);
 
-        if (!countryNewCoordinate.contains(name)) {
-            countryNewCoordinate.emplace(std::make_pair(name, std::make_pair(std::string{}, std::string{})));
+            if (newCoordinate != coordinate) {
+                infoPresenter.handleUpdateContour(name, idx, newCoordinate);
+            }
+
+            ImGui::SameLine();
+            if (ImGui::Button(("Delete##" + std::to_string(idx) + name).c_str())) {
+                infoPresenter.handleDeleteFromContour(name, idx);
+            }
+            idx++;
         }
 
-        auto& [latitude, longitude] = countryNewCoordinate[name];
+        if (!countryNewCoordinateCache.contains(name)) {
+            countryNewCoordinateCache.emplace(std::make_pair(name, std::make_pair(std::string{}, std::string{})));
+        }
+
+        auto& [latitude, longitude] = countryNewCoordinateCache[name];
 
         ImGui::PushItemWidth(COORDINATE_INPUT_WIDTH);
         // input filed for new coordinate
@@ -113,12 +129,14 @@ void HistoricalInfoWidget::displayCountry(const std::string& name)
     }
 }
 
-persistence::Coordinate HistoricalInfoWidget::displayCoordinate(const persistence::Coordinate& coord)
+persistence::Coordinate HistoricalInfoWidget::displayCoordinate(const std::string& uniqueId,
+                                                                const persistence::Coordinate& coord)
 {
     ImGui::PushItemWidth(COORDINATE_INPUT_WIDTH);
 
     auto latitude = coord.latitude;
     auto longitude = coord.longitude;
+    ImGui::PushID(uniqueId.c_str());
     ImGui::InputFloat("latitude", &latitude, STEP, STEP_FAST, DECIMAL_PRECISION);
     if (ImGui::IsItemHovered()) {
         infoPresenter.setHoveredCoord(coord);
@@ -128,13 +146,16 @@ persistence::Coordinate HistoricalInfoWidget::displayCoordinate(const persistenc
     if (ImGui::IsItemHovered()) {
         infoPresenter.setHoveredCoord(coord);
     }
+    ImGui::PopID();
 
     return persistence::Coordinate{latitude, longitude};
 }
 
-void HistoricalInfoWidget::displayCityInfo()
+void HistoricalInfoWidget::displayCityInfos()
 {
-    infoPresenter.handleDisplayCities();
+    for (const auto& city : infoPresenter.handleRequestCityList()) {
+        displayCity(city);
+    }
 
     ImGui::PushItemWidth(NAME_INPUT_WIDTH);
     ImGui::InputTextWithHint("##City name", "City name", &newCityName);
@@ -167,16 +188,22 @@ void HistoricalInfoWidget::displayCityInfo()
 
 void HistoricalInfoWidget::displayCity(const std::string& name)
 {
-    if (ImGui::TreeNode((name + "##city").c_str())) {
-        infoPresenter.handleDisplayCity(name);
+    if (const auto ret = infoPresenter.handleRequestCityCoordinate(name); ret) {
+        if (ImGui::TreeNode((name + "##city").c_str())) {
+            const auto newCoordinate = displayCoordinate(name + "city", *ret);
 
-        if (ImGui::Button("Remove")) {
-            this->logger->debug("Delete city {}", name);
-            infoPresenter.handleRemoveCity(name);
+            if (newCoordinate != *ret) {
+                infoPresenter.handleUpdateCityCoordinate(name, newCoordinate);
+            }
+
+            if (ImGui::Button("Remove")) {
+                this->logger->debug("Delete city {}", name);
+                infoPresenter.handleRemoveCity(name);
+            }
+
+            ImGui::TreePop();
+            ImGui::Spacing();
         }
-
-        ImGui::TreePop();
-        ImGui::Spacing();
     }
 }
 

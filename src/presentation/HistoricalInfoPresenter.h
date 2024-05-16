@@ -3,7 +3,6 @@
 
 #include "src/model/DynamicInfoModel.h"
 #include "src/model/DatabaseModel.h"
-#include "src/presentation/HistoricalInfoWidgetInterface.h"
 #include "src/logger/Util.h"
 
 #include "spdlog/spdlog.h"
@@ -14,18 +13,13 @@
 namespace presentation {
 class HistoricalInfoPresenter {
 public:
-    HistoricalInfoPresenter(HistoricalInfoWidgetInterface& view, const std::string& source):
+    HistoricalInfoPresenter(const std::string& source):
         logger{spdlog::get(logger::LOGGER_NAME)},
-        view{view},
         databaseModel{model::DatabaseModel::getInstance()},
         dynamicInfoModel{model::DynamicInfoModel::getInstance()},
         source{source}
     {}
 
-    void handleDisplayCountries();
-    void handleDisplayCities();
-    void handleDisplayCity(const std::string& name);
-    void handleDisplayCountry(const std::string& name);
     std::optional<std::string> handleGetNote() const noexcept;
     void handleUpdateNote(const std::string& text);
     void handleAddCountry(const std::string& name);
@@ -35,10 +29,16 @@ public:
     void handleRemoveCity(const std::string& name);
     void setHoveredCoord(const persistence::Coordinate& coordinate);
     void clearHoveredCoord();
+    std::vector<std::string> handleRequestCountryList() const;
+    std::list<persistence::Coordinate> handleRequestContour(const std::string& name) const;
+    void handleUpdateContour(const std::string& name, int idx, const persistence::Coordinate& coordinate);
+    void handleDeleteFromContour(const std::string& name, int idx);
+    std::vector<std::string> handleRequestCityList() const;
+    std::optional<persistence::Coordinate> handleRequestCityCoordinate(const std::string& name) const;
+    void handleUpdateCityCoordinate(const std::string& name, const persistence::Coordinate& coord);
 
 private:
     std::shared_ptr<spdlog::logger> logger;
-    HistoricalInfoWidgetInterface& view;
     model::DatabaseModel& databaseModel;
     model::DynamicInfoModel& dynamicInfoModel;
     std::string source;

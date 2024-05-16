@@ -1,55 +1,6 @@
 #include "src/presentation/HistoricalInfoPresenter.h"
 
 namespace presentation {
-void HistoricalInfoPresenter::handleDisplayCountries()
-{
-    if (auto info = dynamicInfoModel.getHistoricalInfo(source); info) {
-        for (const auto& name: info->getCountryList()) {
-            view.displayCountry(name);
-        }
-    } else {
-        logger->trace("Historical info is null from source {} in handleDisplayCountries", source);
-    }
-}
-
-void HistoricalInfoPresenter::handleDisplayCities()
-{
-    if (auto info = dynamicInfoModel.getHistoricalInfo(source); info) {
-        for (const auto& name: info->getCityList()) {
-            view.displayCity(name);
-        }
-    } else {
-        logger->trace("Historical info is null from source {} in handleDisplayCities", source);
-    }
-}
-
-void HistoricalInfoPresenter::handleDisplayCity(const std::string& name)
-{
-    if (auto info = dynamicInfoModel.getHistoricalInfo(source); info) {
-        if (info->containsCity(name)) {
-            auto& city = info->getCity(name); 
-            city.coordinate = view.displayCoordinate(city.coordinate);
-        }
-    } else {
-        logger->trace("Historical info is null from source {} in handleDisplayCity", source);
-    }
-}
-
-void HistoricalInfoPresenter::handleDisplayCountry(const std::string& name)
-{
-    if (auto info = dynamicInfoModel.getHistoricalInfo(source); info) {
-        if (info->containsCountry(name)) {
-            auto& country = info->getCountry(name);
-
-            for (auto& coordinate : country.borderContour) {
-                coordinate = view.displayCoordinate(coordinate);
-            }
-        }
-    } else {
-        logger->trace("Historical info is null from source {} in handleDisplayCountry", source);
-    }
-}
-
 void HistoricalInfoPresenter::handleAddCountry(const std::string& name)
 {
     if (auto info = dynamicInfoModel.getHistoricalInfo(source); info) {
@@ -127,5 +78,69 @@ void HistoricalInfoPresenter::setHoveredCoord(const persistence::Coordinate& coo
 void HistoricalInfoPresenter::clearHoveredCoord()
 {
     dynamicInfoModel.clearHoveredCoord();
+}
+
+std::vector<std::string> HistoricalInfoPresenter::handleRequestCountryList() const
+{
+    if (auto info = dynamicInfoModel.getHistoricalInfo(source); info) {
+        return info->getCountryList();
+    }
+
+    return {};
+}
+
+std::list<persistence::Coordinate> HistoricalInfoPresenter::handleRequestContour(const std::string& name) const
+{
+    if (auto info = dynamicInfoModel.getHistoricalInfo(source); info) {
+        return info->getCountry(name).borderContour;
+    }
+
+    return {};
+}
+
+void HistoricalInfoPresenter::handleUpdateContour(const std::string& name, int idx, const persistence::Coordinate& coordinate)
+{
+    if (auto info = dynamicInfoModel.getHistoricalInfo(source); info) {
+        auto& contour = info->getCountry(name).borderContour;
+        auto it = std::next(contour.begin(), idx);
+        it->latitude = coordinate.latitude;
+        it->longitude = coordinate.longitude;
+    }
+}
+
+void HistoricalInfoPresenter::handleDeleteFromContour(const std::string& name, int idx)
+{
+    if (auto info = dynamicInfoModel.getHistoricalInfo(source); info) {
+        auto& contour = info->getCountry(name).borderContour;
+        auto it = std::next(contour.begin(), idx);
+        contour.erase(it);
+    }
+}
+
+std::vector<std::string> HistoricalInfoPresenter::handleRequestCityList() const
+{
+    if (auto info = dynamicInfoModel.getHistoricalInfo(source); info) {
+        return info->getCityList();
+    }
+
+    return {};
+}
+
+std::optional<persistence::Coordinate> HistoricalInfoPresenter::handleRequestCityCoordinate(const std::string& name) const
+{
+    if (auto info = dynamicInfoModel.getHistoricalInfo(source); info) {
+        return info->getCity(name).coordinate;
+    }
+
+    return std::nullopt;
+}
+
+void HistoricalInfoPresenter::handleUpdateCityCoordinate(const std::string& name, const persistence::Coordinate& coord)
+{   
+    if (auto info = dynamicInfoModel.getHistoricalInfo(source); info) {
+        info->getCity(name).coordinate = coord;
+    } else {
+        logger->error("Update city {} coordinate fail because historical info is null from source {}", name, source);
+    }
 }
 }

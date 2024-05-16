@@ -1,7 +1,6 @@
 #ifndef SRC_UI_HISTORICAL_INFO_WIDGET_H
 #define SRC_UI_HISTORICAL_INFO_WIDGET_H
 
-#include "src/presentation/HistoricalInfoWidgetInterface.h"
 #include "src/presentation/HistoricalInfoPresenter.h"
 #include "src/presentation/DatabaseAccessPresenter.h"
 #include "src/logger/Util.h"
@@ -18,18 +17,15 @@
 #include <map>
 
 namespace ui {
-class HistoricalInfoWidget: public IInfoWidget, public presentation::HistoricalInfoWidgetInterface {
+class HistoricalInfoWidget: public IInfoWidget {
 public:
     HistoricalInfoWidget(): 
         logger{spdlog::get(logger::LOGGER_NAME)}, 
-        infoPresenter{*this, SOURCE},
+        infoPresenter{SOURCE},
         databaseAccessPresenter{SOURCE}
     {
     }
 
-    virtual void displayCountry(const std::string& name) override;
-    virtual void displayCity(const std::string& name) override;
-    virtual persistence::Coordinate displayCoordinate(const persistence::Coordinate& coord) override;
     virtual bool complete() const noexcept override { return false; };
 
 private:
@@ -42,16 +38,19 @@ private:
     int endYear;
     int currentYear;
     std::string countryName;
-    std::map<std::string, std::pair<std::string, std::string>> countryNewCoordinate;
+    std::map<std::string, std::pair<std::string, std::string>> countryNewCoordinateCache;
     std::string newCityName, newCityLatitude, newCityLongitude;
 
-    void displayCountryInfo();
-    void displayCityInfo();
+    void displayCountryInfos();
+    void displayCityInfos();
     void displayNote();
     void saveInfo(int year);
     void saveInfoRange(int startYear, int endYear);
     void savePopupWindow();
     void saveProgressPopUp();
+    void displayCountry(const std::string& name);
+    void displayCity(const std::string& name);
+    persistence::Coordinate displayCoordinate(const std::string& uniqueId, const persistence::Coordinate& coord);
 
     virtual void historyInfo(int year) override;
 };

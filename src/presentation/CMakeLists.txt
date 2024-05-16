@@ -5,7 +5,6 @@ SET(PRESENTATION_SRC
     MapWidgetInterface.h
     InfoWidgetPresenter.h
     InfoWidgetPresenter.cpp
-    HistoricalInfoWidgetInterface.h
     HistoricalInfoPresenter.h
     HistoricalInfoPresenter.cpp
     DatabaseAccessPresenter.h
