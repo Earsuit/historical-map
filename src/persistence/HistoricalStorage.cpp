@@ -84,12 +84,17 @@ void HistoricalStorage::removeCity(const std::string& name)
 
 bool HistoricalStorage::addCountry(const std::string& name)
 {
-    if (countries.contains(name)) {
+    return addCountry(persistence::Country{name});
+}
+
+bool HistoricalStorage::addCountry(const persistence::Country& country)
+{
+    if (countries.contains(country.name)) {
         return false;
     }
 
-    cache.countries.emplace_back(persistence::Country{name});
-    countries.emplace(std::make_pair(name, --cache.countries.end()));
+    cache.countries.emplace_back(country);
+    countries.emplace(std::make_pair(country.name, --cache.countries.end()));
 
     return true;
 }

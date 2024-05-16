@@ -27,6 +27,7 @@ public:
     void removeCountry(const std::string& name);
     void removeCity(const std::string& name);
     bool addCountry(const std::string& name);
+    bool addCountry(const persistence::Country& country);
     bool addCity(const std::string& name, const persistence::Coordinate& coord);
     persistence::Data getData() const noexcept { return cache; }
     persistence::Data getRemoved() const noexcept { return removed; }
