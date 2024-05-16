@@ -1,5 +1,5 @@
-#ifndef SRC_UI_HISTORICAL_INFO_WIDGET_H
-#define SRC_UI_HISTORICAL_INFO_WIDGET_H
+#ifndef SRC_UI_DEFAULT_INFO_WIDGET_H
+#define SRC_UI_DEFAULT_INFO_WIDGET_H
 
 #include "src/presentation/HistoricalInfoPresenter.h"
 #include "src/presentation/DatabaseAccessPresenter.h"
@@ -17,9 +17,9 @@
 #include <map>
 
 namespace ui {
-class HistoricalInfoWidget: public IInfoWidget {
+class DefaultInfoWidget: public IInfoWidget {
 public:
-    HistoricalInfoWidget(): 
+    DefaultInfoWidget(): 
         logger{spdlog::get(logger::LOGGER_NAME)}, 
         infoPresenter{SOURCE},
         databaseAccessPresenter{SOURCE}

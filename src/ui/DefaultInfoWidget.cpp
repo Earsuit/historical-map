@@ -1,4 +1,4 @@
-#include "src/ui/HistoricalInfoWidget.h"
+#include "src/ui/DefaultInfoWidget.h"
 #include "src/ui/Util.h"
 
 #include "external/imgui/imgui.h"
@@ -13,7 +13,7 @@ constexpr float STEP = 0;
 constexpr float STEP_FAST = 0;
 constexpr auto DECIMAL_PRECISION = "%.2f";
 
-void HistoricalInfoWidget::historyInfo(int year)
+void DefaultInfoWidget::historyInfo(int year)
 {
     if (currentYear != year) {
         currentYear = year;
@@ -53,7 +53,7 @@ void HistoricalInfoWidget::historyInfo(int year)
     displayNote();
 }
 
-void HistoricalInfoWidget::displayCountryInfos()
+void DefaultInfoWidget::displayCountryInfos()
 {
     for (const auto& country : infoPresenter.handleRequestCountryList()) {
         displayCountry(country);
@@ -70,7 +70,7 @@ void HistoricalInfoWidget::displayCountryInfos()
     }
 }
 
-void HistoricalInfoWidget::displayCountry(const std::string& name)
+void DefaultInfoWidget::displayCountry(const std::string& name)
 {
     if (ImGui::TreeNode((name + "##country").c_str())) {
         int idx = 0;
@@ -129,7 +129,7 @@ void HistoricalInfoWidget::displayCountry(const std::string& name)
     }
 }
 
-persistence::Coordinate HistoricalInfoWidget::displayCoordinate(const std::string& uniqueId,
+persistence::Coordinate DefaultInfoWidget::displayCoordinate(const std::string& uniqueId,
                                                                 const persistence::Coordinate& coord)
 {
     ImGui::PushItemWidth(COORDINATE_INPUT_WIDTH);
@@ -151,7 +151,7 @@ persistence::Coordinate HistoricalInfoWidget::displayCoordinate(const std::strin
     return persistence::Coordinate{latitude, longitude};
 }
 
-void HistoricalInfoWidget::displayCityInfos()
+void DefaultInfoWidget::displayCityInfos()
 {
     for (const auto& city : infoPresenter.handleRequestCityList()) {
         displayCity(city);
@@ -186,7 +186,7 @@ void HistoricalInfoWidget::displayCityInfos()
     }
 }
 
-void HistoricalInfoWidget::displayCity(const std::string& name)
+void DefaultInfoWidget::displayCity(const std::string& name)
 {
     if (const auto ret = infoPresenter.handleRequestCityCoordinate(name); ret) {
         if (ImGui::TreeNode((name + "##city").c_str())) {
@@ -207,7 +207,7 @@ void HistoricalInfoWidget::displayCity(const std::string& name)
     }
 }
 
-void HistoricalInfoWidget::displayNote()
+void DefaultInfoWidget::displayNote()
 {
     if (auto note = infoPresenter.handleGetNote(); note) {
         if (ImGui::Button("Clear")) {
@@ -220,7 +220,7 @@ void HistoricalInfoWidget::displayNote()
     }
 }
 
-void HistoricalInfoWidget::savePopupWindow()
+void DefaultInfoWidget::savePopupWindow()
 {
     if (ImGui::BeginPopup(POPUP_WINDOW_NAME)) {
         ImGui::SeparatorText(POPUP_WINDOW_NAME);
@@ -238,7 +238,7 @@ void HistoricalInfoWidget::savePopupWindow()
     }
 }
 
-void HistoricalInfoWidget::saveProgressPopUp()
+void DefaultInfoWidget::saveProgressPopUp()
 {
     if (ImGui::BeginPopupModal(PROGRESS_POPUP_WINDOW_NAME)) {
         simpleProgressDisplayer(databaseAccessPresenter.getProgress(),

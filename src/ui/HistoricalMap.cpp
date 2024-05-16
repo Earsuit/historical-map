@@ -1,7 +1,7 @@
 #include "src/ui/HistoricalMap.h"
 #include "src/logger/Util.h"
 #include "src/ui/IInfoWidget.h"
-#include "src/ui/HistoricalInfoWidget.h"
+#include "src/ui/DefaultInfoWidget.h"
 #include "src/presentation/Util.h"
 
 #include "external/imgui/imgui.h"
@@ -33,7 +33,7 @@ static void glfwErrorCallback(int error, const char* description)
 }
 
 HistoricalMap::HistoricalMap():
-    infoWidget{std::make_unique<HistoricalInfoWidget>()},
+    infoWidget{std::make_unique<DefaultInfoWidget>()},
     mapWidget{presentation::DEFAULT_HISTORICAL_INFO_SOURCE},
     tileSourceWidget{}
 {

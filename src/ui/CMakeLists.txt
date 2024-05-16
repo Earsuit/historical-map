@@ -3,7 +3,8 @@ SET(UI_SRC
     MapWidget.cpp
     TileSourceWidget.cpp
     LogWidget.cpp
-    HistoricalInfoWidget.cpp
+    DefaultInfoWidget.cpp
+    DefaultInfoWidget.h
     IInfoWidget.cpp
     Util.cpp
 )
