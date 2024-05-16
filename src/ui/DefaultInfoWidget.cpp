@@ -222,6 +222,7 @@ void DefaultInfoWidget::displayNote()
 
 void DefaultInfoWidget::savePopupWindow()
 {
+    bool openSavePopup = false;
     if (ImGui::BeginPopup(POPUP_WINDOW_NAME)) {
         ImGui::SeparatorText(POPUP_WINDOW_NAME);
         ImGui::InputInt("Start", &startYear);
@@ -230,11 +231,16 @@ void DefaultInfoWidget::savePopupWindow()
         if (ImGui::Button("Save##ForYears")) {
             if (databaseAccessPresenter.handleSave(startYear, endYear)) {
                 ImGui::CloseCurrentPopup();
-                ImGui::OpenPopup(PROGRESS_POPUP_WINDOW_NAME);
+                openSavePopup = true;
             }
         }
         
         ImGui::EndPopup();
+    }
+
+    if (openSavePopup) {
+        openSavePopup = false;
+        ImGui::OpenPopup(PROGRESS_POPUP_WINDOW_NAME);
     }
 }
 
@@ -245,6 +251,7 @@ void DefaultInfoWidget::saveProgressPopUp()
                                 "Done",
                                 databaseAccessPresenter.isSaveComplete(),
                                 [](){});
+        ImGui::EndPopup();
     }
 }
 }
