@@ -3,17 +3,16 @@
 
 #include "src/presentation/HistoricalInfoPresenter.h"
 #include "src/presentation/DatabaseAccessPresenter.h"
+#include "src/presentation/DatabaseYearPresenter.h"
+#include "src/presentation/Util.h"
+
 #include "src/logger/Util.h"
 #include "src/ui/IInfoWidget.h"
 
 #include "spdlog/spdlog.h"
 
 #include <string>
-#include <queue>
-#include <optional>
-#include <list>
 #include <memory>
-#include <utility>
 #include <map>
 
 namespace ui {
@@ -21,19 +20,19 @@ class DefaultInfoWidget: public IInfoWidget {
 public:
     DefaultInfoWidget(): 
         logger{spdlog::get(logger::LOGGER_NAME)}, 
-        infoPresenter{SOURCE},
-        databaseAccessPresenter{SOURCE}
+        infoPresenter{presentation::DEFAULT_HISTORICAL_INFO_SOURCE},
+        databaseAccessPresenter{presentation::DEFAULT_HISTORICAL_INFO_SOURCE}
     {
     }
 
     virtual bool complete() const noexcept override { return false; };
+    virtual void paint() override;
 
 private:
-    constexpr static auto SOURCE = "Database";
-
     std::shared_ptr<spdlog::logger> logger;
     presentation::HistoricalInfoPresenter infoPresenter;
     presentation::DatabaseAccessPresenter databaseAccessPresenter;
+    presentation::DatabaseYearPresenter yearPresenter;
     int startYear;
     int endYear;
     int currentYear;
@@ -44,6 +43,7 @@ private:
     void displayCountryInfos();
     void displayCityInfos();
     void displayNote();
+    void displayYearControlSection();
     void saveInfo(int year);
     void saveInfoRange(int startYear, int endYear);
     void savePopupWindow();
@@ -51,8 +51,6 @@ private:
     void displayCountry(const std::string& name);
     void displayCity(const std::string& name);
     persistence::Coordinate displayCoordinate(const std::string& uniqueId, const persistence::Coordinate& coord);
-
-    virtual void historyInfo(int year) override;
 };
 
 }

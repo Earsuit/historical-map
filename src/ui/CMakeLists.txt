@@ -5,7 +5,7 @@ SET(UI_SRC
     LogWidget.cpp
     DefaultInfoWidget.cpp
     DefaultInfoWidget.h
-    IInfoWidget.cpp
+    IInfoWidget.h
     Util.cpp
 )
 

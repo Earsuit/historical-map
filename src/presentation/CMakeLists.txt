@@ -3,8 +3,8 @@ SET(PRESENTATION_SRC
     MapWidgetPresenter.h
     MapWidgetPresenter.cpp
     MapWidgetInterface.h
-    InfoWidgetPresenter.h
-    InfoWidgetPresenter.cpp
+    DatabaseYearPresenter.h
+    DatabaseYearPresenter.cpp
     HistoricalInfoPresenter.h
     HistoricalInfoPresenter.cpp
     DatabaseAccessPresenter.h

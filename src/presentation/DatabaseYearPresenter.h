@@ -1,5 +1,5 @@
-#ifndef SRC_PRESENTATION_INFO_WIDGET_PRESENTER_H
-#define SRC_PRESENTATION_INFO_WIDGET_PRESENTER_H
+#ifndef SRC_PRESENTATION_DATABASE_YEAR_PRESENTER_H
+#define SRC_PRESENTATION_DATABASE_YEAR_PRESENTER_H
 
 #include "src/model/DatabaseModel.h"
 #include "src/model/DynamicInfoModel.h"
@@ -11,10 +11,10 @@
 #include <atomic>
 
 namespace presentation {
-class InfoWidgetPresenter {
+class DatabaseYearPresenter {
 public:
-    InfoWidgetPresenter();
-    ~InfoWidgetPresenter()
+    DatabaseYearPresenter();
+    ~DatabaseYearPresenter()
     {
         stopWorkerThread();
     }

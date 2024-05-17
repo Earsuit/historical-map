@@ -1,9 +1,9 @@
-#include "src/presentation/InfoWidgetPresenter.h"
+#include "src/presentation/DatabaseYearPresenter.h"
 #include "src/presentation/Util.h"
 #include "src/logger/Util.h"
 
 namespace presentation {
-InfoWidgetPresenter::InfoWidgetPresenter():
+DatabaseYearPresenter::DatabaseYearPresenter():
     logger{spdlog::get(logger::LOGGER_NAME)},
     databaseModel{model::DatabaseModel::getInstance()},
     dynamicInfoModel{model::DynamicInfoModel::getInstance()}
@@ -15,36 +15,36 @@ InfoWidgetPresenter::InfoWidgetPresenter():
     updateInfo();
 }
 
-void InfoWidgetPresenter::handleMoveYearForward() noexcept
+void DatabaseYearPresenter::handleMoveYearForward() noexcept
 {
     databaseModel.moveYearForward();
     updateInfo();
 }
 
-void InfoWidgetPresenter::handleMoveYearBackward() noexcept
+void DatabaseYearPresenter::handleMoveYearBackward() noexcept
 {
     databaseModel.moveYearBackward();
     updateInfo();
 }
 
-void InfoWidgetPresenter::handleSetYear(int year) noexcept
+void DatabaseYearPresenter::handleSetYear(int year) noexcept
 {
     databaseModel.setYear(year);
     updateInfo();
 }
 
-int InfoWidgetPresenter::getYear() const noexcept
+int DatabaseYearPresenter::getYear() const noexcept
 {
     return databaseModel.getYear();
 }
 
-void InfoWidgetPresenter::startWorkerThread()
+void DatabaseYearPresenter::startWorkerThread()
 {
     runWorkerThread = true;
-    workerThread = std::thread(&InfoWidgetPresenter::worker, this);
+    workerThread = std::thread(&DatabaseYearPresenter::worker, this);
 }
 
-void InfoWidgetPresenter::stopWorkerThread()
+void DatabaseYearPresenter::stopWorkerThread()
 {
     runWorkerThread = false;
 
@@ -56,7 +56,7 @@ void InfoWidgetPresenter::stopWorkerThread()
     }
 }
 
-void InfoWidgetPresenter::worker()
+void DatabaseYearPresenter::worker()
 {
     while (runWorkerThread) {
         std::function<void()> task; 
@@ -67,7 +67,7 @@ void InfoWidgetPresenter::worker()
     }
 }
 
-void InfoWidgetPresenter::updateInfo()
+void DatabaseYearPresenter::updateInfo()
 {
     if (!taskQueue.enqueue([this](){
                                 this->dynamicInfoModel.upsert(DEFAULT_HISTORICAL_INFO_SOURCE, 

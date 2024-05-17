@@ -12,45 +12,74 @@ constexpr float STEP = 0;
 constexpr float STEP_FAST = 0;
 constexpr auto DECIMAL_PRECISION = "%.2f";
 
-void DefaultInfoWidget::historyInfo(int year)
+void DefaultInfoWidget::displayYearControlSection()
 {
-    if (currentYear != year) {
-        currentYear = year;
+    currentYear = yearPresenter.getYear();
+
+    if (ImGui::SliderInt("##", &currentYear, yearPresenter.getMinYear(), yearPresenter.getMaxYear(), "Year %d", ImGuiSliderFlags_AlwaysClamp)) {
+        yearPresenter.handleSetYear(currentYear);
         countryNewCoordinateCache.clear();
     }
-
-    if (ImGui::Button("Refresh")) {
-        logger->debug("Refresh data of year {} from database.", year);
-
-        databaseAccessPresenter.handleRefresh();
+    
+    ImGui::SameLine();
+    ImGui::PushButtonRepeat(true);
+    if (ImGui::ArrowButton("##left", ImGuiDir_Left)) {
+        yearPresenter.handleMoveYearBackward();
+        countryNewCoordinateCache.clear();
     }
     ImGui::SameLine();
-
-    if (ImGui::Button("Save")) {
-        databaseAccessPresenter.handleSave(year, year);
-        ImGui::OpenPopup(PROGRESS_POPUP_WINDOW_NAME);
+    if (ImGui::ArrowButton("##right", ImGuiDir_Right)) {
+        yearPresenter.handleMoveYearForward();
+        countryNewCoordinateCache.clear();
     }
-
-    if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
-        startYear = endYear = year;
-        ImGui::OpenPopup(POPUP_WINDOW_NAME);
-    }
-    savePopupWindow();
-    saveProgressPopUp();
-
-    infoPresenter.clearHoveredCoord();
+    ImGui::PopButtonRepeat();
 
     ImGui::SameLine();
-    helpMarker("Right click \"Save\" button to save for several years.");
+    helpMarker("Ctrl + click to maually set the year");
 
-    ImGui::SeparatorText("Countries");
-    displayCountryInfos();
+    currentYear = yearPresenter.getYear();
+}
 
-    ImGui::SeparatorText("Cities");
-    displayCityInfos();
+void DefaultInfoWidget::paint()
+{
+    if (ImGui::Begin(INFO_WIDGET_NAME, nullptr,  ImGuiWindowFlags_NoTitleBar)) {
+        displayYearControlSection();
 
-    ImGui::SeparatorText("Note");
-    displayNote();
+        if (ImGui::Button("Refresh")) {
+            logger->debug("Refresh data of year {} from database.", currentYear);
+
+            databaseAccessPresenter.handleRefresh();
+        }
+        ImGui::SameLine();
+
+        if (ImGui::Button("Save")) {
+            databaseAccessPresenter.handleSave(currentYear, currentYear);
+            ImGui::OpenPopup(PROGRESS_POPUP_WINDOW_NAME);
+        }
+
+        if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
+            startYear = endYear = currentYear;
+            ImGui::OpenPopup(POPUP_WINDOW_NAME);
+        }
+        savePopupWindow();
+        saveProgressPopUp();
+
+        infoPresenter.clearHoveredCoord();
+
+        ImGui::SameLine();
+        helpMarker("Right click \"Save\" button to save for several years.");
+
+        ImGui::SeparatorText("Countries");
+        displayCountryInfos();
+
+        ImGui::SeparatorText("Cities");
+        displayCityInfos();
+
+        ImGui::SeparatorText("Note");
+        displayNote();
+
+        ImGui::End();
+    }
 }
 
 void DefaultInfoWidget::displayCountryInfos()
