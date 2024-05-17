@@ -1,5 +1,5 @@
-#ifndef SRC_PRESENTATION_DATABASE_INOUT_PRESENTER_H
-#define SRC_PRESENTATION_DATABASE_INOUT_PRESENTER_H
+#ifndef SRC_PRESENTATION_DATABASE_SAVER_PRESENTER_H
+#define SRC_PRESENTATION_DATABASE_SAVER_PRESENTER_H
 
 #include "src/model/DynamicInfoModel.h"
 #include "src/model/DatabaseModel.h"
@@ -13,15 +13,14 @@
 #include <atomic>
 
 namespace presentation {
-class DatabaseAccessPresenter {
+class DatabaseSaverPresenter {
 public:
-    DatabaseAccessPresenter(const std::string& source);
-    ~DatabaseAccessPresenter() { stopWorkerThread(); }
+    DatabaseSaverPresenter(const std::string& source);
+    ~DatabaseSaverPresenter() { stopWorkerThread(); }
 
     bool handleSave(int startYear, int endYear);
     bool isSaveComplete() const noexcept { return saveComplete; }
     float getProgress() const noexcept;
-    void handleRefresh();
 
 private:
     std::shared_ptr<spdlog::logger> logger;

@@ -7,8 +7,8 @@ SET(PRESENTATION_SRC
     DatabaseYearPresenter.cpp
     HistoricalInfoPresenter.h
     HistoricalInfoPresenter.cpp
-    DatabaseAccessPresenter.h
-    DatabaseAccessPresenter.cpp
+    DatabaseSaverPresenter.h
+    DatabaseSaverPresenter.cpp
     InfoSelectorPresenter.h
     InfoSelectorPresenter.cpp
 )

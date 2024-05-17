@@ -48,12 +48,12 @@ void DefaultInfoWidget::paint()
         if (ImGui::Button("Refresh")) {
             logger->debug("Refresh data of year {} from database.", currentYear);
 
-            databaseAccessPresenter.handleRefresh();
+            yearPresenter.handleSetYear(currentYear);
         }
         ImGui::SameLine();
 
         if (ImGui::Button("Save")) {
-            databaseAccessPresenter.handleSave(currentYear, currentYear);
+            databaseSaverPresenter.handleSave(currentYear, currentYear);
             ImGui::OpenPopup(PROGRESS_POPUP_WINDOW_NAME);
         }
 
@@ -258,7 +258,7 @@ void DefaultInfoWidget::savePopupWindow()
         ImGui::InputInt("End", &endYear);
         
         if (ImGui::Button("Save##ForYears")) {
-            if (databaseAccessPresenter.handleSave(startYear, endYear)) {
+            if (databaseSaverPresenter.handleSave(startYear, endYear)) {
                 ImGui::CloseCurrentPopup();
                 openSavePopup = true;
             }
@@ -276,9 +276,9 @@ void DefaultInfoWidget::savePopupWindow()
 void DefaultInfoWidget::saveProgressPopUp()
 {
     if (ImGui::BeginPopupModal(PROGRESS_POPUP_WINDOW_NAME)) {
-        simpleProgressDisplayer(databaseAccessPresenter.getProgress(),
+        simpleProgressDisplayer(databaseSaverPresenter.getProgress(),
                                 "Done",
-                                databaseAccessPresenter.isSaveComplete(),
+                                databaseSaverPresenter.isSaveComplete(),
                                 [](){});
         ImGui::EndPopup();
     }

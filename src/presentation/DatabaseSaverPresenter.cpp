@@ -1,8 +1,8 @@
-#include "src/presentation/DatabaseAccessPresenter.h"
+#include "src/presentation/DatabaseSaverPresenter.h"
 #include "src/logger/Util.h"
 
 namespace presentation {
-DatabaseAccessPresenter::DatabaseAccessPresenter(const std::string& source):
+DatabaseSaverPresenter::DatabaseSaverPresenter(const std::string& source):
     logger{spdlog::get(logger::LOGGER_NAME)},
     databaseModel{model::DatabaseModel::getInstance()},
     dynamicInfoModel{model::DynamicInfoModel::getInstance()},
@@ -11,7 +11,7 @@ DatabaseAccessPresenter::DatabaseAccessPresenter(const std::string& source):
     startWorkerThread();
 }
 
-bool DatabaseAccessPresenter::handleSave(int startYear, int endYear)
+bool DatabaseSaverPresenter::handleSave(int startYear, int endYear)
 {
     if (startYear > endYear) {
         logger->error("Start year must less than end year");
@@ -49,28 +49,18 @@ bool DatabaseAccessPresenter::handleSave(int startYear, int endYear)
     }
 }
 
-float DatabaseAccessPresenter::getProgress() const noexcept
+float DatabaseSaverPresenter::getProgress() const noexcept
 {
     return progress / static_cast<float>(total);
 }
 
-void DatabaseAccessPresenter::handleRefresh()
-{
-    if (!taskQueue.enqueue([this](){
-                                this->dynamicInfoModel.upsert(source, 
-                                                              this->databaseModel.loadHistoricalInfo());
-                            })) {
-        logger->error("Enqueue refresh historical info from database for year {} task fail.", databaseModel.getYear());
-    }
-}
-
-void DatabaseAccessPresenter::startWorkerThread()
+void DatabaseSaverPresenter::startWorkerThread()
 {
     runWorkerThread = true;
-    workerThread = std::thread(&DatabaseAccessPresenter::worker, this);
+    workerThread = std::thread(&DatabaseSaverPresenter::worker, this);
 }
 
-void DatabaseAccessPresenter::stopWorkerThread()
+void DatabaseSaverPresenter::stopWorkerThread()
 {
     runWorkerThread = false;
 
@@ -82,7 +72,7 @@ void DatabaseAccessPresenter::stopWorkerThread()
     }
 }
 
-void DatabaseAccessPresenter::worker()
+void DatabaseSaverPresenter::worker()
 {
     while (runWorkerThread) {
         std::function<void()> task; 

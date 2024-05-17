@@ -2,7 +2,7 @@
 #define SRC_UI_DEFAULT_INFO_WIDGET_H
 
 #include "src/presentation/HistoricalInfoPresenter.h"
-#include "src/presentation/DatabaseAccessPresenter.h"
+#include "src/presentation/DatabaseSaverPresenter.h"
 #include "src/presentation/DatabaseYearPresenter.h"
 #include "src/presentation/Util.h"
 
@@ -21,7 +21,7 @@ public:
     DefaultInfoWidget(): 
         logger{spdlog::get(logger::LOGGER_NAME)}, 
         infoPresenter{presentation::DEFAULT_HISTORICAL_INFO_SOURCE},
-        databaseAccessPresenter{presentation::DEFAULT_HISTORICAL_INFO_SOURCE}
+        databaseSaverPresenter{presentation::DEFAULT_HISTORICAL_INFO_SOURCE}
     {
     }
 
@@ -31,7 +31,7 @@ public:
 private:
     std::shared_ptr<spdlog::logger> logger;
     presentation::HistoricalInfoPresenter infoPresenter;
-    presentation::DatabaseAccessPresenter databaseAccessPresenter;
+    presentation::DatabaseSaverPresenter databaseSaverPresenter;
     presentation::DatabaseYearPresenter yearPresenter;
     int startYear;
     int endYear;
