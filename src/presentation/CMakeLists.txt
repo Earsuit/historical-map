@@ -9,6 +9,8 @@ SET(PRESENTATION_SRC
     HistoricalInfoPresenter.cpp
     DatabaseAccessPresenter.h
     DatabaseAccessPresenter.cpp
+    InfoSelectorPresenter.h
+    InfoSelectorPresenter.cpp
 )
 
 add_library(libpresentation STATIC ${PRESENTATION_SRC})

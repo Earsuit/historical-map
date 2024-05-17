@@ -24,7 +24,7 @@ public:
 
     bool addSource(const std::string& source);
     std::vector<std::string> getSourceList() const noexcept;
-    void remove(const std::string& source);
+    void removeSource(const std::string& source);
     void clearHistoricalInfoFromSource(const std::string& source);
     std::shared_ptr<persistence::HistoricalStorage> getHistoricalInfo(const std::string& source);
 

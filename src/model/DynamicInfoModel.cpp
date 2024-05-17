@@ -50,7 +50,7 @@ std::vector<std::string> DynamicInfoModel::getSourceList() const noexcept
     return keys;
 }
 
-void DynamicInfoModel::remove(const std::string& source)
+void DynamicInfoModel::removeSource(const std::string& source)
 {
     logger->debug("Remove source {}", source);
     std::lock_guard lk(cacheLock);
