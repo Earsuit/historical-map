@@ -95,7 +95,7 @@ void InfoSelectorPresenter::handleDeselectNote()
     }
 }
 
-bool InfoSelectorPresenter::isCountrySelected(const std::string& name)
+bool InfoSelectorPresenter::handkeCheckIsCountrySelected(const std::string& name)
 {
     if (auto info = dynamicModel.getHistoricalInfo(toSource); info) {
         return info->containsCountry(name);
@@ -106,7 +106,7 @@ bool InfoSelectorPresenter::isCountrySelected(const std::string& name)
     return false;
 }
 
-bool InfoSelectorPresenter::isCitySelected(const std::string& name)
+bool InfoSelectorPresenter::handleCheckIsCitySelected(const std::string& name)
 {
     if (auto info = dynamicModel.getHistoricalInfo(toSource); info) {
         return info->containsCity(name);
@@ -117,7 +117,7 @@ bool InfoSelectorPresenter::isCitySelected(const std::string& name)
     return false;
 }
 
-bool InfoSelectorPresenter::isNoteSelected()
+bool InfoSelectorPresenter::handleCheckIsNoteSelected()
 {
     if (auto info = dynamicModel.getHistoricalInfo(toSource); info) {
         return !info->getNote().text.empty();

@@ -21,9 +21,9 @@ public:
     void handleDeselectCountry(const std::string& name);
     void handleDeselectCity(const std::string& name);
     void handleDeselectNote();
-    bool isCountrySelected(const std::string& name);
-    bool isCitySelected(const std::string& name);
-    bool isNoteSelected();
+    bool handkeCheckIsCountrySelected(const std::string& name);
+    bool handleCheckIsCitySelected(const std::string& name);
+    bool handleCheckIsNoteSelected();
 
 private:
     std::shared_ptr<spdlog::logger> logger;
