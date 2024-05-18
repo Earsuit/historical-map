@@ -37,7 +37,6 @@ set(PERSISTENCE_SRC
   exporterImporter/ExportManager.h
   exporterImporter/ExportManager.cpp
   exporterImporter/IExporterImporter.h
-  exporterImporter/IExporterImporter.cpp
   exporterImporter/ImportManager.cpp
   exporterImporter/ImportManager.h
   HistoricalStorage.h
