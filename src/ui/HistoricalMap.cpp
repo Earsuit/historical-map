@@ -2,6 +2,7 @@
 #include "src/logger/Util.h"
 #include "src/ui/IInfoWidget.h"
 #include "src/ui/DefaultInfoWidget.h"
+#include "src/ui/ExportInfoWidget.h"
 #include "src/presentation/Util.h"
 
 #include "external/imgui/imgui.h"
@@ -134,10 +135,9 @@ void HistoricalMap::start()
                 }
 
                 if (ImGui::MenuItem("Export")) {
-                    // if (dynamic_cast<HistoricalInfoWidget*>(infoWidget.get()) != nullptr) {
-                    //     previousInfoWidget.swap(infoWidget);
-                    //     infoWidget = std::make_unique<ExportWidget>(previousInfoWidget->getYear());
-                    // }
+                    if (dynamic_cast<DefaultInfoWidget*>(infoWidget.get()) != nullptr) {
+                        infoWidget = std::make_unique<ExportInfoWidget>();
+                    }
                 }
 
                 ImGui::EndMenu();
@@ -154,8 +154,7 @@ void HistoricalMap::start()
         logWidget.paint();
 
         if (infoWidget->complete()) {
-            infoWidget.swap(previousInfoWidget);
-            previousInfoWidget.release();
+            infoWidget = std::make_unique<DefaultInfoWidget>();
         }
 
         ImGui::Render();

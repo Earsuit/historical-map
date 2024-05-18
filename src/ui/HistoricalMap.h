@@ -25,7 +25,6 @@ private:
     GLFWwindow* window;
     LogWidget logWidget;
     std::unique_ptr<IInfoWidget> infoWidget;
-    std::unique_ptr<IInfoWidget> previousInfoWidget;
     MapWidget mapWidget;
     TileSourceWidget tileSourceWidget;
 

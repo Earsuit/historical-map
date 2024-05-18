@@ -7,6 +7,8 @@ SET(UI_SRC
     DefaultInfoWidget.h
     IInfoWidget.h
     Util.cpp
+    ExportInfoWidget.h
+    ExportInfoWidget.cpp
 )
 
 add_library(libui STATIC ${UI_SRC} ${IMGUI_SRC} ${IMPLOT_SRC} ${IM_FILE_DIALOG_SRC})
