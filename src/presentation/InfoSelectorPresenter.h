@@ -24,12 +24,17 @@ public:
     bool handkeCheckIsCountrySelected(const std::string& name);
     bool handleCheckIsCitySelected(const std::string& name);
     bool handleCheckIsNoteSelected();
+    bool handleCheckIsAllSelected();
+    void handleSelectAll();
+    void handleDeselectAll();
 
 private:
     std::shared_ptr<spdlog::logger> logger;
     model::DynamicInfoModel& dynamicModel;
     std::string fromSource;
     std::string toSource;
+
+    std::shared_ptr<persistence::HistoricalStorage> upsertHistoricalStroageIfNotExists();
 };
 }
 

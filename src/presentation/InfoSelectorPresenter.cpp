@@ -17,17 +17,24 @@ InfoSelectorPresenter::~InfoSelectorPresenter()
     dynamicModel.removeSource(toSource);
 }
 
+std::shared_ptr<persistence::HistoricalStorage> InfoSelectorPresenter::upsertHistoricalStroageIfNotExists()
+{
+    if (auto toInfo = dynamicModel.getHistoricalInfo(toSource); toInfo) {
+        return toInfo;
+    }
+
+    logger->debug("Upsert empty HistoricalStroage for target {}", toSource);
+    dynamicModel.upsert(toSource, persistence::Data{});
+    return dynamicModel.getHistoricalInfo(toSource);
+}
+
 void InfoSelectorPresenter::handleSelectCountry(const std::string& name)
 {
     if (auto fromInfo = dynamicModel.getHistoricalInfo(fromSource); fromInfo) {
         if (fromInfo->containsCountry(name)) {
             auto& country = fromInfo->getCountry(name);
-
-            if (auto toInfo = dynamicModel.getHistoricalInfo(toSource); toInfo) {
-                toInfo->addCountry(country);
-            } else {
-                logger->error("Select country {} fail because the target {} doesn't exists", name, toSource);
-            }
+            auto toInfo = upsertHistoricalStroageIfNotExists();
+            toInfo->addCountry(country);
         } else {
             logger->error("Select country {} fail because it doesn't exists in {}", name, fromSource);
         }
@@ -41,12 +48,8 @@ void InfoSelectorPresenter::handleSelectCity(const std::string& name)
     if (auto fromInfo = dynamicModel.getHistoricalInfo(fromSource); fromInfo) {
         if (fromInfo->containsCity(name)) {
             auto& city = fromInfo->getCity(name);
-
-            if (auto toInfo = dynamicModel.getHistoricalInfo(toSource); toInfo) {
-                toInfo->addCity(name, city.coordinate);
-            } else {
-                logger->error("Select city {} fail because the target {} doesn't exists", name, toSource);
-            }
+            auto toInfo = upsertHistoricalStroageIfNotExists();
+            toInfo->addCity(name, city.coordinate);
         } else {
             logger->error("Select city {} fail because it doesn't exists in {}", name, fromSource);
         }
@@ -58,11 +61,8 @@ void InfoSelectorPresenter::handleSelectCity(const std::string& name)
 void InfoSelectorPresenter::handleSelectNote()
 {
     if (auto fromInfo = dynamicModel.getHistoricalInfo(fromSource); fromInfo) {
-        if (auto toInfo = dynamicModel.getHistoricalInfo(toSource); toInfo) {
-            toInfo->getNote() = fromInfo->getNote();
-        } else {
-            logger->error("Select note fail because the target {} doesn't exists", toSource);
-        }
+        auto toInfo = upsertHistoricalStroageIfNotExists();
+        toInfo->getNote() = fromInfo->getNote();
     } else {
         logger->error("Select note fail due to invalid source {}", fromSource);
     }
@@ -72,8 +72,6 @@ void InfoSelectorPresenter::handleDeselectCountry(const std::string& name)
 {
     if (auto info = dynamicModel.getHistoricalInfo(toSource); info) {
         info->removeCountry(name);
-    } else {
-        logger->error("Deselect country {} fail due to invalid target {}", name, fromSource);
     }
 }
 
@@ -81,8 +79,6 @@ void InfoSelectorPresenter::handleDeselectCity(const std::string& name)
 {
     if (auto info = dynamicModel.getHistoricalInfo(toSource); info) {
         info->removeCity(name);
-    } else {
-        logger->error("Deselect city {} fail due to invalid target {}", name, fromSource);
     }
 }
 
@@ -90,8 +86,6 @@ void InfoSelectorPresenter::handleDeselectNote()
 {
     if (auto info = dynamicModel.getHistoricalInfo(toSource); info) {
         info->getNote().text.clear();
-    } else {
-        logger->error("Deselect note fail due to invalid target {}", fromSource);
     }
 }
 
@@ -101,8 +95,6 @@ bool InfoSelectorPresenter::handkeCheckIsCountrySelected(const std::string& name
         return info->containsCountry(name);
     }
     
-    logger->error("Check country {} selection fail due to invalid target {}", name, fromSource);
-
     return false;
 }
 
@@ -111,20 +103,68 @@ bool InfoSelectorPresenter::handleCheckIsCitySelected(const std::string& name)
     if (auto info = dynamicModel.getHistoricalInfo(toSource); info) {
         return info->containsCity(name);
     }
-        
-    logger->error("Check city {} selection fail due to invalid target {}", name, fromSource);
 
     return false;
 }
 
 bool InfoSelectorPresenter::handleCheckIsNoteSelected()
 {
-    if (auto info = dynamicModel.getHistoricalInfo(toSource); info) {
-        return !info->getNote().text.empty();
+    if (auto toInfo = dynamicModel.getHistoricalInfo(toSource); toInfo) {
+        if (auto fromInfo = dynamicModel.getHistoricalInfo(fromSource); fromInfo) {
+            return toInfo->getNote() == fromInfo->getNote();
+        } else {
+            logger->error("Check note selection fail due to invalid source {}", fromSource);
+            return false;
+        }
+    } else {
+        return false;
     }
-        
-    logger->error("Check note selection fail due to invalid target {}", fromSource);
+}
 
-    return false;
+bool InfoSelectorPresenter::handleCheckIsAllSelected()
+{
+    if (auto toInfo = dynamicModel.getHistoricalInfo(toSource); toInfo) {
+        if (auto fromInfo = dynamicModel.getHistoricalInfo(fromSource); fromInfo) {
+            const auto countries = toInfo->getCountryList();
+            const auto cities = toInfo->getCityList();
+            std::unordered_set<std::string> selectedCountries{countries.cbegin(), countries.cend()};  
+            std::unordered_set<std::string> selectedCitiess{cities.cbegin(), cities.cend()};  
+
+            for (const auto& country : fromInfo->getCountryList()) {
+                if (!selectedCountries.contains(country)) {
+                    return false;
+                }
+            }
+
+            for (const auto& city : fromInfo->getCityList()) {
+                if (!selectedCitiess.contains(city)) {
+                    return false;
+                }
+            }
+
+            if (toInfo->getNote() != fromInfo->getNote()) {
+                return false;
+            }
+
+            return true;
+        } else {
+            logger->error("Check select all fail due to invalid source {}", fromSource);
+            return false;
+        }
+    } else {
+        return false;
+    }
+}
+
+void InfoSelectorPresenter::handleSelectAll()
+{
+    if (auto fromInfo = dynamicModel.getHistoricalInfo(fromSource); fromInfo) {
+        dynamicModel.upsert(toSource, fromInfo->getData());
+    }
+}
+
+void InfoSelectorPresenter::handleDeselectAll()
+{
+    dynamicModel.removeHistoricalInfoFromSource(toSource);
 }
 }

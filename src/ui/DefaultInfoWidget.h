@@ -5,7 +5,6 @@
 #include "src/presentation/DatabaseSaverPresenter.h"
 #include "src/presentation/DatabaseYearPresenter.h"
 #include "src/presentation/Util.h"
-
 #include "src/logger/Util.h"
 #include "src/ui/IInfoWidget.h"
 
