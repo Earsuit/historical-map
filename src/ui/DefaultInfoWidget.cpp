@@ -14,9 +14,9 @@ constexpr auto DECIMAL_PRECISION = "%.2f";
 
 void DefaultInfoWidget::displayYearControlSection()
 {
-    currentYear = yearPresenter.getYear();
+    currentYear = yearPresenter.handelGetYear();
 
-    if (ImGui::SliderInt("##", &currentYear, yearPresenter.getMinYear(), yearPresenter.getMaxYear(), "Year %d", ImGuiSliderFlags_AlwaysClamp)) {
+    if (ImGui::SliderInt("##", &currentYear, yearPresenter.handleGetMinYear(), yearPresenter.handleGetMaxYear(), "Year %d", ImGuiSliderFlags_AlwaysClamp)) {
         yearPresenter.handleSetYear(currentYear);
         countryNewCoordinateCache.clear();
     }
@@ -37,7 +37,7 @@ void DefaultInfoWidget::displayYearControlSection()
     ImGui::SameLine();
     helpMarker("Ctrl + click to maually set the year");
 
-    currentYear = yearPresenter.getYear();
+    currentYear = yearPresenter.handelGetYear();
 }
 
 void DefaultInfoWidget::paint()

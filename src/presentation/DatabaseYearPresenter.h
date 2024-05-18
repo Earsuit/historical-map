@@ -22,9 +22,9 @@ public:
     void handleMoveYearForward() noexcept;
     void handleMoveYearBackward() noexcept;
     void handleSetYear(int year) noexcept;
-    int getYear() const noexcept;
-    int getMaxYear() const noexcept { return databaseModel.getMaxYear(); }
-    int getMinYear() const noexcept { return databaseModel.getMinYear(); }
+    int handelGetYear() const noexcept;
+    int handleGetMaxYear() const noexcept { return databaseModel.getMaxYear(); }
+    int handleGetMinYear() const noexcept { return databaseModel.getMinYear(); }
 
 private:
     std::shared_ptr<spdlog::logger> logger;

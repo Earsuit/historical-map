@@ -33,7 +33,7 @@ void DatabaseYearPresenter::handleSetYear(int year) noexcept
     updateInfo();
 }
 
-int DatabaseYearPresenter::getYear() const noexcept
+int DatabaseYearPresenter::handelGetYear() const noexcept
 {
     return dynamicInfoModel.getCurrentYear();
 }
