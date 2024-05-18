@@ -32,7 +32,7 @@ bool DynamicInfoModel::addSource(const std::string& source)
     logger->debug("Add source {}", source);
     std::lock_guard lk(cacheLock);
     if (!cache.contains(source)) {
-        cache.emplace(std::make_pair(source, std::make_shared<persistence::HistoricalStorage>()));
+        cache.emplace(std::make_pair(source, std::map<int, std::shared_ptr<persistence::HistoricalStorage>>{}));
         return true;
     }
 
@@ -57,21 +57,31 @@ void DynamicInfoModel::removeSource(const std::string& source)
     cache.erase(source);
 }
 
-void DynamicInfoModel::clearHistoricalInfoFromSource(const std::string& source)
+void DynamicInfoModel::removeHistoricalInfoFromSource(const std::string& source)
 {
-    logger->debug("Clear historical info from source {}", source);
+    logger->debug("Clear historical info from source {} at year {}", source, year);
     std::lock_guard lk(cacheLock);
     if (cache.contains(source)) {
-        cache[source] = std::make_shared<persistence::HistoricalStorage>();
+        cache[source].erase(year);
     }
 }
 
 std::shared_ptr<persistence::HistoricalStorage> DynamicInfoModel::getHistoricalInfo(const std::string& source)
 {
     std::lock_guard lk(cacheLock);
-    if (cache.contains(source)) {
-        return cache[source];
+    if (containsHistoricalInfo(source)) {
+        return cache[source][year];
     }
+
     return nullptr;
+}
+
+bool DynamicInfoModel::containsHistoricalInfo(const std::string& source) const
+{
+    if (cache.contains(source) && cache.at(source).contains(year)) {
+        return true;
+    }
+
+    return false;
 }
 }

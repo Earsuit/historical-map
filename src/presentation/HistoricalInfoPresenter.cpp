@@ -11,7 +11,7 @@ void HistoricalInfoPresenter::handleAddCountry(const std::string& name)
 }
 
 void HistoricalInfoPresenter::handleExtendContour(const std::string& name, 
-                                                        const persistence::Coordinate& coordinate)
+                                                  const persistence::Coordinate& coordinate)
 {
     if (auto info = dynamicInfoModel.getHistoricalInfo(source); info) {
         if (info->containsCountry(name)) {
@@ -142,5 +142,10 @@ void HistoricalInfoPresenter::handleUpdateCityCoordinate(const std::string& name
     } else {
         logger->error("Update city {} coordinate fail because historical info is null from source {}", name, source);
     }
+}
+
+void HistoricalInfoPresenter::handleClearHistoricalInfo()
+{
+    dynamicInfoModel.removeHistoricalInfoFromSource(source);
 }
 }

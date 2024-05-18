@@ -47,7 +47,8 @@ void DefaultInfoWidget::paint()
 
         if (ImGui::Button("Refresh")) {
             logger->debug("Refresh data of year {} from database.", currentYear);
-
+            
+            infoPresenter.handleClearHistoricalInfo();
             yearPresenter.handleSetYear(currentYear);
         }
         ImGui::SameLine();

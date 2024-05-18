@@ -35,7 +35,7 @@ void DatabaseYearPresenter::handleSetYear(int year) noexcept
 
 int DatabaseYearPresenter::getYear() const noexcept
 {
-    return databaseModel.getYear();
+    return dynamicInfoModel.getCurrentYear();
 }
 
 void DatabaseYearPresenter::startWorkerThread()
@@ -69,10 +69,17 @@ void DatabaseYearPresenter::worker()
 
 void DatabaseYearPresenter::updateInfo()
 {
+    dynamicInfoModel.setCurrentYear(databaseModel.getYear());
     if (!taskQueue.enqueue([this](){
-                                this->dynamicInfoModel.upsert(DEFAULT_HISTORICAL_INFO_SOURCE, 
-                                                              this->databaseModel.loadHistoricalInfo());
-                            })) {
+            if (this->dynamicInfoModel.containsHistoricalInfo(DEFAULT_HISTORICAL_INFO_SOURCE)) {
+                logger->debug("Historical info alredy exists in DynamicInfoModel from {} at year {}, skip it.", 
+                              DEFAULT_HISTORICAL_INFO_SOURCE, 
+                              this->databaseModel.getYear());
+                return;
+            }
+            this->dynamicInfoModel.upsert(DEFAULT_HISTORICAL_INFO_SOURCE, 
+                                          this->databaseModel.loadHistoricalInfo());
+        })) {
         logger->error("Enqueue update historical info from database for year {} task fail.", databaseModel.getYear());
     }
 }

@@ -36,6 +36,7 @@ public:
     std::vector<std::string> handleRequestCityList() const;
     std::optional<persistence::Coordinate> handleRequestCityCoordinate(const std::string& name) const;
     void handleUpdateCityCoordinate(const std::string& name, const persistence::Coordinate& coord);
+    void handleClearHistoricalInfo();
 
 private:
     std::shared_ptr<spdlog::logger> logger;
