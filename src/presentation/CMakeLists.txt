@@ -13,6 +13,8 @@ SET(PRESENTATION_SRC
     InfoSelectorPresenter.cpp
     ExportPresenter.h
     ExportPresenter.cpp
+    ImportPresenter.h
+    ImportPresenter.cpp
 )
 
 add_library(libpresentation STATIC ${PRESENTATION_SRC})

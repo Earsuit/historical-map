@@ -11,6 +11,7 @@ enum class ErrorCode {
     FILE_NOT_EXISTS,
     PARSE_FILE_ERROR,
     FILE_FORMAT_NOT_SUPPORT,
+    FILE_EMPTY,
 };
 
 struct Error {
