@@ -62,11 +62,11 @@ int ImportYearPresenter::setYear(int year) noexcept
 
 int ImportYearPresenter::getMaxYear() const noexcept
 {
-    return *years.begin();
+    return *years.rbegin();
 }
 
 int ImportYearPresenter::getMinYear() const noexcept
 {
-    return *years.rbegin();
+    return *years.begin();
 }
 }
