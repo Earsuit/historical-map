@@ -21,6 +21,7 @@ public:
     void handleDoImport(const std::string& file);
     tl::expected<bool, util::Error> handleCheckImportComplete();
     auto handleGetImportedYears() const { return dynamicInfoModel.getYearList(source); }
+    std::vector<std::string> handleGetSupportedFormat() const { return importModel.getSupportedFormat(); }
 
 private:
     std::shared_ptr<spdlog::logger> logger;
