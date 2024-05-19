@@ -24,7 +24,7 @@ std::shared_ptr<persistence::HistoricalStorage> InfoSelectorPresenter::upsertHis
     }
 
     logger->debug("Upsert empty HistoricalStroage for target {}", toSource);
-    dynamicModel.upsert(toSource, persistence::Data{});
+    dynamicModel.upsert(toSource, persistence::Data{dynamicModel.getCurrentYear()});
     return dynamicModel.getHistoricalInfo(toSource);
 }
 
