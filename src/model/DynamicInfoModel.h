@@ -69,8 +69,7 @@ private:
     std::shared_ptr<spdlog::logger> logger;
     std::optional<persistence::Coordinate> hovered;
     mutable std::mutex hoveredLock;
-    mutable std::mutex cacheLock;
-    mutable std::mutex removeLock;
+    mutable std::recursive_mutex cacheLock;
     std::map<std::string, std::map<int, std::shared_ptr<persistence::HistoricalStorage>>> cache;
     persistence::Data removed;
     std::atomic_int currentYear;

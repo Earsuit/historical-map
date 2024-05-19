@@ -99,6 +99,7 @@ std::vector<int> DynamicInfoModel::getYearList(const std::string& source) const
 
 bool DynamicInfoModel::containsHistoricalInfo(const std::string& source, int year) const
 {
+    std::lock_guard lk(cacheLock);
     if (cache.contains(source) && cache.at(source).contains(year)) {
         return true;
     }
