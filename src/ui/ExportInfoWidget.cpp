@@ -114,6 +114,8 @@ void ExportInfoWidget::displayCity(const std::string& name)
 void ExportInfoWidget::displayNote()
 {
     if (auto note = infoPresenter.handleGetNote(); note && !note->empty()) {
+        ImGui::SeparatorText("Note");
+
         bool select = selectAll || infoSelectorPresenter.handleCheckIsNoteSelected();
         if (ImGui::Checkbox("##note", &select)) {
             if (select) {
@@ -121,9 +123,7 @@ void ExportInfoWidget::displayNote()
             } else {
                 infoSelectorPresenter.handleDeselectNote();
             }
-        }
-        ImGui::SameLine();    
-        ImGui::SeparatorText("Note");
+        }  
         ImGui::TextUnformatted(note->c_str(), note->c_str() + note->size());
     }
 }
