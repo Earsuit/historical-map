@@ -1,4 +1,5 @@
 #include "src/presentation/ImportPresenter.h"
+#include "src/presentation/Util.h"
 #include "src/logger/Util.h"
 
 #include <chrono>
@@ -29,7 +30,6 @@ void ImportPresenter::handleDoImport(const std::string& file)
         if (auto ret = this->importModel.setFormat(format); ret) {
             auto loader = this->importModel.loadFromFile(file);
             int count = 0;
-            int firstYear = std::numeric_limits<int>::max();
 
             while (loader.next()) {
                 if (stopImport) {
@@ -38,7 +38,6 @@ void ImportPresenter::handleDoImport(const std::string& file)
 
                 if (const auto& ret = loader.getValue(); ret) {
                     auto info = ret.value();
-                    firstYear = std::min(info.year, firstYear);
                     this->dynamicInfoModel.upsert(this->source, std::move(info));
                     count++;
                 } else {
@@ -49,8 +48,6 @@ void ImportPresenter::handleDoImport(const std::string& file)
             if (count == 0) {
                 return tl::unexpected{util::Error{util::ErrorCode::FILE_EMPTY}};
             }
-
-            this->dynamicInfoModel.setCurrentYear(firstYear);
 
             return util::SUCCESS;
         } else {
