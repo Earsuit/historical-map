@@ -7,13 +7,13 @@ namespace persistence {
 constexpr auto COMPLETE = 1.0f;
 constexpr int PERIOD_INDEX = 1;
 
-std::future<tl::expected<void, Error>> 
+std::future<tl::expected<void, util::Error>> 
 ImportManager::doImport(const std::string& file)
 {
     return std::async(
             std::launch::async,
             [this, 
-             file]() -> tl::expected<void, Error>
+             file]() -> tl::expected<void, util::Error>
             {
                 // remove "."
                 const auto format = std::filesystem::u8path(file).extension().string().substr(PERIOD_INDEX);
@@ -33,7 +33,7 @@ ImportManager::doImport(const std::string& file)
                     return tl::unexpected{ret.error()};
                 }
 
-                return SUCCESS;
+                return util::SUCCESS;
             }
         );
 }

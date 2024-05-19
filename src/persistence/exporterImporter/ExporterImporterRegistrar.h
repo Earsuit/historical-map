@@ -2,7 +2,7 @@
 #define SRC_PERSISTENCE_EXPORTER_IMPORTER_EXPORTER_IMPORTER_REGISTRAR_H
 
 #include "src/persistence/exporterImporter/ExporterImporterFactory.h"
-#include "src/persistence/exporterImporter/Util.h"
+#include "src/util/Error.h"
 
 #include <string>
 #include <type_traits>

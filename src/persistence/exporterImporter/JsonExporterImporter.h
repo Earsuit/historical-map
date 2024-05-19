@@ -13,14 +13,14 @@ class JsonExporter: public IExporter {
 public:
     JsonExporter();
 
-    virtual tl::expected<void, Error> writeToFile(const std::string& file, bool overwrite) override final;
+    virtual tl::expected<void, util::Error> writeToFile(const std::string& file, bool overwrite) override final;
     virtual void insert(const Data& info) override;
     virtual void insert(Data&& info) override;
 
     auto getJson() const noexcept { return json; }
 
 private:
-    virtual tl::expected<std::fstream, Error> openFile(const std::string& file, bool overwrite);
+    virtual tl::expected<std::fstream, util::Error> openFile(const std::string& file, bool overwrite);
     virtual void toStream(std::fstream stream, const nlohmann::json& json);
 
     nlohmann::json json;
@@ -29,10 +29,10 @@ private:
 
 class JsonImporter: public IImporter {
 public:
-    virtual util::Generator<tl::expected<Data, Error>> loadFromFile(const std::string file) override final;
+    virtual util::Generator<tl::expected<Data, util::Error>> loadFromFile(const std::string file) override final;
 
 private:
-    virtual tl::expected<std::fstream, Error> openFile(const std::string& file);
+    virtual tl::expected<std::fstream, util::Error> openFile(const std::string& file);
 
     virtual nlohmann::json parse(std::fstream stream);
 };

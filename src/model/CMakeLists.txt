@@ -7,6 +7,8 @@ set(MODEL_SRC
     TileModel.cpp
     Util.h
     Util.cpp
+    ExportModel.h
+    ExportModel.cpp
 )
 
 add_library(libmodel STATIC ${MODEL_SRC})

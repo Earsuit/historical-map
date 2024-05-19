@@ -2,7 +2,7 @@
 #define SRC_PERSISTENCE_EXPORTER_IMPORTER_IEXPORTER_IMPORTER_H
 
 #include "src/persistence/Data.h"
-#include "src/persistence/exporterImporter/Util.h"
+#include "src/util/Error.h"
 #include "src/util/Generator.h"
 
 #include "tl/expected.hpp"
@@ -16,7 +16,7 @@ public:
     virtual ~IExporter() = default;
     virtual void insert(const Data& info) = 0;
     virtual void insert(Data&& info) = 0;
-    virtual tl::expected<void, Error> writeToFile(const std::string& file, bool overwrite) = 0;
+    virtual tl::expected<void, util::Error> writeToFile(const std::string& file, bool overwrite) = 0;
 };
 
 class IImporter {
@@ -25,7 +25,7 @@ public:
 
     // It must taken a copy of the path since it returns a coroutine generator, 
     // if passing a temperatory object, it might be destroyed before using
-    virtual util::Generator<tl::expected<Data, Error>> loadFromFile(const std::string file) = 0;
+    virtual util::Generator<tl::expected<Data, util::Error>> loadFromFile(const std::string file) = 0;
 };
 }
 

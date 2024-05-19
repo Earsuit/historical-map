@@ -2,7 +2,7 @@
 #define SRC_PERSISTENCE_EXPORTER_IMPORTER_IMPORT_MANAGER_H
 
 #include "src/persistence/Data.h"
-#include "src/persistence/exporterImporter/Util.h"
+#include "src/util/Error.h"
 
 #include "tl/expected.hpp"
 
@@ -16,7 +16,7 @@
 namespace persistence {
 class ImportManager {
 public:
-    std::future<tl::expected<void, Error>> 
+    std::future<tl::expected<void, util::Error>> 
     doImport(const std::string& file);
     std::vector<std::string> supportedFormat() const;
     size_t numOfYearsImported() const noexcept;

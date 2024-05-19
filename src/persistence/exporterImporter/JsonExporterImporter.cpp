@@ -68,7 +68,7 @@ void JsonExporter::insert(Data&& info)
     json[JSON_FIRST_LEVEL_NAME].emplace_back(std::move(info));
 }
 
-tl::expected<void, Error> JsonExporter::writeToFile(const std::string& file, bool overwrite)
+tl::expected<void, util::Error> JsonExporter::writeToFile(const std::string& file, bool overwrite)
 {
     if (auto&& ret = openFile(file, overwrite); ret) {
         toStream(std::move(ret).value(), json);
@@ -76,7 +76,7 @@ tl::expected<void, Error> JsonExporter::writeToFile(const std::string& file, boo
         return tl::unexpected{ret.error()};;
     }
 
-    return SUCCESS;
+    return util::SUCCESS;
 }
 
 void JsonExporter::toStream(std::fstream stream, const nlohmann::json& json)
@@ -84,19 +84,19 @@ void JsonExporter::toStream(std::fstream stream, const nlohmann::json& json)
     stream << std::setw(PRETTIFY_JSON) << json << std::endl;
 }
 
-tl::expected<std::fstream, Error> JsonExporter::openFile(const std::string& file, bool overwrite)
+tl::expected<std::fstream, util::Error> JsonExporter::openFile(const std::string& file, bool overwrite)
 {
     if (!overwrite && std::filesystem::exists(file)) {
-        return tl::unexpected(Error{ErrorCode::FILE_EXISTS});
+        return tl::unexpected(util::Error{util::ErrorCode::FILE_EXISTS});
     }
 
     return std::fstream{file, std::ios::out | std::ios::trunc};
 }
 
-util::Generator<tl::expected<Data, Error>> JsonImporter::loadFromFile(const std::string file)
+util::Generator<tl::expected<Data, util::Error>> JsonImporter::loadFromFile(const std::string file)
 {
     if (auto&& ret = openFile(file); ret) {
-        std::optional<Error> error;
+        std::optional<util::Error> error;
         try {
             const auto json = parse(std::move(ret).value());
 
@@ -105,7 +105,7 @@ util::Generator<tl::expected<Data, Error>> JsonImporter::loadFromFile(const std:
             }
         }
         catch (const nlohmann::json::exception& e) {
-            error = {ErrorCode::PARSE_FILE_ERROR, e.what()};
+            error = {util::ErrorCode::PARSE_FILE_ERROR, e.what()};
         }
 
         if (error) {
@@ -116,10 +116,10 @@ util::Generator<tl::expected<Data, Error>> JsonImporter::loadFromFile(const std:
     }
 }
 
-tl::expected<std::fstream, Error> JsonImporter::openFile(const std::string& file)
+tl::expected<std::fstream, util::Error> JsonImporter::openFile(const std::string& file)
 {
     if (!std::filesystem::exists(file)) {
-        return tl::unexpected(Error{ErrorCode::FILE_NOT_EXISTS});
+        return tl::unexpected(util::Error{util::ErrorCode::FILE_NOT_EXISTS});
     }
 
     return std::fstream{file, std::ios::in};

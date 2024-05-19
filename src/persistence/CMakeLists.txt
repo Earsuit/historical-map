@@ -30,12 +30,9 @@ set(PERSISTENCE_SRC
   exporterImporter/IExporterImporter.h
   exporterImporter/JsonExporterImporter.cpp
   exporterImporter/JsonExporterImporter.h
-  exporterImporter/Util.h
   exporterImporter/ExporterImporterRegistration.cpp
   exporterImporter/BsonExporterImporter.cpp
   exporterImporter/BsonExporterImporter.h
-  exporterImporter/ExportManager.h
-  exporterImporter/ExportManager.cpp
   exporterImporter/IExporterImporter.h
   exporterImporter/ImportManager.cpp
   exporterImporter/ImportManager.h

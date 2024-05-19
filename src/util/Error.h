@@ -1,11 +1,11 @@
-#ifndef SRC_PERSISTENCE_EXPORTER_IMPORTER_UTIL_H
-#define SRC_PERSISTENCE_EXPORTER_IMPORTER_UTIL_H
+#ifndef SRC_UTIL_ERROR_H
+#define SRC_UTIL_ERROR_H
 
 #include "tl/expected.hpp"
 
 #include <string>
 
-namespace persistence {
+namespace util {
 enum class ErrorCode {
     FILE_EXISTS,
     FILE_NOT_EXISTS,

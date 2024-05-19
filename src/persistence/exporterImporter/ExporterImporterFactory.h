@@ -2,7 +2,7 @@
 #define SRC_PERSISTENCE_EXPORTER_IMPORTER_EXPORTER_IMPORTER_FACTORY_H
 
 #include "src/persistence/exporterImporter/IExporterImporter.h"
-#include "src/persistence/exporterImporter/Util.h"
+#include "src/util/Error.h"
 
 #include "tl/expected.hpp"
 
@@ -58,12 +58,12 @@ private:
     ExporterImporterFactory() = default;
 
     template<typename T>
-    tl::expected<std::unique_ptr<T>, Error> create(std::map<std::string, Builder<T>>& builders, 
+    tl::expected<std::unique_ptr<T>, util::Error> create(std::map<std::string, Builder<T>>& builders, 
                   const std::string& name) {
         if (builders.contains(name)) {
             return builders[name]();
         } else {
-            return tl::unexpected(Error{ErrorCode::FILE_FORMAT_NOT_SUPPORT});
+            return tl::unexpected(util::Error{util::ErrorCode::FILE_FORMAT_NOT_SUPPORT});
         }
     }
 
