@@ -15,6 +15,8 @@ SET(PRESENTATION_SRC
     ExportPresenter.cpp
     ImportPresenter.h
     ImportPresenter.cpp
+    ImportYearPresenter.h
+    ImportYearPresenter.cpp
 )
 
 add_library(libpresentation STATIC ${PRESENTATION_SRC})

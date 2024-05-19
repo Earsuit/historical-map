@@ -15,22 +15,45 @@ DatabaseYearPresenter::DatabaseYearPresenter():
     updateInfo();
 }
 
+DatabaseYearPresenter::~DatabaseYearPresenter()
+{
+    stopWorkerThread();
+}
+
 void DatabaseYearPresenter::handleMoveYearForward() noexcept
 {
-    databaseModel.moveYearForward();
+    databaseModel.setYear(moveYearForward());
     updateInfo();
+}
+
+int DatabaseYearPresenter::moveYearForward() noexcept
+{
+    databaseModel.moveYearForward();
+    return databaseModel.getYear();
 }
 
 void DatabaseYearPresenter::handleMoveYearBackward() noexcept
 {
-    databaseModel.moveYearBackward();
+    databaseModel.setYear(moveYearBackward());
     updateInfo();
+}
+
+int DatabaseYearPresenter::moveYearBackward() noexcept
+{
+    databaseModel.moveYearBackward();
+    return databaseModel.getYear();
 }
 
 void DatabaseYearPresenter::handleSetYear(int year) noexcept
 {
-    databaseModel.setYear(year);
+    databaseModel.setYear(setYear(year));
     updateInfo();
+}
+
+int DatabaseYearPresenter::setYear(int year) noexcept
+{
+    databaseModel.setYear(year);
+    return databaseModel.getYear();
 }
 
 int DatabaseYearPresenter::handelGetYear() const noexcept
