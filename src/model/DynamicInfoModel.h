@@ -13,6 +13,7 @@
 #include <memory>
 #include <map>
 #include <atomic>
+#include <type_traits>
 
 namespace model {
 class DynamicInfoModel {
@@ -33,6 +34,7 @@ public:
     bool containsHistoricalInfo(const std::string& source, int year) const;
 
     template<typename T>
+    requires (std::is_same_v<std::remove_cvref_t<T>, persistence::Data>)
     bool upsert(const std::string& source, T&& info)
     {
         if (info.year != currentYear) {
