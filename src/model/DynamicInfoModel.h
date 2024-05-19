@@ -37,15 +37,10 @@ public:
     requires (std::is_same_v<std::remove_cvref_t<T>, persistence::Data>)
     bool upsert(const std::string& source, T&& info)
     {
-        if (info.year != currentYear) {
-            logger->error("Data's year {} must be the current year {} of the DynamicInfoModel.", info.year, currentYear);
-            return false;
-        }
-
         std::lock_guard lk(cacheLock);
         if (cache.contains(source)) {
             logger->debug("Upsert DynamicInfoModel cache for source {} at year {}", source, info.year);
-            cache[source][currentYear] = std::make_shared<persistence::HistoricalStorage>(std::forward<T>(info));
+            cache[source][info.year] = std::make_shared<persistence::HistoricalStorage>(std::forward<T>(info));
             return true;
         }
 
