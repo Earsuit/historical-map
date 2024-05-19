@@ -18,6 +18,7 @@ namespace presentation {
 class ImportPresenter {
 public:
     ImportPresenter(const std::string& source);
+    ~ImportPresenter();
 
     void handleDoImport(const std::string& file);
     tl::expected<bool, util::Error> handleCheckImportComplete();

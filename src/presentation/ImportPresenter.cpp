@@ -17,6 +17,11 @@ ImportPresenter::ImportPresenter(const std::string& source):
     dynamicInfoModel.addSource(source);
 }
 
+ImportPresenter::~ImportPresenter()
+{
+    dynamicInfoModel.removeSource(source);
+}
+
 void ImportPresenter::handleDoImport(const std::string& file)
 {
     task = std::async(std::launch::async, [this, file]() -> tl::expected<void, util::Error> {
