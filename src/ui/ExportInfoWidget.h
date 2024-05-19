@@ -5,6 +5,7 @@
 #include "src/presentation/InfoSelectorPresenter.h"
 #include "src/presentation/HistoricalInfoPresenter.h"
 #include "src/presentation/DatabaseYearPresenter.h"
+#include "src/presentation/ExportPresenter.h"
 
 #include "spdlog/spdlog.h"
 
@@ -21,15 +22,21 @@ private:
     presentation::HistoricalInfoPresenter infoPresenter;
     presentation::InfoSelectorPresenter infoSelectorPresenter;
     presentation::DatabaseYearPresenter yearPresenter;
+    presentation::ExportPresenter exportPresenter;
     int currentYear;
     bool selectAll;
     bool isComplete = false;
+    std::string errorMsg;
+    bool exportFailPopup = false;
+    bool openFailPopup = false;
+    bool exportComplete = false;
 
     void displayYearControlSection();
     void displayCountry(const std::string& name);
     void displayCity(const std::string& name);
     void displayNote();
     void displayCoordinate(const std::string& uniqueId, const persistence::Coordinate& coord);
+    void displayExportPopup();
 };
 }
 

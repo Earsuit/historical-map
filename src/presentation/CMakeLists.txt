@@ -11,6 +11,8 @@ SET(PRESENTATION_SRC
     DatabaseSaverPresenter.cpp
     InfoSelectorPresenter.h
     InfoSelectorPresenter.cpp
+    ExportPresenter.h
+    ExportPresenter.cpp
 )
 
 add_library(libpresentation STATIC ${PRESENTATION_SRC})
