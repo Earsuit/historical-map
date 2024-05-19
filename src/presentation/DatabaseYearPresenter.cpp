@@ -9,7 +9,7 @@ DatabaseYearPresenter::DatabaseYearPresenter():
     dynamicInfoModel{model::DynamicInfoModel::getInstance()}
 {
     if (!dynamicInfoModel.addSource(DEFAULT_HISTORICAL_INFO_SOURCE)) {
-        logger->critical("Failed to add source {}", DEFAULT_HISTORICAL_INFO_SOURCE);
+        logger->debug("Source {} already exists in DynamicInfoModel", DEFAULT_HISTORICAL_INFO_SOURCE);
     }
     startWorkerThread();
     updateInfo();
