@@ -8,6 +8,8 @@
 
 #include <string>
 #include <memory>
+#include <future>
+#include <atomic>
 
 namespace presentation {
 class InfoSelectorPresenter {
@@ -28,11 +30,21 @@ public:
     void handleSelectAll();
     void handleDeselectAll();
 
+    void handleSelectAllForMultipleYears(int startYear, int endYear);
+    float handleGetSelectAllForMultipleYearsProgress() const noexcept;
+    bool handleCheckSelectAllForMultipleYearsComplete();
+    void handleCancelSelectAllForMultipleYears() noexcept { stopTask = true; };
+
 private:
     std::shared_ptr<spdlog::logger> logger;
-    model::DynamicInfoModel& dynamicModel;
+    model::DatabaseModel& databaseModel;
+    model::DynamicInfoModel& dynamicInfoModel;
     std::string fromSource;
     std::string toSource;
+    std::future<void> task;
+    std::atomic_bool stopTask;
+    int total;
+    std::atomic_int progress;
 
     std::shared_ptr<persistence::HistoricalStorage> upsertHistoricalStroageIfNotExists();
 };

@@ -12,8 +12,12 @@ constexpr auto DECIMAL_PRECISION = "%.2f";
 constexpr auto SELECT_FORMAT_POPUP_NAME = "Select format";
 constexpr auto SAVE_DIALOG_KEY = "ExportDialog";
 constexpr auto EXPORT_PROGRESS_POPUP_NAME = "Exporting";
-constexpr auto EXPORT_PROGRESS_DONE_BUTTON_LABEL = "Done";
+constexpr auto DONE_BUTTON_LABEL = "Done";
 constexpr auto EXPORT_FAIL_POPUP_NAME = "Error";
+constexpr auto SELECT_MULTIPLE_YEAR_POPUP_NAME = "Select multiple years";
+constexpr auto SELECT_MULTI_YEAR_YEAR_CONSTRAINTS = "Start year must be less than end year.";
+constexpr auto PROCESS_MULTI_YEAR_SELECTION_POPUP_NAME = "Selecting";
+constexpr auto PROGRESS_BAR_SIZE = ImVec2{400, 0};
 
 ExportInfoWidget::ExportInfoWidget():
     logger{spdlog::get(logger::LOGGER_NAME)}, 
@@ -152,6 +156,15 @@ void ExportInfoWidget::paint()
                 infoSelectorPresenter.handleDeselectAll();
             }
         }
+        if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
+            ImGui::OpenPopup(SELECT_MULTIPLE_YEAR_POPUP_NAME);
+            startYear = currentYear;
+            endYear = currentYear;
+        }
+        ImGui::SameLine();
+        helpMarker("Right click to select all for multiple years");
+
+        displaySelectAllForMultipleYearsPopup();
 
         ImGui::SeparatorText("Countries");
         for (const auto& country : infoPresenter.handleRequestCountryList()) {
@@ -211,7 +224,7 @@ void ExportInfoWidget::displayExportPopup()
 
         if (!openFailPopup) {
             simpleProgressDisplayer(exportPresenter.handleRequestExportProgress(),
-                                    EXPORT_PROGRESS_DONE_BUTTON_LABEL,
+                                    DONE_BUTTON_LABEL,
                                     exportComplete,
                                     [this](){
                                         this->isComplete = true;
@@ -230,6 +243,50 @@ void ExportInfoWidget::displayExportPopup()
     if (ImGui::BeginPopupModal(EXPORT_FAIL_POPUP_NAME, &exportFailPopup, ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::Text("Failed to export: %s", errorMsg.c_str());
         ImGui::EndPopup();
+    }
+}
+
+void ExportInfoWidget::displaySelectAllForMultipleYearsPopup()
+{
+    if (ImGui::BeginPopup(SELECT_MULTIPLE_YEAR_POPUP_NAME)) {
+        ImGui::InputInt("Start", &startYear);
+        ImGui::InputInt("End", &endYear);
+        helpMarker(SELECT_MULTI_YEAR_YEAR_CONSTRAINTS);
+
+        if (ImGui::Button("Select")) {
+            if (startYear < endYear) {
+                infoSelectorPresenter.handleSelectAllForMultipleYears(startYear, endYear);
+                processMultiYearSelection = true;
+                processMultiYearSelectionComplete = false;
+                ImGui::CloseCurrentPopup();
+            } else {
+                logger->error(SELECT_MULTI_YEAR_YEAR_CONSTRAINTS);
+            }
+        }
+
+        ImGui::EndPopup();
+
+        if (processMultiYearSelection) {
+            ImGui::OpenPopup(PROCESS_MULTI_YEAR_SELECTION_POPUP_NAME);
+        }
+    }
+
+    if (ImGui::BeginPopupModal(PROCESS_MULTI_YEAR_SELECTION_POPUP_NAME, &processMultiYearSelection, ImGuiWindowFlags_AlwaysAutoResize)) {
+        if (!processMultiYearSelectionComplete) {
+            processMultiYearSelectionComplete = infoSelectorPresenter.handleCheckSelectAllForMultipleYearsComplete();
+        }
+        
+        simpleProgressDisplayer(infoSelectorPresenter.handleGetSelectAllForMultipleYearsProgress(),
+                                DONE_BUTTON_LABEL,
+                                processMultiYearSelectionComplete,
+                                [](){});
+
+        ImGui::EndPopup();
+    }
+
+    // the user stops the process manually
+    if (!processMultiYearSelection && !processMultiYearSelectionComplete) {
+        infoSelectorPresenter.handleCancelSelectAllForMultipleYears();
     }
 }
 }

@@ -30,6 +30,10 @@ private:
     bool exportFailPopup = false;
     bool openFailPopup = false;
     bool exportComplete = false;
+    int startYear;
+    int endYear;
+    bool processMultiYearSelection = false;
+    bool processMultiYearSelectionComplete = false;
 
     void displayYearControlSection();
     void displayCountry(const std::string& name);
@@ -37,6 +41,7 @@ private:
     void displayNote();
     void displayCoordinate(const std::string& uniqueId, const persistence::Coordinate& coord);
     void displayExportPopup();
+    void displaySelectAllForMultipleYearsPopup();
 };
 }
 
