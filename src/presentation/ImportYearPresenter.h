@@ -14,7 +14,6 @@ namespace presentation {
 class ImportYearPresenter: public DatabaseYearPresenter {
 public:
     ImportYearPresenter(const std::string& source);
-    virtual ~ImportYearPresenter();
 
 private:
     std::shared_ptr<spdlog::logger> logger;
