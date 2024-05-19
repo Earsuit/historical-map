@@ -12,6 +12,7 @@
 #include <vector>
 #include <memory>
 #include <future>
+#include <atomic>
 
 namespace presentation {
 class ImportPresenter {
@@ -22,6 +23,7 @@ public:
     tl::expected<bool, util::Error> handleCheckImportComplete();
     auto handleGetImportedYears() const { return dynamicInfoModel.getYearList(source); }
     std::vector<std::string> handleGetSupportedFormat() const { return importModel.getSupportedFormat(); }
+    void handleCancelImport() { stopImport = true; }
 
 private:
     std::shared_ptr<spdlog::logger> logger;
@@ -29,6 +31,7 @@ private:
     model::ImportModel importModel;
     std::string source;
     std::future<tl::expected<void, util::Error>> task;
+    std::atomic_bool stopImport = false;
 };
 }
 

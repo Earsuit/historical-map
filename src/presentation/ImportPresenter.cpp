@@ -27,6 +27,10 @@ void ImportPresenter::handleDoImport(const std::string& file)
             int firstYear = std::numeric_limits<int>::max();
 
             while (loader.next()) {
+                if (stopImport) {
+                    return util::SUCCESS;
+                }
+
                 if (const auto& ret = loader.getValue(); ret) {
                     auto info = ret.value();
                     firstYear = std::min(info.year, firstYear);
