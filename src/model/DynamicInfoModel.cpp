@@ -59,24 +59,45 @@ void DynamicInfoModel::removeSource(const std::string& source)
 
 void DynamicInfoModel::removeHistoricalInfoFromSource(const std::string& source)
 {
-    logger->debug("Clear historical info from source {} at year {}", source, year);
+    logger->debug("Clear historical info from source {} at year {}", source, currentYear);
     std::lock_guard lk(cacheLock);
     if (cache.contains(source)) {
-        cache[source].erase(year);
+        cache[source].erase(currentYear);
     }
 }
 
 std::shared_ptr<persistence::HistoricalStorage> DynamicInfoModel::getHistoricalInfo(const std::string& source)
 {
+    return getHistoricalInfo(source, currentYear);
+}
+
+std::shared_ptr<persistence::HistoricalStorage> DynamicInfoModel::getHistoricalInfo(const std::string& source, int year)
+{
     std::lock_guard lk(cacheLock);
-    if (containsHistoricalInfo(source)) {
+    if (containsHistoricalInfo(source, year)) {
         return cache[source][year];
     }
 
     return nullptr;
 }
 
-bool DynamicInfoModel::containsHistoricalInfo(const std::string& source) const
+std::vector<int> DynamicInfoModel::getYearList(const std::string& source) const
+{
+    std::lock_guard lk(cacheLock);
+    std::vector<int> years;
+    if (cache.contains(source)) {
+        years.reserve(cache.at(source).size());
+        for (const auto& [year, info] : cache.at(source)) {
+            years.emplace_back(year);
+        }
+    } else {
+        logger->error("Failed to get year list for source {} because it doesn't exists", source);
+    }
+
+    return years;
+}
+
+bool DynamicInfoModel::containsHistoricalInfo(const std::string& source, int year) const
 {
     if (cache.contains(source) && cache.at(source).contains(year)) {
         return true;

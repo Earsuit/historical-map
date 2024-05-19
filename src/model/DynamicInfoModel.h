@@ -27,8 +27,10 @@ public:
     std::vector<std::string> getSourceList() const noexcept;
     void removeSource(const std::string& source);
     void removeHistoricalInfoFromSource(const std::string& source);
+    std::vector<int> getYearList(const std::string& source) const;
     std::shared_ptr<persistence::HistoricalStorage> getHistoricalInfo(const std::string& source);
-    bool containsHistoricalInfo(const std::string& source) const;
+    std::shared_ptr<persistence::HistoricalStorage> getHistoricalInfo(const std::string& source, int year);
+    bool containsHistoricalInfo(const std::string& source, int year) const;
 
     template<typename T>
     bool upsert(const std::string& source, T&& info)
@@ -36,7 +38,7 @@ public:
         std::lock_guard lk(cacheLock);
         if (cache.contains(source)) {
             logger->debug("Upsert DynamicInfoModel cache for source {} at year {}", source, info.year);
-            cache[source][year] = std::make_shared<persistence::HistoricalStorage>(std::forward<T>(info));
+            cache[source][currentYear] = std::make_shared<persistence::HistoricalStorage>(std::forward<T>(info));
             return true;
         }
 
@@ -44,8 +46,8 @@ public:
         return false;
     }
 
-    int getCurrentYear() const noexcept { return year; }
-    void setCurrentYear(int y) { year = y;}
+    int getCurrentYear() const noexcept { return currentYear; }
+    void setCurrentYear(int year) { currentYear = year;}
 
     DynamicInfoModel(DynamicInfoModel&&) = delete;
     DynamicInfoModel(const DynamicInfoModel&) = delete;
@@ -64,7 +66,7 @@ private:
     mutable std::mutex removeLock;
     std::map<std::string, std::map<int, std::shared_ptr<persistence::HistoricalStorage>>> cache;
     persistence::Data removed;
-    std::atomic_int year;
+    std::atomic_int currentYear;
 };
 }
 

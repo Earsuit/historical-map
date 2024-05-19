@@ -71,7 +71,7 @@ void DatabaseYearPresenter::updateInfo()
 {
     dynamicInfoModel.setCurrentYear(databaseModel.getYear());
     if (!taskQueue.enqueue([this](){
-            if (this->dynamicInfoModel.containsHistoricalInfo(DEFAULT_HISTORICAL_INFO_SOURCE)) {
+            if (this->dynamicInfoModel.containsHistoricalInfo(DEFAULT_HISTORICAL_INFO_SOURCE, this->databaseModel.getYear())) {
                 logger->debug("Historical info alredy exists in DynamicInfoModel from {} at year {}, skip it.", 
                               DEFAULT_HISTORICAL_INFO_SOURCE, 
                               this->databaseModel.getYear());
