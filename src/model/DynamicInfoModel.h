@@ -35,6 +35,11 @@ public:
     template<typename T>
     bool upsert(const std::string& source, T&& info)
     {
+        if (info.year != currentYear) {
+            logger->error("Data's year {} must be the current year {} of the DynamicInfoModel.", info.year, currentYear);
+            return false;
+        }
+
         std::lock_guard lk(cacheLock);
         if (cache.contains(source)) {
             logger->debug("Upsert DynamicInfoModel cache for source {} at year {}", source, info.year);
