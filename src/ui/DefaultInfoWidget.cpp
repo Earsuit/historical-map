@@ -8,9 +8,6 @@ namespace ui {
 constexpr int NAME_INPUT_WIDTH = 100;
 constexpr auto POPUP_WINDOW_NAME = "Save for years";
 constexpr auto PROGRESS_POPUP_WINDOW_NAME = "Saving";
-constexpr float STEP = 0;
-constexpr float STEP_FAST = 0;
-constexpr auto DECIMAL_PRECISION = "%.2f";
 
 void DefaultInfoWidget::displayYearControlSection()
 {
@@ -167,12 +164,12 @@ persistence::Coordinate DefaultInfoWidget::displayCoordinate(const std::string& 
     auto latitude = coord.latitude;
     auto longitude = coord.longitude;
     ImGui::PushID(uniqueId.c_str());
-    ImGui::InputFloat("latitude", &latitude, STEP, STEP_FAST, DECIMAL_PRECISION);
+    inputFloatWithLabelOnLeft("latitude", latitude);
     if (ImGui::IsItemHovered()) {
         infoPresenter.setHoveredCoord(coord);
     }
     ImGui::SameLine();
-    ImGui::InputFloat("longitude", &longitude, STEP, STEP_FAST, DECIMAL_PRECISION);
+    inputFloatWithLabelOnLeft("longitude", longitude);
     if (ImGui::IsItemHovered()) {
         infoPresenter.setHoveredCoord(coord);
     }

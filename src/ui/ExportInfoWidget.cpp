@@ -8,7 +8,6 @@
 
 namespace ui {
 const auto TO_SOURCE = "Export";
-constexpr auto DECIMAL_PRECISION = "%.2f";
 constexpr auto SELECT_FORMAT_POPUP_NAME = "Select format";
 constexpr auto SAVE_DIALOG_KEY = "ExportDialog";
 constexpr auto EXPORT_PROGRESS_POPUP_NAME = "Exporting";
@@ -59,12 +58,12 @@ void ExportInfoWidget::displayCoordinate(const std::string& uniqueId, const pers
     auto latitude = coord.latitude;
     auto longitude = coord.longitude;
     ImGui::PushID(uniqueId.c_str());
-    ImGui::LabelText("latitude", DECIMAL_PRECISION, latitude);
+    textFloatWithLabelOnLeft("latitude", latitude);
     if (ImGui::IsItemHovered()) {
         infoPresenter.setHoveredCoord(coord);
     }
     ImGui::SameLine();
-    ImGui::LabelText("longitude", DECIMAL_PRECISION, longitude);
+    textFloatWithLabelOnLeft("longitude", longitude);
     if (ImGui::IsItemHovered()) {
         infoPresenter.setHoveredCoord(coord);
     }

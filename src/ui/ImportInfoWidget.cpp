@@ -14,7 +14,6 @@ constexpr auto IMPORT_PROGRESS_POPUP_NAME = "Loading";
 constexpr auto IMPORT_COMPLETE_BUTTON = "Complete";
 constexpr auto IMPORT_FAIL_POPUP_NAME = "Import fail";
 constexpr auto DONE_BUTTON = "Done";
-constexpr auto DECIMAL_PRECISION = "%.2f";
 constexpr auto WRITE_TO_DATABASE_PROGRESS_POPUP = "Write to database";
 
 ImportInfoWidget::ImportInfoWidget():
@@ -286,12 +285,12 @@ void ImportInfoWidget::displayCoordinate(presentation::HistoricalInfoPresenter& 
     auto latitude = coord.latitude;
     auto longitude = coord.longitude;
     ImGui::PushID(uniqueId.c_str());
-    ImGui::LabelText("latitude", DECIMAL_PRECISION, latitude);
+    textFloatWithLabelOnLeft("latitude", latitude);
     if (ImGui::IsItemHovered()) {
         infoPresenter.setHoveredCoord(coord);
     }
     ImGui::SameLine();
-    ImGui::LabelText("longitude", DECIMAL_PRECISION, longitude);
+    textFloatWithLabelOnLeft("longitude", longitude);
     if (ImGui::IsItemHovered()) {
         infoPresenter.setHoveredCoord(coord);
     }

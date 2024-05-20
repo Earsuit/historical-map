@@ -54,6 +54,9 @@ bool inBound(T v, T min, T max)
 {
     return (v > min) && (v < max);
 }
+
+void textFloatWithLabelOnLeft(const std::string& label, float value);
+void inputFloatWithLabelOnLeft(const std::string& label, float& value);
 }
 
 #endif
