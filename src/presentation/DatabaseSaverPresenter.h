@@ -18,7 +18,8 @@ public:
     DatabaseSaverPresenter(const std::string& source);
     ~DatabaseSaverPresenter() { stopWorkerThread(); }
 
-    bool handleSave(int startYear, int endYear);
+    bool handleSaveSameForRange(int startYear, int endYear);
+    void handleSaveAll();
     bool isSaveComplete() const noexcept { return saveComplete; }
     float getProgress() const noexcept;
 

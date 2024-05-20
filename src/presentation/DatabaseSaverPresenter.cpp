@@ -11,7 +11,7 @@ DatabaseSaverPresenter::DatabaseSaverPresenter(const std::string& source):
     startWorkerThread();
 }
 
-bool DatabaseSaverPresenter::handleSave(int startYear, int endYear)
+bool DatabaseSaverPresenter::handleSaveSameForRange(int startYear, int endYear)
 {
     if (startYear > endYear) {
         logger->error("Start year must less than end year");
@@ -39,13 +39,34 @@ bool DatabaseSaverPresenter::handleSave(int startYear, int endYear)
                 saveComplete = true;
             })) {
             saveComplete = true;
-            logger->error("Enqueue save historical info modification to database for year {} task fail.", databaseModel.getYear());
+            logger->error("Enqueue save same historical for range info modification to database task fail.");
         }
 
         return true;
     } else {
         logger->error("Current historical info load is null");
         return false;
+    }
+}
+
+void DatabaseSaverPresenter::handleSaveAll()
+{
+    const auto years = this->dynamicInfoModel.getYearList(this->source);
+    total = years.size();
+
+    if (!taskQueue.enqueue([this, years] () mutable {
+            for (const auto year : years) {
+                if (auto info = this->dynamicInfoModel.getHistoricalInfo(this->source, year); info) {
+                    this->databaseModel.updateHistoricalInfo(info->getData());
+                    this->databaseModel.removeHistoricalInfo(info->getRemoved());
+                }
+                this->progress++;
+            }
+
+            saveComplete = true;
+        })) {
+        saveComplete = true;
+        logger->error("Enqueue save all historical modificcation info modification to database task fail.");
     }
 }
 

@@ -54,7 +54,7 @@ void DefaultInfoWidget::paint()
         ImGui::SameLine();
 
         if (ImGui::Button("Save")) {
-            databaseSaverPresenter.handleSave(currentYear, currentYear);
+            databaseSaverPresenter.handleSaveSameForRange(currentYear, currentYear);
             ImGui::OpenPopup(PROGRESS_POPUP_WINDOW_NAME);
         }
 
@@ -259,7 +259,7 @@ void DefaultInfoWidget::savePopupWindow()
         ImGui::InputInt("End", &endYear);
         
         if (ImGui::Button("Save##ForYears")) {
-            if (databaseSaverPresenter.handleSave(startYear, endYear)) {
+            if (databaseSaverPresenter.handleSaveSameForRange(startYear, endYear)) {
                 ImGui::CloseCurrentPopup();
                 openSavePopup = true;
             }
