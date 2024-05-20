@@ -50,21 +50,23 @@ void HistoricalInfoPresenter::handleRemoveCity(const std::string& name)
     }
 }
 
-std::optional<std::string> HistoricalInfoPresenter::handleGetNote() const noexcept
+std::string HistoricalInfoPresenter::handleGetNote() const noexcept
 {
     if (auto info = dynamicInfoModel.getHistoricalInfo(source); info) {
-        return info->getNote().text;
+        if (info->containsNote()) {
+            return info->getNote().text;
+        }
     } else {
         logger->trace("Get note fail because historical info is null from source {}", source);
     }
 
-    return std::nullopt;
+    return std::string{};
 }
 
 void HistoricalInfoPresenter::handleUpdateNote(const std::string& text)
 {
     if (auto info = dynamicInfoModel.getHistoricalInfo(source); info) {
-        info->getNote().text = text;
+        info->addNote(text);
     } else {
         logger->error("Update note fail because historical info is null from source {}", source);
     }

@@ -77,7 +77,7 @@
                         }
                     }
                 },
-                "required": ["year", "countries", "cities", "note"]
+                "required": ["year", "countries", "cities"]
             },
             "minItems": 1
         }

@@ -117,7 +117,7 @@ void ExportInfoWidget::displayCity(const std::string& name)
 
 void ExportInfoWidget::displayNote()
 {
-    if (auto note = infoPresenter.handleGetNote(); note && !note->empty()) {
+    if (auto note = infoPresenter.handleGetNote(); !note.empty()) {
         ImGui::SeparatorText("Note");
 
         bool select = selectAll || infoSelectorPresenter.handleCheckIsNoteSelected();
@@ -128,7 +128,7 @@ void ExportInfoWidget::displayNote()
                 infoSelectorPresenter.handleDeselectNote();
             }
         }  
-        ImGui::TextUnformatted(note->c_str(), note->c_str() + note->size());
+        ImGui::TextUnformatted(note.c_str(), note.c_str() + note.size());
     }
 }
 

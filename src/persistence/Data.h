@@ -9,6 +9,7 @@
 #include <sstream>
 #include <cstdint>
 #include <list>
+#include <optional>
 
 namespace persistence {
 struct Coordinate {
@@ -47,7 +48,7 @@ struct Data {
     int year = 0;
     std::list<Country> countries;
     std::list<City> cities;
-    Note note;
+    std::optional<Note> note;
 
     auto operator<=>(const Data&) const = default;
 };

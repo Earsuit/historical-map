@@ -67,7 +67,11 @@ void InfoSelectorPresenter::handleSelectNote()
 {
     if (auto fromInfo = dynamicInfoModel.getHistoricalInfo(fromSource); fromInfo) {
         auto toInfo = upsertHistoricalStroageIfNotExists();
-        toInfo->getNote() = fromInfo->getNote();
+        if (fromInfo->containsNote()) {
+            toInfo->addNote(fromInfo->getNote().text);
+        } else {
+            logger->error("Select note fail because it doesn't exists in {}", fromSource);
+        }
     } else {
         logger->error("Select note fail due to invalid source {}", fromSource);
     }
@@ -92,7 +96,7 @@ void InfoSelectorPresenter::handleDeselectCity(const std::string& name)
 void InfoSelectorPresenter::handleDeselectNote()
 {
     if (auto info = dynamicInfoModel.getHistoricalInfo(toSource); info) {
-        info->getNote().text.clear();
+        info->removeNote();
     }
 }
 
@@ -117,12 +121,7 @@ bool InfoSelectorPresenter::handleCheckIsCitySelected(const std::string& name)
 bool InfoSelectorPresenter::handleCheckIsNoteSelected()
 {
     if (auto toInfo = dynamicInfoModel.getHistoricalInfo(toSource); toInfo) {
-        if (auto fromInfo = dynamicInfoModel.getHistoricalInfo(fromSource); fromInfo) {
-            return toInfo->getNote() == fromInfo->getNote();
-        } else {
-            logger->error("Check note selection fail due to invalid source {}", fromSource);
-            return false;
-        }
+        return toInfo->containsNote();
     } else {
         return false;
     }
@@ -149,11 +148,7 @@ bool InfoSelectorPresenter::handleCheckIsAllSelected()
                 }
             }
 
-            if (toInfo->getNote() != fromInfo->getNote()) {
-                return false;
-            }
-
-            return true;
+            return toInfo->containsNote() == fromInfo->containsNote();
         } else {
             logger->error("Check select all fail due to invalid source {}", fromSource);
             return false;

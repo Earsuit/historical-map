@@ -258,7 +258,7 @@ void ImportInfoWidget::displayCity(presentation::HistoricalInfoPresenter& infoPr
 
 void ImportInfoWidget::selectNote(const presentation::HistoricalInfoPresenter& infoPresenter)
 {
-    if (auto note = infoPresenter.handleGetNote(); note && !note->empty()) {
+    if (auto note = infoPresenter.handleGetNote(); !note.empty()) {
         bool select = selectAll || infoSelectorPresenter.handleCheckIsNoteSelected();
         if (ImGui::Checkbox("##note", &select)) {
             if (select) {
@@ -272,8 +272,8 @@ void ImportInfoWidget::selectNote(const presentation::HistoricalInfoPresenter& i
 
 void ImportInfoWidget::displayNote(const presentation::HistoricalInfoPresenter& infoPresenter)
 {
-    if (auto note = infoPresenter.handleGetNote(); note && !note->empty()) {
-        ImGui::TextUnformatted(note->c_str(), note->c_str() + note->size());
+    if (auto note = infoPresenter.handleGetNote(); !note.empty()) {
+        ImGui::TextUnformatted(note.c_str(), note.c_str() + note.size());
     }
 }
 

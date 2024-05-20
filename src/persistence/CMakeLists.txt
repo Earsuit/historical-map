@@ -22,9 +22,6 @@ add_custom_target(table_header DEPENDS ${TABLE_HEADER}.h)
 add_custom_target(command_header DEPENDS ${SQL_COMMANDS_HEADER})
 
 set(PERSISTENCE_SRC
-  DatabaseManager.cpp
-  Selector.h
-  Selector.cpp
   exporterImporter/ExporterImporterFactory.h
   exporterImporter/ExporterImporterRegistrar.h
   exporterImporter/IExporterImporter.h

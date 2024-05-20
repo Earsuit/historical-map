@@ -498,7 +498,7 @@ TEST_F(DatabaseTest, UpdateEventExistsInTwoYears)
     database.upsert(data1);
     database.upsert(data2);
 
-    data1.note.text = "Update";
+    data1.note->text = "Update";
 
     database.upsert(data1);
 
@@ -586,6 +586,55 @@ TEST_F(DatabaseTest, LoadNote)
     database.upsert(data);
 
     EXPECT_EQ(database.loadNote(year), note);
+}
+
+TEST_F(DatabaseTest, RemoveNoteWithTestNotMatch)
+{
+    int year = 1900;
+    const persistence::Note note{"Test"};
+    const persistence::Country country1{"Country1", {persistence::Coordinate{1,2}, persistence::Coordinate{3,4}}};
+    const persistence::Country country2{"Country2", {persistence::Coordinate{5,6}, persistence::Coordinate{7,8}}};
+    const persistence::City city1{"One", {1,2}};
+    const persistence::City city2{"Two", {3,4}};
+    persistence::Data data{year, {country1, country2}, {city1, city2}, note};
+    database.upsert(data);
+    
+    persistence::Data remove{year, {}, {}, persistence::Note{""}};
+    database.remove(remove);
+    
+    EXPECT_EQ(database.load(year), data);
+}
+
+TEST_F(DatabaseTest, RemoveNote)
+{
+    int year = 1900;
+    const persistence::Note note{"Test"};
+    const persistence::Country country1{"Country1", {persistence::Coordinate{1,2}, persistence::Coordinate{3,4}}};
+    const persistence::Country country2{"Country2", {persistence::Coordinate{5,6}, persistence::Coordinate{7,8}}};
+    const persistence::City city1{"One", {1,2}};
+    const persistence::City city2{"Two", {3,4}};
+    persistence::Data data{year, {country1, country2}, {city1, city2}, note};
+    database.upsert(data);
+    
+    persistence::Data remove{year, {}, {}, note};
+    database.remove(remove);
+
+    persistence::Data expected{year, {country1, country2}, {city1, city2}};
+    
+    EXPECT_EQ(database.load(year), expected);
+}
+
+TEST_F(DatabaseTest, NoteIsNotAffectedWhenModifyOthers)
+{
+    int year = 1900;
+    const persistence::Data data1{year, {}, {}, persistence::Note{"Test"}};
+    const persistence::Country country{"name", {persistence::Coordinate{1,2}, persistence::Coordinate{3,4}}};
+    persistence::Data data2{year, std::list<persistence::Country>{country}};
+    database.upsert(data1);
+    database.upsert(data2);
+    const persistence::Data expected{year, std::list<persistence::Country>{country}, {}, persistence::Note{"Test"}};
+
+    EXPECT_EQ(database.load(year), expected);
 }
 
 TEST_F(DatabaseTest, LoadCountry)

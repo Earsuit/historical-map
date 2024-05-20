@@ -53,9 +53,9 @@ persistence::City& HistoricalStorage::getCity(const std::string& name)
     return *cities[name];
 }
 
-persistence::Note& HistoricalStorage::getNote()
+persistence::Note HistoricalStorage::getNote()
 {
-    return cache.note;
+    return *cache.note;
 }
 
 std::vector<std::string> HistoricalStorage::getCountryList() const
@@ -109,5 +109,22 @@ bool HistoricalStorage::addCity(const std::string& name, const persistence::Coor
     cities.emplace(std::make_pair(name, --cache.cities.end()));
 
     return true;
+}
+
+bool HistoricalStorage::addNote(const std::string& note)
+{
+    if (cache.note) {
+        cache.note->text = note;
+    } else {
+        cache.note = persistence::Note{note};
+    }
+
+    return true;
+}
+
+void HistoricalStorage::removeNote()
+{
+    removed.note = cache.note;
+    cache.note = std::nullopt;
 }
 }

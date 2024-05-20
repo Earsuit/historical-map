@@ -19,15 +19,18 @@ public:
 
     bool containsCountry(const std::string& name) const { return countries.contains(name); }
     bool containsCity(const std::string& name) const { return cities.contains(name); }
+    bool containsNote() const noexcept { return cache.note.has_value(); }
     persistence::Country& getCountry(const std::string& name);
     persistence::City& getCity(const std::string& name);
-    persistence::Note& getNote();
+    persistence::Note getNote();
     std::vector<std::string> getCountryList() const;
     std::vector<std::string> getCityList() const;
     void removeCountry(const std::string& name);
     void removeCity(const std::string& name);
+    void removeNote();
     bool addCountry(const std::string& name);
     bool addCountry(const persistence::Country& country);
+    bool addNote(const std::string& note);
     bool addCity(const std::string& name, const persistence::Coordinate& coord);
     persistence::Data getData() const noexcept { return cache; }
     persistence::Data getRemoved() const noexcept { return removed; }

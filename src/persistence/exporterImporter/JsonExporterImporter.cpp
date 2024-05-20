@@ -43,14 +43,20 @@ void from_json(const nlohmann::json& j, Note& n) {
 }
 
 void to_json(nlohmann::json& j, const Data& d) {
-    j = nlohmann::json{{"year", d.year}, {"countries", d.countries}, {"cities", d.cities}, {"note", d.note}};
+    j = nlohmann::json{{"year", d.year}, {"countries", d.countries}, {"cities", d.cities}};
+
+    if (d.note) {
+        j["note"] = d.note.value();
+    }
 }
 
 void from_json(const nlohmann::json& j, Data& d) {
     j.at("year").get_to(d.year);
     j.at("countries").get_to(d.countries);
     j.at("cities").get_to(d.cities);
-    j.at("note").get_to(d.note);
+    if (j.count("note") != 0) {
+        d.note = j.at("note").get<Note>();
+    }
 }
 
 JsonExporter::JsonExporter()

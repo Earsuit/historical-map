@@ -20,7 +20,7 @@ public:
         source{source}
     {}
 
-    std::optional<std::string> handleGetNote() const noexcept;
+    std::string handleGetNote() const noexcept;
     void handleUpdateNote(const std::string& text);
     void handleAddCountry(const std::string& name);
     void handleExtendContour(const std::string& name, const persistence::Coordinate& coordinate);

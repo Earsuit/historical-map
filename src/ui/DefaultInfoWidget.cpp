@@ -239,14 +239,13 @@ void DefaultInfoWidget::displayCity(const std::string& name)
 
 void DefaultInfoWidget::displayNote()
 {
-    if (auto note = infoPresenter.handleGetNote(); note) {
-        if (ImGui::Button("Clear")) {
-            infoPresenter.handleUpdateNote("");
-        }
+    auto note = infoPresenter.handleGetNote();
+    if (ImGui::Button("Clear")) {
+        infoPresenter.handleUpdateNote("");
+    }
 
-        if (ImGui::InputTextMultiline("##note", &(*note), ImGui::GetContentRegionAvail(), ImGuiInputTextFlags_AllowTabInput)) {
-            infoPresenter.handleUpdateNote(*note);
-        }
+    if (ImGui::InputTextMultiline("##note", &note, ImGui::GetContentRegionAvail(), ImGuiInputTextFlags_AllowTabInput)) {
+        infoPresenter.handleUpdateNote(note);
     }
 }
 
