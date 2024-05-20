@@ -77,6 +77,7 @@ void InfoSelectorPresenter::handleDeselectCountry(const std::string& name)
 {
     if (auto info = dynamicInfoModel.getHistoricalInfo(toSource); info) {
         info->removeCountry(name);
+        info->clearRemoved();
     }
 }
 
@@ -84,6 +85,7 @@ void InfoSelectorPresenter::handleDeselectCity(const std::string& name)
 {
     if (auto info = dynamicInfoModel.getHistoricalInfo(toSource); info) {
         info->removeCity(name);
+        info->clearRemoved();
     }
 }
 
