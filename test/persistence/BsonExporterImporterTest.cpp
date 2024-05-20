@@ -162,7 +162,7 @@ TEST_F(BsonExporterImporterTest, WriteFileExists)
         auto ret = exporter.value()->writeToFile(FILE_NAME, false);
         EXPECT_FALSE(ret);
 
-        EXPECT_EQ(ret.error().code, persistence::ErrorCode::FILE_EXISTS);
+        EXPECT_EQ(ret.error().code, util::ErrorCode::FILE_EXISTS);
     } else {
         EXPECT_TRUE(false); 
     }
@@ -176,7 +176,7 @@ TEST_F(BsonExporterImporterTest, OverWrite)
         auto ret = exporter.value()->writeToFile(FILE_NAME, false);
         EXPECT_FALSE(ret);
 
-        EXPECT_EQ(ret.error().code, persistence::ErrorCode::FILE_EXISTS);
+        EXPECT_EQ(ret.error().code, util::ErrorCode::FILE_EXISTS);
 
         EXPECT_TRUE(exporter.value()->writeToFile(FILE_NAME, true));
     } else {
@@ -192,14 +192,14 @@ TEST_F(BsonExporterImporterTest, ReadFileNotExists)
     
     loader.next();
 
-    EXPECT_EQ(loader.getValue().error().code, persistence::ErrorCode::FILE_NOT_EXISTS);
+    EXPECT_EQ(loader.getValue().error().code, util::ErrorCode::FILE_NOT_EXISTS);
 }
 
 TEST_F(BsonExporterImporterTest, IncorrectJsonFormat)
 {
     if (auto importer = persistence::ExporterImporterFactory::getInstance().createImporter(FORMAT); importer) {
         auto loader = importer.value()->loadFromFile("incorrectJson.json");
-        std::optional<persistence::Error> error;
+        std::optional<util::Error> error;
 
         while (loader.next()) {
             if (const auto& ret = loader.getValue(); ret) {
@@ -210,7 +210,7 @@ TEST_F(BsonExporterImporterTest, IncorrectJsonFormat)
         }
         
         if (error) {
-            EXPECT_EQ(error.value().code, persistence::ErrorCode::PARSE_FILE_ERROR);
+            EXPECT_EQ(error.value().code, util::ErrorCode::PARSE_FILE_ERROR);
             EXPECT_EQ(error.value().msg, "[json.exception.parse_error.110] parse error at byte 230: syntax error while parsing BSON cstring: unexpected end of input");
         } else {
             EXPECT_TRUE(false); 
