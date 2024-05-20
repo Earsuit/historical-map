@@ -1,4 +1,5 @@
 #include "src/presentation/DatabaseSaverPresenter.h"
+#include "src/presentation/Util.h"
 #include "src/logger/Util.h"
 
 namespace presentation {
@@ -33,6 +34,7 @@ bool DatabaseSaverPresenter::handleSaveSameForRange(int startYear, int endYear)
                     removed.year = year;
                     this->databaseModel.updateHistoricalInfo(data);
                     this->databaseModel.removeHistoricalInfo(removed);
+                    this->dynamicInfoModel.upsert(DEFAULT_HISTORICAL_INFO_SOURCE, this->databaseModel.loadHistoricalInfo(year));
                     this->progress++;
                 }
 
@@ -59,6 +61,7 @@ void DatabaseSaverPresenter::handleSaveAll()
                 if (auto info = this->dynamicInfoModel.getHistoricalInfo(this->source, year); info) {
                     this->databaseModel.updateHistoricalInfo(info->getData());
                     this->databaseModel.removeHistoricalInfo(info->getRemoved());
+                    this->dynamicInfoModel.upsert(DEFAULT_HISTORICAL_INFO_SOURCE, this->databaseModel.loadHistoricalInfo(year));
                 }
                 this->progress++;
             }

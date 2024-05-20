@@ -20,11 +20,12 @@ public:
     bool setYear(int year) noexcept;
     bool moveYearForward() noexcept;
     bool moveYearBackward() noexcept;
-    int getYear() const noexcept { return year; }
+    int getYear() const noexcept { return currentYear; }
     int getMaxYear() const noexcept;
     int getMinYear() const noexcept;
 
     persistence::Data loadHistoricalInfo();
+    persistence::Data loadHistoricalInfo(int year);
     void updateHistoricalInfo(const persistence::Data& info);
     void removeHistoricalInfo(const persistence::Data& info);
 
@@ -39,7 +40,7 @@ private:
     std::shared_ptr<spdlog::logger> logger;
     persistence::Database<sqlpp::sqlite3::connection, sqlpp::sqlite3::connection_config> database;
     std::mutex lock;
-    int year;
+    int currentYear;
 
     DatabaseModel();
 };

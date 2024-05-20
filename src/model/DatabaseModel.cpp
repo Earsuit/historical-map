@@ -8,7 +8,7 @@ constexpr int INVALID_YEAR = 0;
 DatabaseModel::DatabaseModel():
     logger{spdlog::get(logger::LOGGER_NAME)},
     database{std::make_shared<sqlpp::sqlite3::connection_config>(DATABASE_NAME, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE)},
-    year{QIN_DYNASTY}
+    currentYear{QIN_DYNASTY}
 {
 }
 
@@ -38,21 +38,21 @@ bool DatabaseModel::setYear(int newYear) noexcept
         newYear = 1;
     }
 
-    year = newYear;
+    currentYear = newYear;
 
     return true;
 }
 
 bool DatabaseModel::moveYearForward() noexcept
 {
-    if (year + 1 > MAX_YEAR) {
+    if (currentYear + 1 > MAX_YEAR) {
         return false;
     }
 
-    year++;
+    currentYear++;
 
-    if (year == INVALID_YEAR) {
-        year++;
+    if (currentYear == INVALID_YEAR) {
+        currentYear++;
     }
 
     return true;
@@ -60,20 +60,25 @@ bool DatabaseModel::moveYearForward() noexcept
 
 bool DatabaseModel::moveYearBackward() noexcept
 {
-    if (year - 1 < MIN_YEAR) {
+    if (currentYear - 1 < MIN_YEAR) {
         return false;
     }
 
-    year--;
+    currentYear--;
 
-    if (year == INVALID_YEAR) {
-        year--;
+    if (currentYear == INVALID_YEAR) {
+        currentYear--;
     }
 
     return true;
 }
 
 persistence::Data DatabaseModel::loadHistoricalInfo()
+{
+    return loadHistoricalInfo(currentYear);
+}
+
+persistence::Data DatabaseModel::loadHistoricalInfo(int year)
 {
     logger->debug("Load item from database for year {}.", year);
     std::scoped_lock lk{lock};
