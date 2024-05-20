@@ -16,16 +16,13 @@ ImportYearPresenter::ImportYearPresenter(const std::string& source):
 
 void ImportYearPresenter::initYearsList()
 {
-    if (years.empty()) {
-        for (int year : dynamicInfoModel.getYearList(source)) {
-            years.emplace(year);
-        }
+    for (int year : dynamicInfoModel.getYearList(source)) {
+        years.emplace(year);
     }
 }
 
 int ImportYearPresenter::moveYearForward() noexcept
 {
-    initYearsList();
     if (auto it = years.upper_bound(dynamicInfoModel.getCurrentYear()); it != years.end()) {
         dynamicInfoModel.setCurrentYear(*it);
     }
@@ -35,7 +32,6 @@ int ImportYearPresenter::moveYearForward() noexcept
 
 int ImportYearPresenter::moveYearBackward() noexcept
 {
-    initYearsList();
     if (auto it = years.lower_bound(dynamicInfoModel.getCurrentYear()); it != years.end() && it != years.begin()) {
         dynamicInfoModel.setCurrentYear(*std::prev(it));
     }

@@ -15,13 +15,13 @@ class ImportYearPresenter: public DatabaseYearPresenter {
 public:
     ImportYearPresenter(const std::string& source);
 
+    void initYearsList();
+
 private:
     std::shared_ptr<spdlog::logger> logger;
     model::DynamicInfoModel& dynamicInfoModel;
     std::string source;
     std::set<int> years;
-
-    void initYearsList();
 
     virtual int moveYearForward() noexcept override;
     virtual int moveYearBackward() noexcept override;
