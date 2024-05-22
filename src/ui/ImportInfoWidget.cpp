@@ -7,7 +7,6 @@
 #include "ImFileDialog.h"
 
 namespace ui {
-const auto IMPORT_SOURCE = "Import";
 const auto SELECTION = "Selected";
 constexpr auto FILE_SELECT_POPUP_NAME = "Select file";
 constexpr auto IMPORT_PROGRESS_POPUP_NAME = "Loading";
@@ -19,10 +18,10 @@ constexpr auto WRITE_TO_DATABASE_PROGRESS_POPUP = "Write to database";
 ImportInfoWidget::ImportInfoWidget():
     logger{spdlog::get(logger::LOGGER_NAME)}, 
     databaseInfoPresenter{presentation::DEFAULT_HISTORICAL_INFO_SOURCE},
-    importInfoPresenter{IMPORT_SOURCE},
-    infoSelectorPresenter{IMPORT_SOURCE, SELECTION},
-    yearPresenter{IMPORT_SOURCE},
-    importPresenter{IMPORT_SOURCE},
+    importInfoPresenter{presentation::IMPORT_SOURCE},
+    infoSelectorPresenter{presentation::IMPORT_SOURCE, SELECTION},
+    yearPresenter{presentation::IMPORT_SOURCE},
+    importPresenter{presentation::IMPORT_SOURCE},
     databaseSaverPresenter{SELECTION}
 {
     ifd::FileDialog::getInstance().open(FILE_SELECT_POPUP_NAME, FILE_SELECT_POPUP_NAME, fileExtensionFormat());

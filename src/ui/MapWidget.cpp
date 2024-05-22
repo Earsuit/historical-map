@@ -45,17 +45,18 @@ void MapWidget::paint()
 {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding,  ImVec2(0, 0));
-    if (ImGui::Begin(MAP_WIDGET_NAME)) {
-        ImGui::PopStyleVar(2);
+    // we should render the map even if it is collapsed,
+    // otherwise it will break when changing the docking layout
+    ImGui::Begin(getName().c_str());
+    ImGui::PopStyleVar(2);
 
-        dragPointId = 0;
+    dragPointId = 0;
 
-        renderMap();
-        renderRightClickMenu();
-        renderOverlay();
+    renderMap();
+    renderRightClickMenu();
+    renderOverlay();
 
-        ImGui::End();
-    } 
+    ImGui::End();
 }
 
 void MapWidget::renderAnnotation(const model::Vec2& coordinate, const std::string& name, const presentation::Color& color, const model::Vec2& offset)
@@ -229,7 +230,7 @@ void MapWidget::renderOverlay()
 
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
 
-    ImVec2 work_pos = viewport->WorkPos; // Use work area to avoid menu-bar/task-bar, if any!
+    ImVec2 work_pos = ImGui::GetWindowPos(); // Use work area to avoid menu-bar/task-bar, if any!
     ImVec2 window_pos;
     window_pos.x = work_pos.x + OVERLAY_PAD;
     window_pos.y = work_pos.y + OVERLAY_PAD;

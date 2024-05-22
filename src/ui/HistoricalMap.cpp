@@ -22,9 +22,19 @@ namespace ui {
 
 constexpr int WINDOW_WIDTH = 1080 * 1.5;
 constexpr int WINDOW_HEIGHT = 1080;
-constexpr float MAP_WIDGET_HORIZONTAL_RATIO = 3.6f/5.0f;
-constexpr float MAP_WIDGET_VERTICAL_RATIO = 2.0f/3.0f;
+constexpr float MAIN_DOCKSPACE_HORIZONTAL_RATIO = 3.6f/5.0f;
+constexpr float MAIN_DOCKSPACE_VERTICAL_RATIO = 2.0f/3.0f;
+constexpr float MAP_WIDGET_DOCKSPACE_RATIO = 0.5f;
 constexpr ImVec4 backgroundColor = {0.45f, 0.55f, 0.60f, 1.00f};
+// We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
+// because it would be confusing to have two docking targets within each others.
+constexpr ImGuiWindowFlags WINDOW_FLAGS = ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoCollapse |
+                                         ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
+                                         ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+constexpr auto MAP_WIDGETS_DOCKSPACE_WINDOW_NAME = "MapDockSpace";
+constexpr ImGuiDockNodeFlags DOCKSPACE_FLAG = ImGuiDockNodeFlags_PassthruCentralNode | ImGuiDockNodeFlags_AutoHideTabBar;
+constexpr int MAX_MAP_WIDGET_NUM = 2;
+constexpr ImVec2 DOCKSPACE_DEFAULT_ARG = ImVec2{0.0f, 0.0f};
 
 namespace {
 static void glfwErrorCallback(int error, const char* description)
@@ -36,9 +46,10 @@ static void glfwErrorCallback(int error, const char* description)
 
 HistoricalMap::HistoricalMap():
     infoWidget{std::make_unique<DefaultInfoWidget>()},
-    mapWidget{presentation::DEFAULT_HISTORICAL_INFO_SOURCE},
     tileSourceWidget{}
-{
+{   
+    mapWidgets.emplace_back(std::make_unique<MapWidget>(presentation::DEFAULT_HISTORICAL_INFO_SOURCE));
+
     glfwSetErrorCallback(glfwErrorCallback);
     if (!glfwInit()) {
         throw std::runtime_error("Failed to initialize glfw.");
@@ -126,10 +137,13 @@ void HistoricalMap::start()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
+        buildDockSpace();
+
         if (ImGui::BeginMainMenuBar()) {
             if (ImGui::BeginMenu("File")) {
                 if (ImGui::MenuItem("Import")) {
                     if (dynamic_cast<DefaultInfoWidget*>(infoWidget.get()) != nullptr) {
+                        mapWidgets.emplace_back(std::make_unique<MapWidget>(presentation::IMPORT_SOURCE));
                         infoWidget = std::make_unique<ImportInfoWidget>();
                     }
                 }
@@ -146,15 +160,16 @@ void HistoricalMap::start()
             ImGui::EndMainMenuBar();
         }
 
-        buildDockSpace(io);
-
         infoWidget->paint();
         tileSourceWidget.paint();
-        mapWidget.paint();
+        for (auto& mapWidget : mapWidgets) {
+            mapWidget->paint();
+        }
         logWidget.paint();
 
         if (infoWidget->complete()) {
             infoWidget = std::make_unique<DefaultInfoWidget>();
+            mapWidgets.resize(1);
         }
 
         ImGui::Render();
@@ -169,18 +184,39 @@ void HistoricalMap::start()
     }
 }
 
+void HistoricalMap::buildMapDockSpace()
+{
+    auto dockspace = ImGui::GetID("MyMapDockSpace");
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding,  ImVec2(0, 0));
+    ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 0.0f);
+    ImGui::Begin(MAP_WIDGETS_DOCKSPACE_WINDOW_NAME, nullptr, WINDOW_FLAGS);
+    ImGui::PopStyleVar(3);
+
+    ImGui::DockSpace(dockspace, DOCKSPACE_DEFAULT_ARG, DOCKSPACE_FLAG);
+
+    if (mapWidgets.size() != previousDockedMapWidget) {
+        ImGui::DockBuilderRemoveNode(dockspace); // clear any previous layout
+		ImGui::DockBuilderAddNode(dockspace, ImGuiDockNodeFlags_DockSpace);
+        ImGui::DockBuilderSetNodeSize(dockspace, ImGui::GetWindowSize());
+        
+        const auto right = ImGui::DockBuilderSplitNode(dockspace, ImGuiDir_Right, MAP_WIDGET_DOCKSPACE_RATIO, nullptr, &dockspace);
+        ImGui::DockBuilderDockWindow(mapWidgets.front()->getName().c_str(), dockspace);
+        if (mapWidgets.size() == MAX_MAP_WIDGET_NUM) {
+            ImGui::DockBuilderDockWindow(mapWidgets.back()->getName().c_str(), right);
+        }
+
+        previousDockedMapWidget = mapWidgets.size();
+    }
+
+    ImGui::End();
+}
+
 // based on example https://gist.github.com/moebiussurfing/d7e6ec46a44985dd557d7678ddfeda99
-void HistoricalMap::buildDockSpace(ImGuiIO& io)
+void HistoricalMap::buildDockSpace()
 {
     static auto firstTime = true;
-    ImGuiID dockspace = ImGui::GetID("MyDockSpace");
-
-    // We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
-    // because it would be confusing to have two docking targets within each others.
-    const ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoDocking |
-                                         ImGuiWindowFlags_NoCollapse | 
-                                         ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
-                                         ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+    auto dockspace = ImGui::GetID("MyDockSpace");
 
     ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->Pos);
@@ -192,10 +228,10 @@ void HistoricalMap::buildDockSpace(ImGuiIO& io)
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding,  ImVec2(0, 0));
     ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 0.0f);
-    ImGui::Begin("DockSpace", nullptr, windowFlags);
+    ImGui::Begin("DockSpace", nullptr, WINDOW_FLAGS);
     ImGui::PopStyleVar(3);
 
-    ImGui::DockSpace(dockspace, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode | ImGuiDockNodeFlags_AutoHideTabBar);
+    ImGui::DockSpace(dockspace, DOCKSPACE_DEFAULT_ARG, DOCKSPACE_FLAG);
 
     if (firstTime) {
         firstTime = false;
@@ -207,11 +243,11 @@ void HistoricalMap::buildDockSpace(ImGuiIO& io)
 		// split the dockspace into nodes -- DockBuilderSplitNode takes in the following args in the following order
 		// window ID to split, direction, fraction (between 0 and 1), the final two setting let's us choose which id we want (which ever one we DON'T set as NULL, will be returned by the function)
 		// out_id_at_dir is the id of the node in the direction we specified earlier, out_id_at_opposite_dir is in the opposite direction
-        const auto down = ImGui::DockBuilderSplitNode(dockspace, ImGuiDir_Down, 1 - MAP_WIDGET_VERTICAL_RATIO, nullptr, &dockspace);
-        const auto right = ImGui::DockBuilderSplitNode(dockspace, ImGuiDir_Right, 1 - MAP_WIDGET_HORIZONTAL_RATIO, nullptr, &dockspace);
+        const auto down = ImGui::DockBuilderSplitNode(dockspace, ImGuiDir_Down, 1 - MAIN_DOCKSPACE_VERTICAL_RATIO, nullptr, &dockspace);
+        const auto right = ImGui::DockBuilderSplitNode(dockspace, ImGuiDir_Right, 1 - MAIN_DOCKSPACE_HORIZONTAL_RATIO, nullptr, &dockspace);
 
 		// we now dock our windows into the docking node we made above
-		ImGui::DockBuilderDockWindow(MAP_WIDGET_NAME, dockspace);
+        ImGui::DockBuilderDockWindow(MAP_WIDGETS_DOCKSPACE_WINDOW_NAME, dockspace);
 		ImGui::DockBuilderDockWindow(LOG_WIDGET_NAME, down);
 		ImGui::DockBuilderDockWindow(TILE_SOURCE_WIDGET_NAME, down);
         ImGui::DockBuilderDockWindow(INFO_WIDGET_NAME, right);
@@ -219,6 +255,8 @@ void HistoricalMap::buildDockSpace(ImGuiIO& io)
     }
 
     ImGui::End();
+
+    buildMapDockSpace();
 }
 
 }

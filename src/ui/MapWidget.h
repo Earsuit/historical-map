@@ -16,7 +16,7 @@
 #include <optional>
 
 namespace ui {
-constexpr auto MAP_WIDGET_NAME = "Map plot";
+constexpr auto MAP_WIDGET_NAME_PREFIX = "Map plot";
 
 class MapWidget: presentation::MapWidgetInterface {
 public:
@@ -41,6 +41,8 @@ public:
     virtual model::Vec2 getPlotSize() const noexcept override;
     virtual void renderTile(void* texture, const model::Vec2& bMin, const model::Vec2& bMax) override;
     virtual std::optional<model::Vec2> getMousePos() const override;
+
+    std::string getName() const noexcept { return MAP_WIDGET_NAME_PREFIX + source; }
 
 private:
     std::shared_ptr<spdlog::logger> logger;

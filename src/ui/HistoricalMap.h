@@ -11,6 +11,7 @@
 #include "src/logger/StringSink.h"
 
 #include <memory>
+#include <vector>
 
 namespace ui {
 
@@ -25,10 +26,13 @@ private:
     GLFWwindow* window;
     LogWidget logWidget;
     std::unique_ptr<IInfoWidget> infoWidget;
-    MapWidget mapWidget;
+    std::vector<std::unique_ptr<MapWidget>> mapWidgets;
     TileSourceWidget tileSourceWidget;
+    int previousDockedMapWidget = 0;
+    ImGuiID down, left;
 
-    void buildDockSpace(ImGuiIO& io);
+    void buildDockSpace();
+    void buildMapDockSpace();
 };
 
 }
