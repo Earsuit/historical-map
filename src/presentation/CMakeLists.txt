@@ -20,6 +20,9 @@ SET(PRESENTATION_SRC
     TileSourceWidgetPresenter.h
     TileSourceUrlPresenter.h
     TileSourceUrlPresenter.cpp
+    MainViewInterface.h
+    MainViewPresenter.h
+    MainViewPresenter.cpp
 )
 
 add_library(libpresentation STATIC ${PRESENTATION_SRC})

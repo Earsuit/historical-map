@@ -9,18 +9,24 @@
 #include "src/ui/MapWidget.h"
 #include "src/ui/IInfoWidget.h"
 #include "src/logger/StringSink.h"
+#include "src/presentation/MainViewInterface.h"
+#include "src/presentation/MainViewPresenter.h"
 
 #include <memory>
 #include <vector>
 
 namespace ui {
 
-class HistoricalMap {
+class HistoricalMap: public presentation::MainViewInterface {
 public:
     HistoricalMap();
     ~HistoricalMap();
 
     void start();
+
+    virtual void addInteractiveMapWidget(const std::string& source) override;
+    virtual void addNoninteractiveMapWidget(const std::string& source) override;
+    virtual void clearMapWidgets() override;
 
 private:
     GLFWwindow* window;
@@ -28,6 +34,7 @@ private:
     std::unique_ptr<IInfoWidget> infoWidget;
     std::vector<std::unique_ptr<MapWidget>> mapWidgets;
     TileSourceWidget tileSourceWidget;
+    presentation::MainViewPresenter presenter;
     int previousDockedMapWidget = 0;
     ImGuiID down, left;
 

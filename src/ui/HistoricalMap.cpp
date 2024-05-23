@@ -5,7 +5,6 @@
 #include "src/ui/ExportInfoWidget.h"
 #include "src/ui/ImportInfoWidget.h"
 #include "src/ui/MapWidgetNoninteractive.h"
-#include "src/presentation/Util.h"
 
 #include "external/imgui/imgui.h"
 #include "external/imgui/imgui_internal.h"
@@ -45,11 +44,27 @@ static void glfwErrorCallback(int error, const char* description)
 }
 }
 
+void HistoricalMap::addInteractiveMapWidget(const std::string& source)
+{
+    mapWidgets.emplace_back(std::make_unique<MapWidget>(source));
+}
+
+void HistoricalMap::addNoninteractiveMapWidget(const std::string& source)
+{
+    mapWidgets.emplace_back(std::make_unique<MapWidgetNoninteractive>(source));
+}
+
+void HistoricalMap::clearMapWidgets()
+{
+    mapWidgets.clear();
+}
+
 HistoricalMap::HistoricalMap():
     infoWidget{std::make_unique<DefaultInfoWidget>()},
-    tileSourceWidget{}
+    tileSourceWidget{},
+    presenter{*this}
 {   
-    mapWidgets.emplace_back(std::make_unique<MapWidget>(presentation::DEFAULT_HISTORICAL_INFO_SOURCE));
+    mapWidgets.emplace_back(std::make_unique<MapWidget>(presenter.handleGetDefaultMapWidgetSouceName()));
 
     glfwSetErrorCallback(glfwErrorCallback);
     if (!glfwInit()) {
@@ -144,17 +159,14 @@ void HistoricalMap::start()
             if (ImGui::BeginMenu("File")) {
                 if (ImGui::MenuItem("Import")) {
                     if (dynamic_cast<DefaultInfoWidget*>(infoWidget.get()) != nullptr) {
-                        mapWidgets.clear();
-                        mapWidgets.emplace_back(std::make_unique<MapWidgetNoninteractive>(presentation::DEFAULT_HISTORICAL_INFO_SOURCE));
-                        mapWidgets.emplace_back(std::make_unique<MapWidgetNoninteractive>(presentation::IMPORT_SOURCE));
+                        presenter.handleClickImport();
                         infoWidget = std::make_unique<ImportInfoWidget>();
                     }
                 }
 
                 if (ImGui::MenuItem("Export")) {
                     if (dynamic_cast<DefaultInfoWidget*>(infoWidget.get()) != nullptr) {
-                        mapWidgets.clear();
-                        mapWidgets.emplace_back(std::make_unique<MapWidgetNoninteractive>(presentation::DEFAULT_HISTORICAL_INFO_SOURCE));
+                        presenter.handleClickExport();
                         infoWidget = std::make_unique<ExportInfoWidget>();
                     }
                 }
@@ -173,9 +185,8 @@ void HistoricalMap::start()
         logWidget.paint();
 
         if (infoWidget->complete()) {
+            presenter.handleImportExportComplete();
             infoWidget = std::make_unique<DefaultInfoWidget>();
-            mapWidgets.clear();
-            mapWidgets.emplace_back(std::make_unique<MapWidget>(presentation::DEFAULT_HISTORICAL_INFO_SOURCE));
         }
 
         ImGui::Render();
