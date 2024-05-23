@@ -1,12 +1,17 @@
 SET(UI_SRC
     HistoricalMap.cpp
+    HistoricalMap.h
     MapWidget.cpp
+    MapWidget.h
     TileSourceWidget.cpp
+    TileSourceWidget.h
     LogWidget.cpp
+    LogWidget.h
     DefaultInfoWidget.cpp
     DefaultInfoWidget.h
     IInfoWidget.h
     Util.cpp
+    Util.h
     ExportInfoWidget.h
     ExportInfoWidget.cpp
     ImportInfoWidget.h

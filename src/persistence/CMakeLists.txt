@@ -35,6 +35,8 @@ set(PERSISTENCE_SRC
   exporterImporter/ImportManager.h
   HistoricalStorage.h
   HistoricalStorage.cpp
+  Data.h
+  Database.h
 )
 
 add_library(libpersistence STATIC ${PERSISTENCE_SRC})
