@@ -1,4 +1,5 @@
 #include "src/model/TileModel.h"
+#include "src/logger/Util.h"
 
 #include <algorithm>
 
@@ -12,6 +13,12 @@ TileModel& TileModel::getInstance()
     static TileModel model;
     return model;
 }
+
+TileModel::TileModel():
+    logger{spdlog::get(logger::LOGGER_NAME)},
+    tileLoader{tile::TileLoader::getInstance()},
+    supportedSourceType{"URL"}
+{}
 
 std::vector<std::shared_ptr<tile::Tile>> TileModel::getTiles(const Range& xAxis,
                                                              const Range& yAxis,
@@ -61,6 +68,21 @@ Vec2 TileModel::getTileBoundMin(std::shared_ptr<tile::Tile> tile) const noexcept
 
     return {model::computeTileBound(coord.x, zoom), 
             model::computeTileBound(coord.y, zoom)};
+}
+
+tl::expected<void, util::Error> TileModel::setTileEngine(const std::string& name)
+{
+    if (auto engine = tile::TileEngineFactory::createInstance(name); engine) {
+        tileLoader.setTileEngine(engine);
+        return util::SUCCESS;
+    }
+
+    return tl::unexpected{util::Error{util::ErrorCode::INVALID_PARAM, "Invalid tile engine!"}};
+}
+
+void TileModel::setTileSource(std::shared_ptr<tile::TileSource> tileSource)
+{
+    tileLoader.setTileSource(tileSource);
 }
 
 }

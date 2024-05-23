@@ -17,6 +17,9 @@ SET(PRESENTATION_SRC
     ImportPresenter.cpp
     ImportYearPresenter.h
     ImportYearPresenter.cpp
+    TileSourceWidgetPresenter.h
+    TileSourceUrlPresenter.h
+    TileSourceUrlPresenter.cpp
 )
 
 add_library(libpresentation STATIC ${PRESENTATION_SRC})

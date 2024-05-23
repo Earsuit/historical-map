@@ -12,6 +12,7 @@ enum class ErrorCode {
     PARSE_FILE_ERROR,
     FILE_FORMAT_NOT_SUPPORT,
     FILE_EMPTY,
+    INVALID_PARAM,
 };
 
 struct Error {

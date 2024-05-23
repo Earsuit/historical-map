@@ -4,8 +4,6 @@
 #include "src/tile/TileEngine.h"
 
 namespace tile {
-constexpr auto RASTER_TILE_ENGINE_NAME = "Raster Tile";
-
 struct RasterTileEngine : public TileEngine {
 public:
     Image toImage(const std::vector<std::byte>& rawBlob) override;

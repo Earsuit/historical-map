@@ -1,37 +1,40 @@
 #include "src/ui/TileSourceWidget.h"
-#include "src/tile/TileSourceUrl.h"
-#include "src/tile/RasterTileEngine.h"
-#include "src/tile/TileEngineFactory.h"
+#include "src/presentation/TileSourceUrlPresenter.h"
 #include "src/logger/Util.h"
 
 #include "external/imgui/imgui.h"
 #include "external/imgui/misc/cpp/imgui_stdlib.h"
 
 namespace ui {
-
-constexpr auto DEFAULT_URL = "https://a.tile.openstreetmap.org/{Z}/{X}/{Y}.png";
-constexpr auto SOURCE_TYPE = "URL\0";
-constexpr const char* TILE_ENGINES[] = {tile::RASTER_TILE_ENGINE_NAME};
 constexpr auto TRANSPARENT = IM_COL32(0, 0, 0, 0);
-constexpr auto DEFAULT_TILE_ENGINE = TILE_ENGINES[0];
+const auto TILE_SERVER_LOOKUP = "For different tile server url, please check https://www.trailnotes.org/FetchMap/TileServeSource.html";
 
 TileSourceWidget::TileSourceWidget():
     logger{spdlog::get(logger::LOGGER_NAME)},
-    tileLoader{tile::TileLoader::getInstance()},
     showConfigWidget{[this](){this->showTileSourceUrlConfig();}}
 {
-    tileLoader.setTileEngine(tile::TileEngineFactory::createInstance(DEFAULT_TILE_ENGINE));
-    tileLoader.setTileSource(std::make_shared<tile::TileSourceUrl>(DEFAULT_URL));
+    widgetPresenter.handleSetTileEngine(widgetPresenter.handleGetTileEngineList().front());
+
+    for (const auto& source : widgetPresenter.handleGetTileSourceList()) {
+        sourceList += source + "\0";
+    }
+
+    engineList = widgetPresenter.handleGetTileEngineList();
+    for (const auto& engine : engineList) {
+        engineListString += engine + "\0";
+    }
 }
 
 void TileSourceWidget::paint()
 {
     ImGui::Begin(TILE_SOURCE_WIDGET_NAME);
 
-    ImGui::Combo("Source", &sourceIdx, SOURCE_TYPE);
+    ImGui::Combo("Source", &sourceIdx, sourceList.c_str());
     
-    if (ImGui::Combo("Tile Data Processor", &tileEngineIdx, TILE_ENGINES, sizeof(TILE_ENGINES)/sizeof(TILE_ENGINES[0]))) {
-        tileLoader.setTileEngine(tile::TileEngineFactory::createInstance(TILE_ENGINES[tileEngineIdx]));
+    if (ImGui::Combo("Tile Data Processor", &tileEngineIdx, engineListString.c_str())) {
+        if (auto ret = widgetPresenter.handleSetTileEngine(engineList[tileEngineIdx]); !ret) {
+            logger->error("Failed to set tile engine, error {}", ret.error().msg);
+        }
     }
 
     ImGui::SeparatorText("Configuration");
@@ -43,15 +46,17 @@ void TileSourceWidget::paint()
 
 void TileSourceWidget::showTileSourceUrlConfig()
 {
-    static std::string url = DEFAULT_URL;
-    const auto text = "For different tile server url, please check https://www.trailnotes.org/FetchMap/TileServeSource.html";
-    ImGui::InputText("##url", &url);
+    static presentation::TileSourceUrlPresenter presenter{};
+    auto url = presenter.handleGetUrl();
+    if (ImGui::InputText("##url", &url)) {
+        presenter.handleSetUrl(url);
+    }
     ImGui::SameLine();
     if (ImGui::Button("Set")) {
-        tileLoader.setTileSource(std::make_shared<tile::TileSourceUrl>(url));
+        presenter.handleSetTileSource();
     }
     ImGui::PushStyleColor(ImGuiCol_FrameBg, TRANSPARENT);  // Transparent background
-    ImGui::InputText("##text", (char*)text, strlen(text) + 1, ImGuiInputTextFlags_ReadOnly);
+    ImGui::InputText("##text", (char*)TILE_SERVER_LOOKUP, strlen(TILE_SERVER_LOOKUP) + 1, ImGuiInputTextFlags_ReadOnly);
     ImGui::PopStyleColor(1);
 }
 }

@@ -12,6 +12,7 @@ namespace tile {
 class TileEngineFactory {
 public:
     static std::shared_ptr<TileEngine> createInstance(const std::string& name);
+    static std::vector<std::string> getTileEngines();
 
 protected:
     static std::map<std::string, std::function<std::shared_ptr<TileEngine>()>> creator;

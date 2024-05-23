@@ -79,20 +79,16 @@ std::optional<std::shared_ptr<Tile>> TileLoader::loadTile(const Coordinate& coor
 
 void TileLoader::setTileSource(std::shared_ptr<TileSource> tileSource)
 {
-    if (this->tileSource != tileSource) {
-        clearCache();
+    clearCache();
 
-        this->tileSource = tileSource;
-    }
+    this->tileSource = tileSource;
 }
 
 void TileLoader::setTileEngine(std::shared_ptr<TileEngine> tileEngine)
 {
-    if (this->tileEngine != tileEngine) {
-        clearCache();
+    clearCache();
 
-        this->tileEngine = tileEngine;
-    }
+    this->tileEngine = tileEngine;
 }
 
 void TileLoader::clearCache()

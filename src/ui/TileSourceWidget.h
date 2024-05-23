@@ -1,7 +1,7 @@
 #ifndef SRC_UI_TILE_SOURCE_WIDGET_H
 #define SRC_UI_TILE_SOURCE_WIDGET_H
 
-#include "src/tile/TileLoader.h"
+#include "src/presentation/TileSourceWidgetPresenter.h"
 
 #include "spdlog/spdlog.h"
 
@@ -20,9 +20,12 @@ public:
 
 private:
     std::shared_ptr<spdlog::logger> logger;
-    tile::TileLoader& tileLoader;
+    presentation::TileSourceWidgetPresenter widgetPresenter;
     int sourceIdx = 0;
     int tileEngineIdx = 0;
+    std::string sourceList;
+    std::string engineListString;
+    std::vector<std::string> engineList;
     std::vector<std::function<void()>> showConfigWidget;
 
     void showTileSourceUrlConfig();
