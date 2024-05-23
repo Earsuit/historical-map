@@ -27,6 +27,7 @@ public:
         plotName{"##" + source}
     {
     }
+    virtual ~MapWidget() = default;
 
     void paint();
 
@@ -59,7 +60,8 @@ private:
 
     void renderMap();
     void renderOverlay();
-    void renderRightClickMenu();
+    virtual void renderRightClickMenu();
+    virtual void prepareRenderPoint();
 };
 }
 

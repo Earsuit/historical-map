@@ -16,6 +16,8 @@ SET(UI_SRC
     ExportInfoWidget.cpp
     ImportInfoWidget.h
     ImportInfoWidget.cpp
+    MapWidgetNoninteractive.h
+    MapWidgetNoninteractive.cpp
 )
 
 add_library(libui STATIC ${UI_SRC} ${IMGUI_SRC} ${IMPLOT_SRC} ${IM_FILE_DIALOG_SRC})

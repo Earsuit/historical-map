@@ -50,13 +50,18 @@ void MapWidget::paint()
     ImGui::Begin(getName().c_str());
     ImGui::PopStyleVar(2);
 
-    dragPointId = 0;
+    prepareRenderPoint();
 
     renderMap();
     renderRightClickMenu();
     renderOverlay();
 
     ImGui::End();
+}
+
+void MapWidget::prepareRenderPoint()
+{
+    dragPointId = 0;
 }
 
 void MapWidget::renderAnnotation(const model::Vec2& coordinate, const std::string& name, const presentation::Color& color, const model::Vec2& offset)
