@@ -203,7 +203,7 @@ void MapWidget::renderRightClickMenu()
     }
 
     if (ImGui::BeginPopup(ADD_NEW_COUNTRY_POPUP_NAME)) {
-        ImGui::InputText("Name", &newCountryName);
+        ImGui::InputTextWithHint("##", "Country Name", &newCountryName);
         if (ImGui::Button("Add") & !newCountryName.empty()) {
             if (presenter.handleAddCountry(newCountryName, 
                                            model::Vec2{static_cast<float>(rightClickMenuPos.x), static_cast<float>(rightClickMenuPos.y)})) {
@@ -215,7 +215,7 @@ void MapWidget::renderRightClickMenu()
     }
 
     if (ImGui::BeginPopup(ADD_NEW_CITY_POPUP_NAME)) {
-        ImGui::InputText("Name", &newCityName);
+        ImGui::InputTextWithHint("##", "City Name", &newCityName);
         if (ImGui::Button("Add") & !newCityName.empty()) {
             if (presenter.handleAddCity(newCityName, 
                                         model::Vec2{static_cast<float>(rightClickMenuPos.x), static_cast<float>(rightClickMenuPos.y)})) {
