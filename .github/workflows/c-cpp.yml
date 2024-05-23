@@ -77,7 +77,7 @@ jobs:
     - name: "test"
       run: |
         chmod a+x test/persistence/*
-        ctest
+        ctest --output-on-failure
       working-directory:
         build/
 
@@ -96,6 +96,6 @@ jobs:
     - name: "test"
       run: |
         chmod a+x test/persistence/*
-        ctest
+        ctest --output-on-failure
       working-directory:
         build/
