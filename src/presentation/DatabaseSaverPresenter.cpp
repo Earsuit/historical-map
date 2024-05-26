@@ -19,36 +19,34 @@ bool DatabaseSaverPresenter::handleSaveSameForRange(int startYear, int endYear)
         return false;
     }
     
-    if (auto info = dynamicInfoModel.getHistoricalInfo(source); info) {
-        progress = 0;
-        total = endYear - startYear + 1;
-        saveComplete = false;
+    progress = 0;
+    total = endYear - startYear + 1;
+    saveComplete = false;
 
-        if (!taskQueue.enqueue([this, 
-                                startYear, 
-                                endYear,
-                                data = info->getData(),
-                                removed = info->getRemoved()] () mutable {
+    if (!taskQueue.enqueue([this, 
+                            startYear, 
+                            endYear] () mutable {
+            const auto year = this->dynamicInfoModel.getCurrentYear();
+            auto data = this->dynamicInfoModel.getData(this->source, year);
+            auto removed = this->dynamicInfoModel.getRemoved(this->source, year);
+            if (data && removed) {
                 for (int year = startYear; year <= endYear; year++) {
-                    data.year = year;
-                    removed.year = year;
-                    this->databaseModel.updateHistoricalInfo(data);
-                    this->databaseModel.removeHistoricalInfo(removed);
+                    data->year = year;
+                    removed->year = year;
+                    this->databaseModel.updateHistoricalInfo(*data);
+                    this->databaseModel.removeHistoricalInfo(*removed);
                     this->dynamicInfoModel.upsert(DEFAULT_HISTORICAL_INFO_SOURCE, this->databaseModel.loadHistoricalInfo(year));
                     this->progress++;
                 }
+            }
 
-                saveComplete = true;
-            })) {
             saveComplete = true;
-            logger->error("Enqueue save same historical for range info modification to database task fail.");
-        }
-
-        return true;
-    } else {
-        logger->error("Current historical info load is null");
-        return false;
+        })) {
+        saveComplete = true;
+        logger->error("Enqueue save same historical for range info modification to database task fail.");
     }
+
+    return true;
 }
 
 void DatabaseSaverPresenter::handleSaveAll()
@@ -58,9 +56,12 @@ void DatabaseSaverPresenter::handleSaveAll()
 
     if (!taskQueue.enqueue([this, years] () mutable {
             for (const auto year : years) {
-                if (auto info = this->dynamicInfoModel.getHistoricalInfo(this->source, year); info) {
-                    this->databaseModel.updateHistoricalInfo(info->getData());
-                    this->databaseModel.removeHistoricalInfo(info->getRemoved());
+                auto data = this->dynamicInfoModel.getData(this->source, year);
+                auto removed = this->dynamicInfoModel.getRemoved(this->source, year);
+
+                if (data && removed) {
+                    this->databaseModel.updateHistoricalInfo(*data);
+                    this->databaseModel.removeHistoricalInfo(*removed);
                     this->dynamicInfoModel.upsert(DEFAULT_HISTORICAL_INFO_SOURCE, this->databaseModel.loadHistoricalInfo(year));
                 }
                 this->progress++;

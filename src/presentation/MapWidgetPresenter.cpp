@@ -114,46 +114,57 @@ void MapWidgetPresenter::handleRenderTiles()
 
 void MapWidgetPresenter::handleRenderCountry()
 {
-    if (auto info = dynamicInfoModel.getHistoricalInfo(source); info) {
-        for (const auto& name : info->getCountryList()) {
-            // have to use double type here due to a compilation error in mapbox::polylabel if use float
-            mapbox::geometry::polygon<double> polygon{mapbox::geometry::linear_ring<double>{}};
-            std::vector<model::Vec2> points;
-            const auto color = computeColor(name);
-            auto& country = info->getCountry(name);
+    const auto year = dynamicInfoModel.getCurrentYear();
+    for (const auto& name : dynamicInfoModel.getCountryList(source, year)) {
+        // have to use double type here due to a compilation error in mapbox::polylabel if use float
+        mapbox::geometry::polygon<double> polygon{mapbox::geometry::linear_ring<double>{}};
+        std::vector<model::Vec2> points;
+        const auto color = computeColor(name);
+        int idx = 0;
 
-            for (auto& coordinate : country.borderContour) {
-                const auto point = handleRenderCoordinate(coordinate, color);
-                polygon.back().emplace_back(point.x, point.y);
-                points.emplace_back(point);
+        for (const auto& coordinate : dynamicInfoModel.getContour(source, year, name)) {
+            const auto& [newCoord, point] = handleRenderCoordinate(coordinate, color);
+            
+            if (newCoord != coordinate) {
+                dynamicInfoModel.updateContour(source, year, name, idx, newCoord);
             }
 
-            if (points.size() >= MINIMAL_POINTS_OF_POLYGON) {
-                const auto visualCenter = mapbox::polylabel<double>(polygon, VISUAL_CENTER_PERCISION);
-                view.renderAnnotation(model::Vec2{static_cast<float>(visualCenter.x), static_cast<float>(visualCenter.y)}, 
-                                    country.name, 
-                                    color,
-                                    COUNTRY_ANNOTATION_OFFSET);
-                view.renderContour(country.name, points, color);
-            }
+            polygon.back().emplace_back(point.x, point.y);
+            points.emplace_back(point);
+
+            idx++;
+        }
+
+        if (points.size() >= MINIMAL_POINTS_OF_POLYGON) {
+            const auto visualCenter = mapbox::polylabel<double>(polygon, VISUAL_CENTER_PERCISION);
+            view.renderAnnotation(model::Vec2{static_cast<float>(visualCenter.x), static_cast<float>(visualCenter.y)}, 
+                                  name, 
+                                  color,
+                                  COUNTRY_ANNOTATION_OFFSET);
+            view.renderContour(name, points, color);
         }
     }
 }
 
 void MapWidgetPresenter::handleRenderCity()
 {
-    if (auto info = dynamicInfoModel.getHistoricalInfo(source); info) {
-        for (const auto& name : info->getCityList()) {
+    const auto year = dynamicInfoModel.getCurrentYear();
+    for (const auto& name : dynamicInfoModel.getCityList(source, year)) {
+        if (const auto& city = dynamicInfoModel.getCity(source, year, name); city) {
             const auto color = computeColor(name);
-            auto& city = info->getCity(name);
-            const auto point = handleRenderCoordinate(city.coordinate, color);
-            view.renderAnnotation(point, city.name, color, CITY_ANNOTATION_OFFSET);
+            const auto& [newCoord, point] = handleRenderCoordinate(city->coordinate, color);
+
+            if (newCoord != city->coordinate) {
+                dynamicInfoModel.updateCityCoord(source, year, name, newCoord);
+            }
+
+            view.renderAnnotation(point, city->name, color, CITY_ANNOTATION_OFFSET);
         }
     }
 }
 
-model::Vec2 MapWidgetPresenter::handleRenderCoordinate(persistence::Coordinate& coordinate,
-                                                       const Color& color)
+std::pair<persistence::Coordinate, model::Vec2> MapWidgetPresenter::handleRenderCoordinate(persistence::Coordinate coordinate,
+                                                                                           const Color& color)
 {
     bool changed = false;
     const auto hovered = dynamicInfoModel.getHoveredCoord();
@@ -173,7 +184,7 @@ model::Vec2 MapWidgetPresenter::handleRenderCoordinate(persistence::Coordinate& 
         logger->debug("Moving point to lay {}, lon {}", coordinate.latitude, coordinate.longitude);
     }
 
-    return newPoint;
+    return {coordinate, newPoint};
 }
 
 std::string MapWidgetPresenter::handleGetOverlayText() const
@@ -214,59 +225,43 @@ bool MapWidgetPresenter::handleRequestHasRightClickMenu() const noexcept
 
 std::vector<std::string> MapWidgetPresenter::handleRequestCountryList() const
 {
-    if (auto info = dynamicInfoModel.getHistoricalInfo(source); info) {
-        return info->getCountryList();
-    }
-
-    return {};
+    return dynamicInfoModel.getCountryList(source, dynamicInfoModel.getCurrentYear());
 }
 
-void MapWidgetPresenter::handleExtendContour(const std::string& name, const model::Vec2& pos)
+bool MapWidgetPresenter::handleExtendContour(const std::string& name, const model::Vec2& pos)
 {
-    if (auto info = dynamicInfoModel.getHistoricalInfo(source); info) {
-        if (info->containsCountry(name)) {
-            auto& country = info->getCountry(name);
-            auto longitude = x2Longitude(pos.x);
-            auto latitude = y2Latitude(pos.y);
-            country.borderContour.emplace_back(persistence::Coordinate{latitude, longitude});
-        } else {
-            logger->error("Extend contour fail because country {} doesn't exist from source {}", name, source);
-        }
-    } else {
-        logger->error("Extend contour fail because historical info is null from source {}", source);
+    const persistence::Coordinate coord{.latitude = y2Latitude(pos.y), .longitude = x2Longitude(pos.x)};
+
+    if (dynamicInfoModel.extendContour(source, dynamicInfoModel.getCurrentYear(), name, coord)) {
+        return true;
     }
+
+    logger->error("Extend country {} contour fail for source", name, source);
+    return false;
 }
 
 bool MapWidgetPresenter::handleAddCountry(const std::string& name, const model::Vec2& pos)
 {
-    if (auto info = dynamicInfoModel.getHistoricalInfo(source); info) {
-        auto longitude = x2Longitude(pos.x);
-        auto latitude = y2Latitude(pos.y);
-        if (!info->addCountry(persistence::Country{name, {persistence::Coordinate{latitude, longitude}}})) {
-            logger->error("Add country {} fail because it already exists from source {}", name, source);
-            return false;
-        }
-    } else {
-        logger->error("Add country {} fail because historical info is null from source {}", name, source);
-        return false;
+    const persistence::Country country{name, {persistence::Coordinate{.latitude = y2Latitude(pos.y), .longitude = x2Longitude(pos.x)}}};
+    if (dynamicInfoModel.addCountry(source, dynamicInfoModel.getCurrentYear(), country)) {
+        return true;
     }
-    return true;
+
+    logger->error("Add country {} fail for source {}", name, source);
+
+    return false;
 }
 
 bool MapWidgetPresenter::handleAddCity(const std::string& name, const model::Vec2& pos)
 {
-    if (auto info = dynamicInfoModel.getHistoricalInfo(source); info) {
-        auto longitude = x2Longitude(pos.x);
-        auto latitude = y2Latitude(pos.y);
-        if (!info->addCity(name, persistence::Coordinate{latitude, longitude})) {
-            logger->error("Add city {} fail because it already exists from source {}", name, source);
-            return false;
-        }
-    } else {
-        logger->error("Add city {} fail because historical info is null from source {}", name, source);
-        return false;
+    const persistence::City city{name, {.latitude = y2Latitude(pos.y), .longitude = x2Longitude(pos.x)}};
+
+    if (dynamicInfoModel.addCity(source, dynamicInfoModel.getCurrentYear(), city)) {
+        return true;
     }
 
-    return true;
+    logger->error("Add city {} fail for source {}", name, source);
+
+    return false;
 }
 }

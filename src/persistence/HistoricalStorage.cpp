@@ -45,15 +45,30 @@ HistoricalStorage::HistoricalStorage(persistence::Data&& info):
 
 persistence::Country& HistoricalStorage::getCountry(const std::string& name)
 {
-    return *countries[name];
+    return *countries.at(name);
 }
 
 persistence::City& HistoricalStorage::getCity(const std::string& name)
 {
-    return *cities[name];
+    return *cities.at(name);
 }
 
-persistence::Note HistoricalStorage::getNote()
+persistence::Note& HistoricalStorage::getNote()
+{
+    return *cache.note;
+}
+
+const persistence::Country& HistoricalStorage::getCountry(const std::string& name) const
+{
+    return *countries.at(name);
+}
+
+const persistence::City& HistoricalStorage::getCity(const std::string& name) const
+{
+    return *cities.at(name);
+}
+
+const persistence::Note& HistoricalStorage::getNote() const
 {
     return *cache.note;
 }
@@ -99,14 +114,14 @@ bool HistoricalStorage::addCountry(const persistence::Country& country)
     return true;
 }
 
-bool HistoricalStorage::addCity(const std::string& name, const persistence::Coordinate& coord)
+bool HistoricalStorage::addCity(const persistence::City& city)
 {
-    if (cities.contains(name)) {
+    if (cities.contains(city.name)) {
         return false;
     }
 
-    cache.cities.emplace_back(persistence::City{name, coord});
-    cities.emplace(std::make_pair(name, --cache.cities.end()));
+    cache.cities.emplace_back(city);
+    cities.emplace(std::make_pair(city.name, --cache.cities.end()));
 
     return true;
 }

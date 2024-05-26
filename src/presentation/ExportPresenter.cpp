@@ -20,8 +20,8 @@ void ExportPresenter::handleDoExport(const std::string& file)
         this->total = years.size();
 
         for (const auto year : years) {
-            if (auto info = this->dynamicModel.getHistoricalInfo(this->source, year); info) {
-                this->exportModel.insert(info->getData());
+            if (auto data = this->dynamicModel.getData(this->source, year); data) {
+                this->exportModel.insert(*data);
             }
             this->progress++;
         }

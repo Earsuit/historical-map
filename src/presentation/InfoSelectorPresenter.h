@@ -46,7 +46,7 @@ private:
     int total;
     std::atomic_int progress;
 
-    std::shared_ptr<persistence::HistoricalStorage> upsertHistoricalStroageIfNotExists();
+    void upsertHistoricalStroageIfNotExists(int year);
 };
 }
 

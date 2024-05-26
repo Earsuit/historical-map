@@ -3,61 +3,44 @@
 namespace presentation {
 void HistoricalInfoPresenter::handleAddCountry(const std::string& name)
 {
-    if (auto info = dynamicInfoModel.getHistoricalInfo(source); info) {
-        info->addCountry(name);
-    } else {
-        logger->error("Add country fail because historical info is null from source {}", source);
+    if (!dynamicInfoModel.addCountry(source, dynamicInfoModel.getCurrentYear(),name)) {
+        logger->error("Add country {} fail for source", name, source);
     }
 }
 
 void HistoricalInfoPresenter::handleExtendContour(const std::string& name, 
                                                   const persistence::Coordinate& coordinate)
 {
-    if (auto info = dynamicInfoModel.getHistoricalInfo(source); info) {
-        if (info->containsCountry(name)) {
-            auto& country = info->getCountry(name);
-            country.borderContour.emplace_back(coordinate);
-        }
-    } else {
-        logger->error("Extend contour fail because historical info is null from source {}", source);
+    if (!dynamicInfoModel.extendContour(source, dynamicInfoModel.getCurrentYear(), name, coordinate)) {
+        logger->error("Extend country {} contour fail for source", name, source);
     }
 }
 
 void HistoricalInfoPresenter::handleAddCity(const std::string& name, const persistence::Coordinate& coordinate)
 {
-    if (auto info = dynamicInfoModel.getHistoricalInfo(source); info) {
-        info->addCity(name, coordinate);
-    } else {
-        logger->error("Add city fail because historical info is null from source {}", source);
+    if (!dynamicInfoModel.addCity(source, dynamicInfoModel.getCurrentYear(), persistence::City{name, coordinate})) {
+        logger->error("Add city {} fail for source {}", name, source);
     }
 }
 
 void HistoricalInfoPresenter::handleRemoveCountry(const std::string& name)
 {
-    if (auto info = dynamicInfoModel.getHistoricalInfo(source); info) {
-        info->removeCountry(name);
-    } else {
-        logger->error("Remove country fail because historical info is null from source {}", source);
+    if (!dynamicInfoModel.removeCountry(source, dynamicInfoModel.getCurrentYear(), name)) {
+        logger->error("Remove country {} fail for source {}", name, source);
     }
 }
 
 void HistoricalInfoPresenter::handleRemoveCity(const std::string& name)
 {
-    if (auto info = dynamicInfoModel.getHistoricalInfo(source); info) {
-        info->removeCity(name);
-    } else {
-        logger->error("Remove city fail because historical info is null from source {}", source);
+    if (!dynamicInfoModel.removeCity(source, dynamicInfoModel.getCurrentYear(), name)) {
+        logger->error("Remove city {} fail for source {}", name, source);
     }
 }
 
 std::string HistoricalInfoPresenter::handleGetNote() const noexcept
 {
-    if (auto info = dynamicInfoModel.getHistoricalInfo(source); info) {
-        if (info->containsNote()) {
-            return info->getNote().text;
-        }
-    } else {
-        logger->trace("Get note fail because historical info is null from source {}", source);
+    if (auto note = dynamicInfoModel.getNote(source, dynamicInfoModel.getCurrentYear()); note) {
+        return note.value();
     }
 
     return std::string{};
@@ -65,10 +48,8 @@ std::string HistoricalInfoPresenter::handleGetNote() const noexcept
 
 void HistoricalInfoPresenter::handleUpdateNote(const std::string& text)
 {
-    if (auto info = dynamicInfoModel.getHistoricalInfo(source); info) {
-        info->addNote(text);
-    } else {
-        logger->error("Update note fail because historical info is null from source {}", source);
+    if (!dynamicInfoModel.addNote(source, dynamicInfoModel.getCurrentYear(), text)) {
+        logger->error("Update note fail for source {}", source);
     }
 }
 
@@ -84,65 +65,42 @@ void HistoricalInfoPresenter::clearHoveredCoord()
 
 std::vector<std::string> HistoricalInfoPresenter::handleRequestCountryList() const
 {
-    if (auto info = dynamicInfoModel.getHistoricalInfo(source); info) {
-        return info->getCountryList();
-    }
-
-    return {};
+    return dynamicInfoModel.getCountryList(source, dynamicInfoModel.getCurrentYear());
 }
 
 std::list<persistence::Coordinate> HistoricalInfoPresenter::handleRequestContour(const std::string& name) const
 {
-    if (auto info = dynamicInfoModel.getHistoricalInfo(source); info) {
-        return info->getCountry(name).borderContour;
-    }
-
-    return {};
+    return dynamicInfoModel.getContour(source, dynamicInfoModel.getCurrentYear(), name);
 }
 
 void HistoricalInfoPresenter::handleUpdateContour(const std::string& name, int idx, const persistence::Coordinate& coordinate)
 {
-    if (auto info = dynamicInfoModel.getHistoricalInfo(source); info) {
-        auto& contour = info->getCountry(name).borderContour;
-        auto it = std::next(contour.begin(), idx);
-        it->latitude = coordinate.latitude;
-        it->longitude = coordinate.longitude;
+    if (!dynamicInfoModel.updateContour(source, dynamicInfoModel.getCurrentYear(), name, idx, coordinate)) {
+        logger->error("Update country {} contour fail for source {}", name, source);
     }
 }
 
 void HistoricalInfoPresenter::handleDeleteFromContour(const std::string& name, int idx)
 {
-    if (auto info = dynamicInfoModel.getHistoricalInfo(source); info) {
-        auto& contour = info->getCountry(name).borderContour;
-        auto it = std::next(contour.begin(), idx);
-        contour.erase(it);
+    if (!dynamicInfoModel.delectFromContour(source, dynamicInfoModel.getCurrentYear(), name, idx)) {
+        logger->error("Delect idx {} from country {} contour fail for source {}", idx, name, source);
     }
 }
 
 std::vector<std::string> HistoricalInfoPresenter::handleRequestCityList() const
 {
-    if (auto info = dynamicInfoModel.getHistoricalInfo(source); info) {
-        return info->getCityList();
-    }
-
-    return {};
+    return dynamicInfoModel.getCityList(source, dynamicInfoModel.getCurrentYear());
 }
 
 std::optional<persistence::Coordinate> HistoricalInfoPresenter::handleRequestCityCoordinate(const std::string& name) const
 {
-    if (auto info = dynamicInfoModel.getHistoricalInfo(source); info) {
-        return info->getCity(name).coordinate;
-    }
-
-    return std::nullopt;
+    return dynamicInfoModel.getCityCoord(source, dynamicInfoModel.getCurrentYear(), name);
 }
 
 void HistoricalInfoPresenter::handleUpdateCityCoordinate(const std::string& name, const persistence::Coordinate& coord)
 {   
-    if (auto info = dynamicInfoModel.getHistoricalInfo(source); info) {
-        info->getCity(name).coordinate = coord;
-    } else {
-        logger->error("Update city {} coordinate fail because historical info is null from source {}", name, source);
+    if (!dynamicInfoModel.updateCityCoord(source, dynamicInfoModel.getCurrentYear(), name, coord)) {
+        logger->error("Update city {} coordinate fail for source {}", name, source);
     }
 }
 

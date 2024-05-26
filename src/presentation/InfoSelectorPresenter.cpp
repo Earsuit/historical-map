@@ -22,146 +22,129 @@ InfoSelectorPresenter::~InfoSelectorPresenter()
     dynamicInfoModel.removeSource(toSource);
 }
 
-std::shared_ptr<persistence::HistoricalStorage> InfoSelectorPresenter::upsertHistoricalStroageIfNotExists()
+void InfoSelectorPresenter::upsertHistoricalStroageIfNotExists(int year)
 {
-    if (auto toInfo = dynamicInfoModel.getHistoricalInfo(toSource); toInfo) {
-        return toInfo;
+    if (dynamicInfoModel.containsHistoricalInfo(toSource, year)) {
+        return;
     }
 
-    logger->debug("Upsert empty HistoricalStroage for target {}", toSource);
-    dynamicInfoModel.upsert(toSource, persistence::Data{dynamicInfoModel.getCurrentYear()});
-    return dynamicInfoModel.getHistoricalInfo(toSource);
+    dynamicInfoModel.upsert(toSource, persistence::Data{year});
 }
 
 void InfoSelectorPresenter::handleSelectCountry(const std::string& name)
 {
-    if (auto fromInfo = dynamicInfoModel.getHistoricalInfo(fromSource); fromInfo) {
-        if (fromInfo->containsCountry(name)) {
-            auto& country = fromInfo->getCountry(name);
-            auto toInfo = upsertHistoricalStroageIfNotExists();
-            toInfo->addCountry(country);
-        } else {
-            logger->error("Select country {} fail because it doesn't exists in {}", name, fromSource);
+    const auto year = dynamicInfoModel.getCurrentYear();
+    upsertHistoricalStroageIfNotExists(year);
+    if (const auto country = dynamicInfoModel.getCountry(fromSource, year, name); country) {
+        if (dynamicInfoModel.addCountry(toSource, year, country.value())) {
+            return;
         }
-    } else {
-        logger->error("Select country {} fail due to invalid source {}", name, fromSource);
     }
+
+    logger->error("Select country {} fail", name);
 }
 
 void InfoSelectorPresenter::handleSelectCity(const std::string& name)
 {
-    if (auto fromInfo = dynamicInfoModel.getHistoricalInfo(fromSource); fromInfo) {
-        if (fromInfo->containsCity(name)) {
-            auto& city = fromInfo->getCity(name);
-            auto toInfo = upsertHistoricalStroageIfNotExists();
-            toInfo->addCity(name, city.coordinate);
-        } else {
-            logger->error("Select city {} fail because it doesn't exists in {}", name, fromSource);
+    const auto year = dynamicInfoModel.getCurrentYear();
+    upsertHistoricalStroageIfNotExists(year);
+    if (const auto city = dynamicInfoModel.getCity(fromSource, year, name); city) {
+        if (dynamicInfoModel.addCity(toSource, year, city.value())) {
+            return;
         }
-    } else {
-        logger->error("Select city {} fail due to invalid source {}", name, fromSource);
     }
+
+    logger->error("Select city {} fail", name);
 }
 
 void InfoSelectorPresenter::handleSelectNote()
 {
-    if (auto fromInfo = dynamicInfoModel.getHistoricalInfo(fromSource); fromInfo) {
-        auto toInfo = upsertHistoricalStroageIfNotExists();
-        if (fromInfo->containsNote()) {
-            toInfo->addNote(fromInfo->getNote().text);
-        } else {
-            logger->error("Select note fail because it doesn't exists in {}", fromSource);
+    const auto year = dynamicInfoModel.getCurrentYear();
+    upsertHistoricalStroageIfNotExists(year);
+    if (const auto note = dynamicInfoModel.getNote(fromSource, year); note) {
+        if (dynamicInfoModel.addNote(toSource, year, note.value())) {
+            return;
         }
-    } else {
-        logger->error("Select note fail due to invalid source {}", fromSource);
     }
+
+    logger->error("Select note fail");
 }
 
 void InfoSelectorPresenter::handleDeselectCountry(const std::string& name)
 {
-    if (auto info = dynamicInfoModel.getHistoricalInfo(toSource); info) {
-        info->removeCountry(name);
-        info->clearRemoved();
-    }
+    const auto year = dynamicInfoModel.getCurrentYear();
+    dynamicInfoModel.removeCountry(toSource, year, name);
+    dynamicInfoModel.clearRemoved(toSource, year);
 }
 
 void InfoSelectorPresenter::handleDeselectCity(const std::string& name)
 {
-    if (auto info = dynamicInfoModel.getHistoricalInfo(toSource); info) {
-        info->removeCity(name);
-        info->clearRemoved();
-    }
+    const auto year = dynamicInfoModel.getCurrentYear();
+    dynamicInfoModel.removeCity(toSource, year, name);
+    dynamicInfoModel.clearRemoved(toSource, year);
 }
 
 void InfoSelectorPresenter::handleDeselectNote()
 {
-    if (auto info = dynamicInfoModel.getHistoricalInfo(toSource); info) {
-        info->removeNote();
-    }
+    const auto year = dynamicInfoModel.getCurrentYear();
+    dynamicInfoModel.removeNote(toSource, year);
+    dynamicInfoModel.clearRemoved(toSource, year);
 }
 
 bool InfoSelectorPresenter::handkeCheckIsCountrySelected(const std::string& name)
 {
-    if (auto info = dynamicInfoModel.getHistoricalInfo(toSource); info) {
-        return info->containsCountry(name);
-    }
-    
-    return false;
+    return dynamicInfoModel.containsCountry(toSource, dynamicInfoModel.getCurrentYear(), name);
 }
 
 bool InfoSelectorPresenter::handleCheckIsCitySelected(const std::string& name)
 {
-    if (auto info = dynamicInfoModel.getHistoricalInfo(toSource); info) {
-        return info->containsCity(name);
-    }
-
-    return false;
+    return dynamicInfoModel.containsCity(toSource, dynamicInfoModel.getCurrentYear(), name);
 }
 
 bool InfoSelectorPresenter::handleCheckIsNoteSelected()
 {
-    if (auto toInfo = dynamicInfoModel.getHistoricalInfo(toSource); toInfo) {
-        return toInfo->containsNote();
-    } else {
-        return false;
-    }
+    return dynamicInfoModel.containsNote(toSource, dynamicInfoModel.getCurrentYear());
 }
 
 bool InfoSelectorPresenter::handleCheckIsAllSelected()
 {
-    if (auto toInfo = dynamicInfoModel.getHistoricalInfo(toSource); toInfo) {
-        if (auto fromInfo = dynamicInfoModel.getHistoricalInfo(fromSource); fromInfo) {
-            const auto countries = toInfo->getCountryList();
-            const auto cities = toInfo->getCityList();
-            std::unordered_set<std::string> selectedCountries{countries.cbegin(), countries.cend()};  
-            std::unordered_set<std::string> selectedCitiess{cities.cbegin(), cities.cend()};  
+    const auto year = dynamicInfoModel.getCurrentYear();
+    const auto toCountries = dynamicInfoModel.getCountryList(toSource, year);
+    const auto toCities = dynamicInfoModel.getCityList(toSource, year);
+    const auto fromCountries = dynamicInfoModel.getCountryList(fromSource, year);
+    const auto fromCities = dynamicInfoModel.getCityList(fromSource, year);
+    std::unordered_set<std::string> selectedCountries{toCountries.cbegin(), toCountries.cend()};
+    std::unordered_set<std::string> selectedCitiess{toCities.cbegin(), toCities.cend()};
 
-            for (const auto& country : fromInfo->getCountryList()) {
-                if (!selectedCountries.contains(country)) {
-                    return false;
-                }
-            }
-
-            for (const auto& city : fromInfo->getCityList()) {
-                if (!selectedCitiess.contains(city)) {
-                    return false;
-                }
-            }
-
-            return toInfo->containsNote() == fromInfo->containsNote();
-        } else {
-            logger->error("Check select all fail due to invalid source {}", fromSource);
-            return false;
-        }
-    } else {
+    if (toCountries.size() != fromCountries.size() || toCities.size() != fromCountries.size()) {
         return false;
     }
+
+    if (toCountries.empty() && 
+        toCities.empty() &&
+        !dynamicInfoModel.containsNote(toSource, year)) {
+        return false;
+    }
+
+    for (const auto& country : fromCountries) {
+        if (!selectedCountries.contains(country)) {
+            return false;
+        }
+    }
+
+    for (const auto& city : fromCities) {
+        if (!selectedCitiess.contains(city)) {
+            return false;
+        }
+    }
+
+    return dynamicInfoModel.containsNote(toSource, year) == dynamicInfoModel.containsNote(fromSource, year);
 }
 
 void InfoSelectorPresenter::handleSelectAll()
 {
-    if (auto fromInfo = dynamicInfoModel.getHistoricalInfo(fromSource); fromInfo) {
-        dynamicInfoModel.upsert(toSource, fromInfo->getData());
+    if (auto data = dynamicInfoModel.getData(fromSource, dynamicInfoModel.getCurrentYear()); data) {
+        dynamicInfoModel.upsert(toSource, *data);
     }
 }
 

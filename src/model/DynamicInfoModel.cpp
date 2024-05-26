@@ -32,7 +32,7 @@ bool DynamicInfoModel::addSource(const std::string& source)
     logger->debug("Add source {}", source);
     std::lock_guard lk(cacheLock);
     if (!cache.contains(source)) {
-        cache.emplace(std::make_pair(source, std::map<int, std::shared_ptr<persistence::HistoricalStorage>>{}));
+        cache.emplace(std::make_pair(source, std::map<int, persistence::HistoricalStorage>{}));
         return true;
     }
 
@@ -66,21 +66,6 @@ void DynamicInfoModel::removeHistoricalInfoFromSource(const std::string& source)
     }
 }
 
-std::shared_ptr<persistence::HistoricalStorage> DynamicInfoModel::getHistoricalInfo(const std::string& source)
-{
-    return getHistoricalInfo(source, currentYear);
-}
-
-std::shared_ptr<persistence::HistoricalStorage> DynamicInfoModel::getHistoricalInfo(const std::string& source, int year)
-{
-    std::lock_guard lk(cacheLock);
-    if (containsHistoricalInfo(source, year)) {
-        return cache[source][year];
-    }
-
-    return nullptr;
-}
-
 std::vector<int> DynamicInfoModel::getYearList(const std::string& source) const
 {
     std::lock_guard lk(cacheLock);
@@ -101,6 +86,277 @@ bool DynamicInfoModel::containsHistoricalInfo(const std::string& source, int yea
 {
     std::lock_guard lk(cacheLock);
     if (cache.contains(source) && cache.at(source).contains(year)) {
+        return true;
+    }
+
+    return false;
+}
+
+bool DynamicInfoModel::containsCountry(const std::string& source, int year, const std::string& name) const
+{
+    std::lock_guard lk(cacheLock);
+    if (containsHistoricalInfo(source, year)) {
+        return cache.at(source).at(year).containsCountry(name);
+    }
+
+    return false;
+}
+
+bool DynamicInfoModel::containsCity(const std::string& source, int year, const std::string& name) const
+{
+    std::lock_guard lk(cacheLock);
+    if (containsHistoricalInfo(source, year)) {
+        return cache.at(source).at(year).containsCity(name);
+    }
+
+    return false;
+}
+
+bool DynamicInfoModel::containsNote(const std::string& source, int year) const
+{
+    std::lock_guard lk(cacheLock);
+    if (containsHistoricalInfo(source, year)) {
+        return cache.at(source).at(year).containsNote();
+    }
+
+    return false;
+}
+
+std::optional<persistence::Country> DynamicInfoModel::getCountry(const std::string& source, int year, const std::string& name) const
+{
+    std::lock_guard lk(cacheLock);
+    if (containsCountry(source, year, name)) {
+        return cache.at(source).at(year).getCountry(name);
+    }
+
+    return std::nullopt;
+}
+
+std::optional<persistence::City> DynamicInfoModel::getCity(const std::string& source, int year, const std::string& name) const
+{
+    std::lock_guard lk(cacheLock);
+    if (containsCity(source, year, name)) {
+        return cache.at(source).at(year).getCity(name);
+    }
+
+    return std::nullopt;
+}
+
+std::vector<std::string> DynamicInfoModel::getCountryList(const std::string& source, int year) const
+{
+    std::lock_guard lk(cacheLock);
+
+    if (containsHistoricalInfo(source, year)) {
+        return cache.at(source).at(year).getCountryList();
+    }
+
+    return {};
+}
+
+std::vector<std::string> DynamicInfoModel::getCityList(const std::string& source, int year) const
+{
+    std::lock_guard lk(cacheLock);
+
+    if (containsHistoricalInfo(source, year)) {
+        return cache.at(source).at(year).getCityList();
+    }
+
+    return {};
+}
+
+std::list<persistence::Coordinate> DynamicInfoModel::getContour(const std::string& source, int year, const std::string& name) const
+{
+    std::lock_guard lk(cacheLock);
+
+    if (containsCountry(source, year, name)) {
+        return cache.at(source).at(year).getCountry(name).borderContour;
+    }
+
+    return {};
+}
+
+std::optional<persistence::Coordinate> DynamicInfoModel::getCityCoord(const std::string& source, int year, const std::string& name) const
+{
+    std::lock_guard lk(cacheLock);
+
+    if (containsCity(source, year, name)) {
+        return cache.at(source).at(year).getCity(name).coordinate;
+    }
+
+    return std::nullopt;
+}
+
+std::optional<std::string> DynamicInfoModel::getNote(const std::string& source, int year) const
+{
+    std::lock_guard lk(cacheLock);
+    if (containsNote(source, year)) {
+        return cache.at(source).at(year).getNote().text;
+    }
+
+    return std::nullopt;
+}
+
+bool DynamicInfoModel::extendContour(const std::string& source, int year, const std::string& name, const persistence::Coordinate& coord)
+{
+    std::lock_guard lk(cacheLock);
+
+    if (containsCountry(source, year, name)) {
+        auto& country = cache.at(source).at(year).getCountry(name);
+        country.borderContour.emplace_back(coord);
+        return true;
+    }
+
+    return false;
+}
+
+bool DynamicInfoModel::delectFromContour(const std::string& source, int year, const std::string& name, int idx)
+{
+    std::lock_guard lk(cacheLock);
+
+    if (containsCountry(source, year, name)) {
+        auto& contour = cache.at(source).at(year).getCountry(name).borderContour;
+        if (idx < contour.size()) {
+            auto it = std::next(contour.begin(), idx);
+            contour.erase(it);
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool DynamicInfoModel::updateContour(const std::string& source, int year, const std::string& name, int idx, const persistence::Coordinate& coord)
+{
+    std::lock_guard lk(cacheLock);
+
+    if (containsCountry(source, year, name)) {
+        auto& contour = cache.at(source).at(year).getCountry(name).borderContour;
+        auto it = std::next(contour.begin(), idx);
+        *it = coord;
+        return true;
+    }
+
+    return false;
+}
+
+bool DynamicInfoModel::updateCityCoord(const std::string& source, int year, const std::string& name, const persistence::Coordinate& coord)
+{
+    std::lock_guard lk(cacheLock);
+
+    if (containsCity(source, year, name)) {
+        auto& city = cache.at(source).at(year).getCity(name);
+        city.coordinate = coord;
+        return true;
+    }
+
+    return false;
+}
+
+bool DynamicInfoModel::removeCountry(const std::string& source, int year, const std::string& name)
+{
+    std::lock_guard lk(cacheLock);
+
+    if (containsCountry(source, year, name)) {
+        cache.at(source).at(year).removeCountry(name);
+        return true;
+    }
+
+    return false;
+}
+
+bool DynamicInfoModel::removeCity(const std::string& source, int year, const std::string& name)
+{
+    std::lock_guard lk(cacheLock);
+
+    if (containsCity(source, year, name)) {
+        cache.at(source).at(year).removeCity(name);
+        return true;
+    }
+
+    return false;
+}
+
+bool DynamicInfoModel::removeNote(const std::string& source, int year)
+{
+    std::lock_guard lk(cacheLock);
+
+    if (containsNote(source, year)) {
+        cache.at(source).at(year).removeNote();
+        return true;
+    }
+
+    return false;
+}
+
+bool DynamicInfoModel::addCountry(const std::string& source, int year, const std::string& name)
+{
+    std::lock_guard lk(cacheLock);
+
+    if (containsHistoricalInfo(source, year)) {
+        return cache.at(source).at(year).addCountry(name);   
+    }
+
+    return false;
+}
+
+bool DynamicInfoModel::addCountry(const std::string& source, int year, const persistence::Country& country)
+{
+    std::lock_guard lk(cacheLock);
+
+    if (containsHistoricalInfo(source, year)) {
+        return cache.at(source).at(year).addCountry(country);   
+    }
+
+    return false;
+}
+
+bool DynamicInfoModel::addNote(const std::string& source, int year, const std::string& note)
+{
+    std::lock_guard lk(cacheLock);
+
+    if (containsHistoricalInfo(source, year)) {
+        return cache.at(source).at(year).addNote(note);   
+    }
+
+    return false;
+}
+
+bool DynamicInfoModel::addCity(const std::string& source, int year, const persistence::City& city)
+{
+    std::lock_guard lk(cacheLock);
+
+    if (containsHistoricalInfo(source, year)) {
+        return cache.at(source).at(year).addCity(city);   
+    }
+
+    return false;
+}
+
+std::optional<persistence::Data> DynamicInfoModel::getData(const std::string& source, int year) const noexcept
+{
+    std::lock_guard lk(cacheLock);
+    if (containsHistoricalInfo(source, year)) {
+        return cache.at(source).at(year).getData();
+    }
+
+    return std::nullopt;
+}
+
+std::optional<persistence::Data> DynamicInfoModel::getRemoved(const std::string& source, int year) const noexcept
+{
+    std::lock_guard lk(cacheLock);
+    if (containsHistoricalInfo(source, year)) {
+        return cache.at(source).at(year).getRemoved();
+    }
+
+    return std::nullopt;
+}
+
+bool DynamicInfoModel::clearRemoved(const std::string& source, int year) noexcept
+{
+    std::lock_guard lk(cacheLock);
+    if (containsHistoricalInfo(source, year)) {
+        cache.at(source).at(year).clearRemoved();
         return true;
     }
 

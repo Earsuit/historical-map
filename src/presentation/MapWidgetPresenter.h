@@ -34,7 +34,7 @@ public:
     std::string handleGetOverlayText() const;
     bool handleRequestHasRightClickMenu() const noexcept;
     std::vector<std::string> handleRequestCountryList() const;
-    void handleExtendContour(const std::string& name, const model::Vec2& pos);
+    bool handleExtendContour(const std::string& name, const model::Vec2& pos);
     bool handleAddCountry(const std::string& name, const model::Vec2& pos);
     bool handleAddCity(const std::string& name, const model::Vec2& pos);
 
@@ -48,7 +48,7 @@ private:
     std::thread workerThread;
     std::string source;
 
-    model::Vec2 handleRenderCoordinate(persistence::Coordinate& coordinate, const Color& color);
+    std::pair<persistence::Coordinate, model::Vec2> handleRenderCoordinate(persistence::Coordinate coordinate, const Color& color);
     void worker();
     void startWorkerThread();
     void stopWorkerThread();

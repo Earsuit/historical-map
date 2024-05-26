@@ -20,9 +20,12 @@ public:
     bool containsCountry(const std::string& name) const { return countries.contains(name); }
     bool containsCity(const std::string& name) const { return cities.contains(name); }
     bool containsNote() const noexcept { return cache.note.has_value(); }
+    const persistence::Country& getCountry(const std::string& name) const;
+    const persistence::City& getCity(const std::string& name) const;
+    const persistence::Note& getNote() const;
     persistence::Country& getCountry(const std::string& name);
     persistence::City& getCity(const std::string& name);
-    persistence::Note getNote();
+    persistence::Note& getNote();
     std::vector<std::string> getCountryList() const;
     std::vector<std::string> getCityList() const;
     void removeCountry(const std::string& name);
@@ -31,7 +34,7 @@ public:
     bool addCountry(const std::string& name);
     bool addCountry(const persistence::Country& country);
     bool addNote(const std::string& note);
-    bool addCity(const std::string& name, const persistence::Coordinate& coord);
+    bool addCity(const persistence::City& city);
     persistence::Data getData() const noexcept { return cache; }
     persistence::Data getRemoved() const noexcept { return removed; }
     void clearRemoved() noexcept { removed = persistence::Data{cache.year}; }
