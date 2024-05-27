@@ -4,6 +4,7 @@
 #include "src/persistence/Data.h"
 #include "src/persistence/HistoricalStorage.h"
 #include "src/logger/Util.h"
+#include "src/util/Signal.h"
 
 #include "spdlog/spdlog.h"
 
@@ -64,6 +65,10 @@ public:
         if (cache.contains(source)) {
             logger->debug("Upsert DynamicInfoModel cache for source {} at year {}", source, info.year);
             cache[source][info.year] = persistence::HistoricalStorage{std::forward<T>(info)};
+
+            onCountryUpdate(source, info.year);
+            onCityUpdate(source, info.year);
+            onNoteUpdate(source, info.year);
             return true;
         }
 
@@ -77,6 +82,10 @@ public:
     DynamicInfoModel(DynamicInfoModel&&) = delete;
     DynamicInfoModel(const DynamicInfoModel&) = delete;
     DynamicInfoModel& operator=(const DynamicInfoModel&) = delete;
+
+    util::Signal<void(const std::string& source, int year)> onCountryUpdate;
+    util::Signal<void(const std::string& source, int year)> onCityUpdate;
+    util::Signal<void(const std::string& source, int year)> onNoteUpdate;
 
 private:
     DynamicInfoModel():

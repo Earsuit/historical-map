@@ -203,6 +203,7 @@ bool DynamicInfoModel::extendContour(const std::string& source, int year, const 
     if (containsCountry(source, year, name)) {
         auto& country = cache.at(source).at(year).getCountry(name);
         country.borderContour.emplace_back(coord);
+        onCountryUpdate(source, year);
         return true;
     }
 
@@ -218,6 +219,7 @@ bool DynamicInfoModel::delectFromContour(const std::string& source, int year, co
         if (idx < contour.size()) {
             auto it = std::next(contour.begin(), idx);
             contour.erase(it);
+            onCountryUpdate(source, year);
             return true;
         }
     }
@@ -233,6 +235,7 @@ bool DynamicInfoModel::updateContour(const std::string& source, int year, const 
         auto& contour = cache.at(source).at(year).getCountry(name).borderContour;
         auto it = std::next(contour.begin(), idx);
         *it = coord;
+        onCountryUpdate(source, year);
         return true;
     }
 
@@ -246,6 +249,7 @@ bool DynamicInfoModel::updateCityCoord(const std::string& source, int year, cons
     if (containsCity(source, year, name)) {
         auto& city = cache.at(source).at(year).getCity(name);
         city.coordinate = coord;
+        onCityUpdate(source, year);
         return true;
     }
 
@@ -258,6 +262,7 @@ bool DynamicInfoModel::removeCountry(const std::string& source, int year, const 
 
     if (containsCountry(source, year, name)) {
         cache.at(source).at(year).removeCountry(name);
+        onCountryUpdate(source, year);
         return true;
     }
 
@@ -270,6 +275,7 @@ bool DynamicInfoModel::removeCity(const std::string& source, int year, const std
 
     if (containsCity(source, year, name)) {
         cache.at(source).at(year).removeCity(name);
+        onCityUpdate(source, year);
         return true;
     }
 
@@ -282,6 +288,7 @@ bool DynamicInfoModel::removeNote(const std::string& source, int year)
 
     if (containsNote(source, year)) {
         cache.at(source).at(year).removeNote();
+        onNoteUpdate(source, year);
         return true;
     }
 
@@ -293,7 +300,10 @@ bool DynamicInfoModel::addCountry(const std::string& source, int year, const std
     std::lock_guard lk(cacheLock);
 
     if (containsHistoricalInfo(source, year)) {
-        return cache.at(source).at(year).addCountry(name);   
+        if (cache.at(source).at(year).addCountry(name)) {
+            onCountryUpdate(source, year);
+            return true;
+        }
     }
 
     return false;
@@ -304,7 +314,10 @@ bool DynamicInfoModel::addCountry(const std::string& source, int year, const per
     std::lock_guard lk(cacheLock);
 
     if (containsHistoricalInfo(source, year)) {
-        return cache.at(source).at(year).addCountry(country);   
+        if (cache.at(source).at(year).addCountry(country)) {
+            onCityUpdate(source, year);
+            return true;
+        }
     }
 
     return false;
@@ -315,7 +328,10 @@ bool DynamicInfoModel::addNote(const std::string& source, int year, const std::s
     std::lock_guard lk(cacheLock);
 
     if (containsHistoricalInfo(source, year)) {
-        return cache.at(source).at(year).addNote(note);   
+        if (cache.at(source).at(year).addNote(note)) {
+            onNoteUpdate(source, year);
+            return true;
+        }
     }
 
     return false;
@@ -326,7 +342,10 @@ bool DynamicInfoModel::addCity(const std::string& source, int year, const persis
     std::lock_guard lk(cacheLock);
 
     if (containsHistoricalInfo(source, year)) {
-        return cache.at(source).at(year).addCity(city);   
+        if (cache.at(source).at(year).addCity(city)) {
+            onCityUpdate(source, year);
+            return true;
+        } 
     }
 
     return false;
