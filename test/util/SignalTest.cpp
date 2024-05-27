@@ -15,8 +15,8 @@ TEST(SignalTest, connectNoParameter)
 {
     Signal<void()> sig;
     Foo foo;
-    sig.connect(&foo, &Foo::foo);
-    sig.emit();
+    connect(sig, &foo, &Foo::foo);
+    sig();
 
     EXPECT_EQ(foo.result, 1);
 }
@@ -25,12 +25,12 @@ TEST(SignalTest, connectWithParameter)
 {
     Signal<void(int)> sig;
     Foo foo;
-    sig.connect(&foo, &Foo::set);
+    connect(sig, &foo, &Foo::set);
 
-    sig.emit(10);
+    sig(10);
     EXPECT_EQ(foo.result, 10);
 
-    sig.emit(5);
+    sig(5);
     EXPECT_EQ(foo.result, 5);
 }
 
@@ -38,14 +38,14 @@ TEST(SignalTest, disconnect)
 {
     Signal<void()> sig;
     Foo foo;
-    auto connection = sig.connect(&foo, &Foo::foo);
-    sig.emit();
+    auto connection = connect(sig, &foo, &Foo::foo);
+    sig();
 
     EXPECT_EQ(foo.result, 1);
 
     connection.disconnect();
     
-    sig.emit();
+    sig();
 
     EXPECT_EQ(foo.result, 1);
 }

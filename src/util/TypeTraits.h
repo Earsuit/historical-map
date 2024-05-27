@@ -37,6 +37,23 @@ constexpr ForwardType<T, U> forward_if(U&& item)
 {
     return static_cast<ForwardType<T, U>>(item);
 }
+
+template <typename... T> 
+struct 
+param_pack {};
+
+template<typename, typename>
+struct is_all_same: public std::false_type { 
+};
+
+template<typename... Ts, typename... Ys>
+requires (sizeof...(Ts) == sizeof...(Ys))
+struct is_all_same<param_pack<Ts...>, param_pack<Ys...>> {
+    constexpr static bool value = (std::is_same_v<std::remove_cvref_t<Ts>, std::remove_cvref_t<Ys>>&&...);
+};
+
+template<typename T, typename Y>
+inline constexpr bool is_all_same_v = is_all_same<T, Y>::value;
 }
 
 #endif

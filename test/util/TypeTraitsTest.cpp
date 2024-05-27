@@ -5,6 +5,8 @@
 #include <vector>
 #include <iostream>
 
+using namespace util;
+
 struct Foo {
     int foo;
 };
@@ -49,4 +51,14 @@ TEST(TypeTraitsTest, forward_ifOnConstLvalue)
 {
     const std::vector<Foo> vec;
     forwardFromConstLvalue(vec);
+}
+
+TEST(TypeTraitsTest, is_alll_same)
+{
+    static_assert(is_all_same_v<param_pack<int>, param_pack<int>>);    
+    static_assert(is_all_same_v<param_pack<int, float, int>, param_pack<int, float, int>>);
+    static_assert(is_all_same_v<param_pack<int, float, int&>, param_pack<int, float, int>>);
+    static_assert(is_all_same_v<param_pack<int, float, int&&>, param_pack<int, float, int>>);
+    static_assert(!is_all_same_v<param_pack<int, float, int>, param_pack<int, float>>);
+    static_assert(!is_all_same_v<param_pack<int, float, int>, param_pack<int, float, float>>);
 }
