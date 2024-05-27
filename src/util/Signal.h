@@ -16,10 +16,10 @@ template<typename F>
 class Signal {
 };
 
-template<typename T, typename Rs, typename... Parms>
-Connection<Rs(Parms...), Rs, Parms...> connect(Signal<Rs(Parms...)>& signal, T* receiver, Rs(T::*f)(Parms...))
+template<typename T, typename Y, typename Rs, typename... Parms>
+Connection<Rs(Parms...), Rs, Parms...> connect(T* sender, Signal<Rs(Parms...)> T::* signal, Y* receiver, Rs(Y::*f)(Parms...))
 {
-    return signal.connect(receiver, f);
+    return (sender->*signal).connect(receiver, f);
 }
 
 template<typename R, typename... Args>
@@ -37,8 +37,8 @@ public:
 
     friend class Connection<R(Args...), R, Args...>;
 
-    template<typename T, typename Rs, typename... Parms>
-    friend Connection<Rs(Parms...), Rs, Parms...> connect(Signal<Rs(Parms...)>& signal, T* receiver, Rs(T::*f)(Parms...));
+    template<typename T, typename Y, typename Rs, typename... Parms>
+    friend Connection<Rs(Parms...), Rs, Parms...> connect(T* sender, Signal<Rs(Parms...)> T::* signal, Y* receiver, Rs(Y::*f)(Parms...));
 
 private:
     std::recursive_mutex lock;
@@ -65,6 +65,8 @@ private:
 template<typename T, typename R, typename... Args>
 class Connection {
 public:
+    Connection() = default;
+
     Connection(Signal<T>* signal, std::list<std::function<R(Args...)>>::iterator it):
         signal{signal},
         it{it}

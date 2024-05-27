@@ -11,41 +11,50 @@ struct Foo {
     void set(int a) { result = a; }
 };
 
-TEST(SignalTest, connectNoParameter)
-{
-    Signal<void()> sig;
+struct Sender {
+    Signal<void()> sig0;
+    Signal<void(int)> sig1;
+};
+
+class SignalTest : public ::testing::Test {
+public:
+    SignalTest() = default;
+
+    Sender sender;
     Foo foo;
-    connect(sig, &foo, &Foo::foo);
-    sig();
+};
+
+TEST_F(SignalTest, connectNoParameter)
+{
+    connect(&sender, &Sender::sig0, &foo, &Foo::foo);
+    sender.sig0();
 
     EXPECT_EQ(foo.result, 1);
 }
 
-TEST(SignalTest, connectWithParameter)
+TEST_F(SignalTest, connectWithParameter)
 {
     Signal<void(int)> sig;
     Foo foo;
-    connect(sig, &foo, &Foo::set);
+    connect(&sender, &Sender::sig1, &foo, &Foo::set);
 
-    sig(10);
+    sender.sig1(10);
     EXPECT_EQ(foo.result, 10);
 
-    sig(5);
+    sender.sig1(5);
     EXPECT_EQ(foo.result, 5);
 }
 
-TEST(SignalTest, disconnect)
+TEST_F(SignalTest, disconnect)
 {
-    Signal<void()> sig;
-    Foo foo;
-    auto connection = connect(sig, &foo, &Foo::foo);
-    sig();
+    auto connection = connect(&sender, &Sender::sig0, &foo, &Foo::foo);
+    sender.sig0();
 
     EXPECT_EQ(foo.result, 1);
 
     connection.disconnect();
     
-    sig();
+    sender.sig0();
 
     EXPECT_EQ(foo.result, 1);
 }
