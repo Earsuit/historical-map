@@ -8,7 +8,7 @@
 #include <mutex>
 #include <type_traits>
 
-namespace util {
+namespace util::signal {
 template<typename T, typename R, typename... Args>
 class Connection;
 

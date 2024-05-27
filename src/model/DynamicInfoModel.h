@@ -83,9 +83,9 @@ public:
     DynamicInfoModel(const DynamicInfoModel&) = delete;
     DynamicInfoModel& operator=(const DynamicInfoModel&) = delete;
 
-    util::Signal<void(const std::string& source, int year)> onCountryUpdate;
-    util::Signal<void(const std::string& source, int year)> onCityUpdate;
-    util::Signal<void(const std::string& source, int year)> onNoteUpdate;
+    util::signal::Signal<void(const std::string& source, int year)> onCountryUpdate;
+    util::signal::Signal<void(const std::string& source, int year)> onCityUpdate;
+    util::signal::Signal<void(const std::string& source, int year)> onNoteUpdate;
 
 private:
     DynamicInfoModel():

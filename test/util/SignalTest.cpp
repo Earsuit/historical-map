@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 
 namespace {
-using namespace util;
+using namespace util::signal;
 
 struct Foo {
     int result = 0;
