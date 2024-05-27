@@ -7,6 +7,8 @@
 #include <functional>
 #include <mutex>
 #include <type_traits>
+#include <map>
+#include <set>
 
 namespace util::signal {
 template<typename T>
@@ -24,6 +26,12 @@ template<typename T, typename Y, typename Rs, typename... Parms>
 Connection<Rs(Parms...)> connect(T* sender, Signal<Rs(Parms...)> T::* signal, Y* receiver, Rs(Y::*f)(Parms...))
 {
     return (sender->*signal).connect(receiver, f);
+}
+
+template<typename T, typename Y, typename Rs, typename... Parms>
+void disconnectAll(T* sender, Signal<Rs(Parms...)> T::* signal, Y* receiver)
+{
+    (sender->*signal).disconnect(reinterpret_cast<void*>(receiver));
 }
 
 template<typename R, typename... Args>
@@ -44,14 +52,40 @@ public:
     template<typename T, typename Y, typename Rs, typename... Parms>
     friend Connection<Rs(Parms...)> connect(T* sender, Signal<Rs(Parms...)> T::* signal, Y* receiver, Rs(Y::*f)(Parms...));
 
+    template<typename T, typename Y, typename Rs, typename... Parms>
+    friend void disconnectAll(T* sender, Signal<Rs(Parms...)> T::* signal, Y* receiver);
+
 private:
+    using ItType = std::list<std::function<R(Args...)>>::iterator;
+    struct IteratorCmp
+    {
+        bool operator()(const ItType& lhs, const ItType& rhs) const
+        {
+            return std::distance(lhs, rhs);
+        }
+    };
+
     std::recursive_mutex lock;
     std::list<std::function<R(Args...)>> slots;
+    std::map<void*, std::set<ItType, IteratorCmp>> its;
 
     void disconnect(const Connection<R(Args...)>& connection)
     {
         std::scoped_lock lk{lock};
+        its[connection.receiver].erase(connection.it);
         slots.erase(connection.it);
+    }
+
+    void disconnect(void* receiver)
+    {
+        std::scoped_lock lk{lock};
+        if (its.contains(receiver)) {
+            for (const auto it : its[receiver]) {
+                slots.erase(it);
+            }
+
+            its.erase(receiver);
+        }
     }
 
     template<typename T>
@@ -62,28 +96,43 @@ private:
             (receiver->*f)(std::forward<Args>(args)...);
         });
 
-        return Connection<R(Args...)>{this, slots.begin()};
+        const auto it = slots.begin();
+        void* ptr = reinterpret_cast<void*>(receiver);
+        if (its.contains(ptr)) {
+            its[ptr].emplace(it);
+        } else {
+            its.emplace(std::make_pair(ptr, std::set<ItType, IteratorCmp>{it}));
+        }
+
+        return Connection<R(Args...)>{reinterpret_cast<void*>(receiver), this, it};
     }
 };
 
 template<typename R, typename... Args>
 class Connection<R(Args...)> {
 public:
-    Connection() = default;
+    Connection():
+        signal{nullptr}
+    {}
 
-    Connection(Signal<R(Args...)>* signal, std::list<std::function<R(Args...)>>::iterator it):
+    Connection(void* receiver, Signal<R(Args...)>* signal, std::list<std::function<R(Args...)>>::iterator it):
+        receiver{receiver},
         signal{signal},
         it{it}
     {}
 
     void disconnect()
     {
-        signal->disconnect(*this);
+        if (signal != nullptr) {
+            signal->disconnect(*this);
+            signal = nullptr;
+        }
     }
 
     friend class Signal<R(Args...)>;
 
 private:
+    void* receiver;
     Signal<R(Args...)>* signal;
     std::list<std::function<R(Args...)>>::iterator it;
 };
