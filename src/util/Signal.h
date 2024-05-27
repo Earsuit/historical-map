@@ -9,15 +9,19 @@
 #include <type_traits>
 
 namespace util::signal {
-template<typename T, typename R, typename... Args>
-class Connection;
+template<typename T>
+class Connection
+{};
+
+template<typename R, typename... Args>
+class Connection<R(Args...)>;
 
 template<typename F>
 class Signal {
 };
 
 template<typename T, typename Y, typename Rs, typename... Parms>
-Connection<Rs(Parms...), Rs, Parms...> connect(T* sender, Signal<Rs(Parms...)> T::* signal, Y* receiver, Rs(Y::*f)(Parms...))
+Connection<Rs(Parms...)> connect(T* sender, Signal<Rs(Parms...)> T::* signal, Y* receiver, Rs(Y::*f)(Parms...))
 {
     return (sender->*signal).connect(receiver, f);
 }
@@ -35,16 +39,16 @@ public:
         }
     }
 
-    friend class Connection<R(Args...), R, Args...>;
+    friend class Connection<R(Args...)>;
 
     template<typename T, typename Y, typename Rs, typename... Parms>
-    friend Connection<Rs(Parms...), Rs, Parms...> connect(T* sender, Signal<Rs(Parms...)> T::* signal, Y* receiver, Rs(Y::*f)(Parms...));
+    friend Connection<Rs(Parms...)> connect(T* sender, Signal<Rs(Parms...)> T::* signal, Y* receiver, Rs(Y::*f)(Parms...));
 
 private:
     std::recursive_mutex lock;
     std::list<std::function<R(Args...)>> slots;
 
-    void disconnect(const Connection<R(Args...), R, Args...>& connection)
+    void disconnect(const Connection<R(Args...)>& connection)
     {
         std::scoped_lock lk{lock};
         slots.erase(connection.it);
@@ -58,16 +62,16 @@ private:
             (receiver->*f)(std::forward<Args>(args)...);
         });
 
-        return Connection<R(Args...), R, Args...>{this, slots.begin()};
+        return Connection<R(Args...)>{this, slots.begin()};
     }
 };
 
-template<typename T, typename R, typename... Args>
-class Connection {
+template<typename R, typename... Args>
+class Connection<R(Args...)> {
 public:
     Connection() = default;
 
-    Connection(Signal<T>* signal, std::list<std::function<R(Args...)>>::iterator it):
+    Connection(Signal<R(Args...)>* signal, std::list<std::function<R(Args...)>>::iterator it):
         signal{signal},
         it{it}
     {}
@@ -80,7 +84,7 @@ public:
     friend class Signal<R(Args...)>;
 
 private:
-    Signal<T>* signal;
+    Signal<R(Args...)>* signal;
     std::list<std::function<R(Args...)>>::iterator it;
 };
 }
