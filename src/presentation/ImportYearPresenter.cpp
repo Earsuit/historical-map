@@ -1,4 +1,5 @@
 #include "src/presentation/ImportYearPresenter.h"
+#include "src/presentation/Util.h"
 
 #include "src/logger/Util.h"
 
@@ -9,6 +10,7 @@ namespace presentation {
 // when instantiate it
 ImportYearPresenter::ImportYearPresenter(const std::string& source):
     logger{spdlog::get(logger::LOGGER_NAME)},
+    databaseModel{model::DatabaseModel::getInstance()},
     dynamicInfoModel{model::DynamicInfoModel::getInstance()},
     source{source}
 {
@@ -21,48 +23,68 @@ void ImportYearPresenter::initYearsList()
     }
 }
 
-int ImportYearPresenter::moveYearForward() noexcept
+void ImportYearPresenter::handleMoveYearForward() noexcept
 {
     if (auto it = years.upper_bound(dynamicInfoModel.getCurrentYear()); it != years.end()) {
-        dynamicInfoModel.setCurrentYear(*it);
+        databaseModel.setYear(*it);
+        updateInfo();
     }
-
-    return dynamicInfoModel.getCurrentYear();
 }
 
-int ImportYearPresenter::moveYearBackward() noexcept
+void ImportYearPresenter::handleMoveYearBackward() noexcept
 {
     if (auto it = years.lower_bound(dynamicInfoModel.getCurrentYear()); it != years.end() && it != years.begin()) {
-        dynamicInfoModel.setCurrentYear(*std::prev(it));
+        databaseModel.setYear(*std::prev(it));
+        updateInfo();
     }
-
-    return dynamicInfoModel.getCurrentYear();
 }
 
-int ImportYearPresenter::setYear(int year) noexcept
+void ImportYearPresenter::handleSetYear(int year) noexcept
 {
     auto lowerBound = years.lower_bound(year);
     
     if (lowerBound == years.begin()) {
-        dynamicInfoModel.setCurrentYear(*lowerBound);
+        databaseModel.setYear(*lowerBound);
     } else if (lowerBound == years.end()) {
-        dynamicInfoModel.setCurrentYear(*std::prev(lowerBound));
+        databaseModel.setYear(*std::prev(lowerBound));
     } else {
         const auto prev = std::prev(lowerBound);
         const auto target = *lowerBound - year > year - *prev ? *prev : *lowerBound;
-        dynamicInfoModel.setCurrentYear(target);
+        databaseModel.setYear(target);
     }
 
-    return dynamicInfoModel.getCurrentYear();
+    updateInfo();
 }
 
-int ImportYearPresenter::getMaxYear() const noexcept
+int ImportYearPresenter::handleGetMaxYear() const noexcept
 {
     return *years.rbegin();
 }
 
-int ImportYearPresenter::getMinYear() const noexcept
+int ImportYearPresenter::handleGetMinYear() const noexcept
 {
     return *years.begin();
+}
+
+int ImportYearPresenter::handelGetYear() const noexcept
+{
+    return dynamicInfoModel.getCurrentYear();
+}
+
+void ImportYearPresenter::updateInfo()
+{
+    dynamicInfoModel.setCurrentYear(databaseModel.getYear());
+    if (!worker.enqueue([this](){
+            if (this->dynamicInfoModel.containsHistoricalInfo(DEFAULT_HISTORICAL_INFO_SOURCE, this->databaseModel.getYear())) {
+                logger->debug("Historical info alredy exists in DynamicInfoModel from {} at year {}, skip it.", 
+                              DEFAULT_HISTORICAL_INFO_SOURCE, 
+                              this->databaseModel.getYear());
+                return;
+            }
+            this->dynamicInfoModel.upsert(DEFAULT_HISTORICAL_INFO_SOURCE, 
+                                          this->databaseModel.loadHistoricalInfo());
+        })) {
+        logger->error("Enqueue update historical info from database for year {} task fail.", databaseModel.getYear());
+    }
 }
 }

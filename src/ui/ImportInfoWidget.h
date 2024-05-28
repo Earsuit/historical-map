@@ -30,7 +30,7 @@ private:
     presentation::ImportPresenter importPresenter;
     presentation::DatabaseSaverPresenter databaseSaverPresenter;
     int currentYear;
-    bool importComplete;
+    bool importComplete = false;
     std::string errorMsg;
     bool openErrorPopup;
     bool isComplete = false;

@@ -75,7 +75,6 @@ void ImportInfoWidget::doImport()
             const std::string file = ifd::FileDialog::getInstance().getResult().u8string();
             logger->debug("Open file {}", file);
             importPresenter.handleDoImport(file);
-            importComplete = false;
             openErrorPopup = false;
             ImGui::OpenPopup(IMPORT_PROGRESS_POPUP_NAME);
         } else {
@@ -98,7 +97,9 @@ void ImportInfoWidget::doImport()
 
         if (!importComplete) {
             if (auto ret = importPresenter.handleCheckImportComplete(); ret) {
-                importComplete = ret.value();
+                if (importComplete = ret.value(); importComplete) {
+                    yearPresenter.initYearsList();
+                }
             } else {
                 ImGui::CloseCurrentPopup();
                 errorMsg = ret.error().msg;
@@ -110,7 +111,6 @@ void ImportInfoWidget::doImport()
                                  this->importComplete,
                                  [this](){
                                     // start from the first year
-                                    this->yearPresenter.initYearsList();
                                     this->yearPresenter.handleSetYear(this->yearPresenter.handleGetMinYear());
                                  });
 
@@ -137,69 +137,72 @@ void ImportInfoWidget::doImport()
 
 void ImportInfoWidget::paint()
 {
+    doImport();
+
     if (ImGui::Begin(INFO_WIDGET_NAME, nullptr,  ImGuiWindowFlags_NoTitleBar)) {
-        doImport();
-        displayYearControlSection();
+        if (importComplete) {
+            displayYearControlSection();
 
-        if (ImGui::Button("Confirm")) {
-            databaseSaverPresenter.handleSaveAll();
-            ImGui::OpenPopup(WRITE_TO_DATABASE_PROGRESS_POPUP);
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Cancel")) {
-            isComplete = true;
-        }
-
-        displaySaveToDatabasePopup();
-
-        selectAll = infoSelectorPresenter.handleCheckIsAllSelected();
-        if (ImGui::Checkbox("Select all", &selectAll)) {
-            if (selectAll) {
-                infoSelectorPresenter.handleSelectAll();
-            } else {
-                infoSelectorPresenter.handleDeselectAll();
+            if (ImGui::Button("Confirm")) {
+                databaseSaverPresenter.handleSaveAll();
+                ImGui::OpenPopup(WRITE_TO_DATABASE_PROGRESS_POPUP);
             }
-        }
-
-        if (ImGui::TreeNode("Imported")) {
-            ImGui::SeparatorText("Countries");
-            for (const auto& country : importInfoPresenter.handleRequestCountryList()) {
-                selectCountry(country);
-                ImGui::SameLine();
-                displayCountry(importInfoPresenter, country);
+            ImGui::SameLine();
+            if (ImGui::Button("Cancel")) {
+                isComplete = true;
             }
 
-            ImGui::SeparatorText("Cities");
-            for (const auto& city : importInfoPresenter.handleRequestCityList()) {
-                selectCity(city);
-                ImGui::SameLine();
-                displayCity(importInfoPresenter, city);
+            displaySaveToDatabasePopup();
+
+            selectAll = infoSelectorPresenter.handleCheckIsAllSelected();
+            if (ImGui::Checkbox("Select all", &selectAll)) {
+                if (selectAll) {
+                    infoSelectorPresenter.handleSelectAll();
+                } else {
+                    infoSelectorPresenter.handleDeselectAll();
+                }
             }
 
-            ImGui::SeparatorText("Note");
-            selectNote(importInfoPresenter);
-            displayNote(importInfoPresenter);
+            if (ImGui::TreeNode("Imported")) {
+                ImGui::SeparatorText("Countries");
+                for (const auto& country : importInfoPresenter.handleRequestCountryList()) {
+                    selectCountry(country);
+                    ImGui::SameLine();
+                    displayCountry(importInfoPresenter, country);
+                }
 
-            ImGui::TreePop();
-            ImGui::Spacing();
-        }
+                ImGui::SeparatorText("Cities");
+                for (const auto& city : importInfoPresenter.handleRequestCityList()) {
+                    selectCity(city);
+                    ImGui::SameLine();
+                    displayCity(importInfoPresenter, city);
+                }
 
-        if (ImGui::TreeNode("Database")) {
-            ImGui::SeparatorText("Countries");
-            for (const auto& country : databaseInfoPresenter.handleRequestCountryList()) {
-                displayCountry(databaseInfoPresenter, country);
+                ImGui::SeparatorText("Note");
+                selectNote(importInfoPresenter);
+                displayNote(importInfoPresenter);
+
+                ImGui::TreePop();
+                ImGui::Spacing();
             }
 
-            ImGui::SeparatorText("Cities");
-            for (const auto& city : databaseInfoPresenter.handleRequestCityList()) {
-                displayCity(databaseInfoPresenter, city);
+            if (ImGui::TreeNode("Database")) {
+                ImGui::SeparatorText("Countries");
+                for (const auto& country : databaseInfoPresenter.handleRequestCountryList()) {
+                    displayCountry(databaseInfoPresenter, country);
+                }
+
+                ImGui::SeparatorText("Cities");
+                for (const auto& city : databaseInfoPresenter.handleRequestCityList()) {
+                    displayCity(databaseInfoPresenter, city);
+                }
+
+                ImGui::SeparatorText("Note");
+                displayNote(databaseInfoPresenter);
+
+                ImGui::TreePop();
+                ImGui::Spacing();
             }
-
-            ImGui::SeparatorText("Note");
-            displayNote(databaseInfoPresenter);
-
-            ImGui::TreePop();
-            ImGui::Spacing();
         }
 
         ImGui::End();
