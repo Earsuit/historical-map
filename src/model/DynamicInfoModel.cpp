@@ -315,7 +315,7 @@ bool DynamicInfoModel::addCountry(const std::string& source, int year, const per
 
     if (containsHistoricalInfo(source, year)) {
         if (cache.at(source).at(year).addCountry(country)) {
-            onCityUpdate(source, year);
+            onCountryUpdate(source, year);
             return true;
         }
     }
