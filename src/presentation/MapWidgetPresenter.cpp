@@ -61,41 +61,10 @@ MapWidgetPresenter::MapWidgetPresenter(MapWidgetInterface& view, const std::stri
     dynamicInfoModel{model::DynamicInfoModel::getInstance()},
     source{source}
 {
-    startWorkerThread();
 }
 
 MapWidgetPresenter::~MapWidgetPresenter()
 {
-    stopWorkerThread();
-}
-
-void MapWidgetPresenter::startWorkerThread()
-{
-    runWorkerThread = true;
-    workerThread = std::thread(&MapWidgetPresenter::worker, this);
-}
-
-void MapWidgetPresenter::stopWorkerThread()
-{
-    runWorkerThread = false;
-
-    // enqueue an empty task to wake up the wait_dequeue if necessary
-    taskQueue.enqueue([](){});
-
-    if (workerThread.joinable()) {
-        workerThread.join();
-    }
-}
-
-void MapWidgetPresenter::worker()
-{
-    while (runWorkerThread) {
-        std::function<void()> task; 
-
-        taskQueue.wait_dequeue(task);
-
-        task();
-    }
 }
 
 void MapWidgetPresenter::handleRenderTiles()

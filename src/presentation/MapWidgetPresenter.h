@@ -12,15 +12,12 @@
 #include "src/model/DynamicInfoModel.h"
 
 #include "spdlog/spdlog.h"
-#include "blockingconcurrentqueue.h"
 
 #include <cstddef>
 #include <vector>
 #include <memory>
 #include <functional>
 #include <string>
-#include <thread>
-#include <atomic>
 
 namespace presentation {
 class MapWidgetPresenter {
@@ -44,15 +41,9 @@ private:
     model::DatabaseModel& databaseModel;
     model::TileModel& tileModel;
     model::DynamicInfoModel& dynamicInfoModel;
-    moodycamel::BlockingConcurrentQueue<std::function<void()>> taskQueue;
-    std::atomic_bool runWorkerThread;
-    std::thread workerThread;
     std::string source;
 
     std::pair<persistence::Coordinate, model::Vec2> handleRenderCoordinate(persistence::Coordinate coordinate, const Color& color);
-    void worker();
-    void startWorkerThread();
-    void stopWorkerThread();
 };
 }
 
