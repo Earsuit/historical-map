@@ -35,10 +35,6 @@ public:
     void handleUpdateCityCoordinate(const std::string& name, const persistence::Coordinate& coord);
     void handleClearHistoricalInfo();
 
-    void onCountryUpdate(const std::string& source, int year);
-    void onCityUpdate(const std::string& source, int year);
-    void onNoteUpdate(const std::string& source, int year);
-
     util::signal::Signal<void()> setCountriesUpdated;
     util::signal::Signal<void()> setCityUpdated;
     util::signal::Signal<void()> setNoteUpdated;
@@ -50,6 +46,9 @@ private:
     std::string source;
 
     bool varifySignal(const std::string& source, int year) const noexcept;
+    void onCountryUpdate(const std::string& source, int year);
+    void onCityUpdate(const std::string& source, int year);
+    void onNoteUpdate(const std::string& source, int year);
 };
 }
 

@@ -25,8 +25,6 @@ public:
     int handleGetMaxYear() const noexcept { return databaseModel.getMaxYear(); }
     int handleGetMinYear() const noexcept { return databaseModel.getMinYear(); }
 
-    void updateInfo(int year);
-
     util::signal::Signal<void(int)> onYearChange;
 
 private:
@@ -34,6 +32,8 @@ private:
     model::DatabaseModel& databaseModel;
     model::DynamicInfoModel& dynamicInfoModel;
     util::Worker<std::function<void()>> worker;
+
+    void updateInfo(int year);
 };
 }
 

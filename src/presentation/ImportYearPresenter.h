@@ -26,8 +26,6 @@ public:
     int handleGetMaxYear() const noexcept;
     int handleGetMinYear() const noexcept;
 
-    void updateInfo(int year);
-
     util::signal::Signal<void(int)> onYearChange;
 
 private:
@@ -37,6 +35,8 @@ private:
     std::string source;
     std::set<int> years;
     util::Worker<std::function<void()>> worker;
+
+    void updateInfo(int year);
 };
 }
 
