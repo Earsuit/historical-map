@@ -33,7 +33,7 @@ private:
     presentation::DatabaseYearPresenter yearPresenter;
     presentation::ExportPresenter exportPresenter;
     std::atomic_int currentYear;
-    bool selectAll;
+    bool selectAll = true;
     bool isComplete = false;
     std::string errorMsg;
     bool exportFailPopup = false;

@@ -181,10 +181,7 @@ void ImportInfoWidget::doImport()
 
         centeredEnableableButton(IMPORT_COMPLETE_BUTTON,
                                  this->importComplete,
-                                 [this](){
-                                    // start from the first year
-                                    this->yearPresenter.handleSetYear(this->yearPresenter.handleGetMinYear());
-                                 });
+                                 [](){});
 
         ImGui::EndPopup();
 
@@ -257,6 +254,9 @@ void ImportInfoWidget::paint()
                 ImGui::SeparatorText("Note");
                 selectNote(importedNote);
                 displayNote(importedNote);
+
+                ImGui::TreePop();
+                ImGui::Spacing();
             }
 
             if (ImGui::TreeNode("Database")) {

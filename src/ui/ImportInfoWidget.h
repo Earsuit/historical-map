@@ -58,7 +58,7 @@ private:
     std::map<std::string, persistence::Coordinate> importedCities;
     std::atomic_bool importedNoteResourceUpdated = false;
     std::string importedNote;
-    bool selectAll;
+    bool selectAll = false;
     std::atomic_bool needUpdateSelectAll = false;
 
     void displayYearControlSection();

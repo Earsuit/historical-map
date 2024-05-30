@@ -46,7 +46,7 @@ ExportInfoWidget::ExportInfoWidget():
                           this, 
                           &ExportInfoWidget::setRefreshAll);
 
-    currentYear = yearPresenter.handelGetYear();
+    setRefreshAll(yearPresenter.handelGetYear());
 }
 
 ExportInfoWidget::~ExportInfoWidget()

@@ -139,7 +139,7 @@ bool InfoSelectorPresenter::handleCheckIsAllSelected()
     std::unordered_set<std::string> selectedCountries{toCountries.cbegin(), toCountries.cend()};
     std::unordered_set<std::string> selectedCitiess{toCities.cbegin(), toCities.cend()};
 
-    if (toCountries.size() != fromCountries.size() || toCities.size() != fromCountries.size()) {
+    if (toCountries.size() != fromCountries.size() || toCities.size() != fromCities.size()) {
         return false;
     }
 

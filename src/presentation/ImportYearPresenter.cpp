@@ -32,6 +32,8 @@ void ImportYearPresenter::initYearsList()
     for (int year : dynamicInfoModel.getYearList(source)) {
         years.emplace(year);
     }
+
+    databaseModel.setYear(handleGetMinYear());
 }
 
 void ImportYearPresenter::handleMoveYearForward() noexcept
