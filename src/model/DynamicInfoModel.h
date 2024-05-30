@@ -28,7 +28,7 @@ public:
     bool addSource(const std::string& source);
     std::vector<std::string> getSourceList() const noexcept;
     void removeSource(const std::string& source);
-    void removeHistoricalInfoFromSource(const std::string& source);
+    void removeHistoricalInfoFromSource(const std::string& source, int year);
     std::vector<int> getYearList(const std::string& source) const;
 
     bool containsHistoricalInfo(const std::string& source, int year) const;
@@ -76,9 +76,6 @@ public:
         return false;
     }
 
-    int getCurrentYear() const noexcept { return currentYear; }
-    void setCurrentYear(int year) { currentYear = year;}
-
     DynamicInfoModel(DynamicInfoModel&&) = delete;
     DynamicInfoModel(const DynamicInfoModel&) = delete;
     DynamicInfoModel& operator=(const DynamicInfoModel&) = delete;
@@ -99,7 +96,6 @@ private:
     mutable std::recursive_mutex cacheLock;
     std::map<std::string, std::map<int, persistence::HistoricalStorage>> cache;
     persistence::Data removed;
-    std::atomic_int currentYear;
 };
 }
 

@@ -40,6 +40,8 @@ bool DatabaseModel::setYear(int newYear) noexcept
 
     currentYear = newYear;
 
+    onYearChange(currentYear.load());
+
     return true;
 }
 
@@ -54,6 +56,8 @@ bool DatabaseModel::moveYearForward() noexcept
     if (currentYear == INVALID_YEAR) {
         currentYear++;
     }
+
+    onYearChange(currentYear.load());
 
     return true;
 }
@@ -70,12 +74,9 @@ bool DatabaseModel::moveYearBackward() noexcept
         currentYear--;
     }
 
-    return true;
-}
+    onYearChange(currentYear.load());
 
-persistence::Data DatabaseModel::loadHistoricalInfo()
-{
-    return loadHistoricalInfo(currentYear);
+    return true;
 }
 
 persistence::Data DatabaseModel::loadHistoricalInfo(int year)

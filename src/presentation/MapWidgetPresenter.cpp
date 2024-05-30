@@ -56,6 +56,7 @@ float y2Latitude(float y)
 MapWidgetPresenter::MapWidgetPresenter(MapWidgetInterface& view, const std::string& source):
     logger{spdlog::get(logger::LOGGER_NAME)},
     view{view},
+    databaseModel{model::DatabaseModel::getInstance()},
     tileModel{model::TileModel::getInstance()},
     dynamicInfoModel{model::DynamicInfoModel::getInstance()},
     source{source}
@@ -114,7 +115,7 @@ void MapWidgetPresenter::handleRenderTiles()
 
 void MapWidgetPresenter::handleRenderCountry()
 {
-    const auto year = dynamicInfoModel.getCurrentYear();
+    const auto year = databaseModel.getYear();
     for (const auto& name : dynamicInfoModel.getCountryList(source, year)) {
         // have to use double type here due to a compilation error in mapbox::polylabel if use float
         mapbox::geometry::polygon<double> polygon{mapbox::geometry::linear_ring<double>{}};
@@ -148,7 +149,7 @@ void MapWidgetPresenter::handleRenderCountry()
 
 void MapWidgetPresenter::handleRenderCity()
 {
-    const auto year = dynamicInfoModel.getCurrentYear();
+    const auto year = databaseModel.getYear();
     for (const auto& name : dynamicInfoModel.getCityList(source, year)) {
         if (const auto& city = dynamicInfoModel.getCity(source, year, name); city) {
             const auto color = computeColor(name);
@@ -225,14 +226,14 @@ bool MapWidgetPresenter::handleRequestHasRightClickMenu() const noexcept
 
 std::vector<std::string> MapWidgetPresenter::handleRequestCountryList() const
 {
-    return dynamicInfoModel.getCountryList(source, dynamicInfoModel.getCurrentYear());
+    return dynamicInfoModel.getCountryList(source, databaseModel.getYear());
 }
 
 bool MapWidgetPresenter::handleExtendContour(const std::string& name, const model::Vec2& pos)
 {
     const persistence::Coordinate coord{.latitude = y2Latitude(pos.y), .longitude = x2Longitude(pos.x)};
 
-    if (dynamicInfoModel.extendContour(source, dynamicInfoModel.getCurrentYear(), name, coord)) {
+    if (dynamicInfoModel.extendContour(source, databaseModel.getYear(), name, coord)) {
         return true;
     }
 
@@ -243,7 +244,7 @@ bool MapWidgetPresenter::handleExtendContour(const std::string& name, const mode
 bool MapWidgetPresenter::handleAddCountry(const std::string& name, const model::Vec2& pos)
 {
     const persistence::Country country{name, {persistence::Coordinate{.latitude = y2Latitude(pos.y), .longitude = x2Longitude(pos.x)}}};
-    if (dynamicInfoModel.addCountry(source, dynamicInfoModel.getCurrentYear(), country)) {
+    if (dynamicInfoModel.addCountry(source, databaseModel.getYear(), country)) {
         return true;
     }
 
@@ -256,7 +257,7 @@ bool MapWidgetPresenter::handleAddCity(const std::string& name, const model::Vec
 {
     const persistence::City city{name, {.latitude = y2Latitude(pos.y), .longitude = x2Longitude(pos.x)}};
 
-    if (dynamicInfoModel.addCity(source, dynamicInfoModel.getCurrentYear(), city)) {
+    if (dynamicInfoModel.addCity(source, databaseModel.getYear(), city)) {
         return true;
     }
 

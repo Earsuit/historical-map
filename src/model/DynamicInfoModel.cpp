@@ -57,12 +57,15 @@ void DynamicInfoModel::removeSource(const std::string& source)
     cache.erase(source);
 }
 
-void DynamicInfoModel::removeHistoricalInfoFromSource(const std::string& source)
+void DynamicInfoModel::removeHistoricalInfoFromSource(const std::string& source, int year)
 {
-    logger->debug("Clear historical info from source {} at year {}", source, currentYear);
+    logger->debug("Clear historical info from source {} at year {}", source, year);
     std::lock_guard lk(cacheLock);
     if (cache.contains(source)) {
-        cache[source].erase(currentYear);
+        cache[source].erase(year);
+        onCountryUpdate(source, year);
+        onCityUpdate(source, year);
+        onNoteUpdate(source, year);
     }
 }
 

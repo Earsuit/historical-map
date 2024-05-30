@@ -14,6 +14,17 @@ ImportYearPresenter::ImportYearPresenter(const std::string& source):
     dynamicInfoModel{model::DynamicInfoModel::getInstance()},
     source{source}
 {
+    util::signal::connect(&databaseModel,
+                          &model::DatabaseModel::onYearChange,
+                          this,
+                          &ImportYearPresenter::updateInfo);
+}
+
+ImportYearPresenter::~ImportYearPresenter()
+{
+    util::signal::disconnectAll(&databaseModel,
+                                &model::DatabaseModel::onYearChange,
+                                this);
 }
 
 void ImportYearPresenter::initYearsList()
@@ -25,17 +36,15 @@ void ImportYearPresenter::initYearsList()
 
 void ImportYearPresenter::handleMoveYearForward() noexcept
 {
-    if (auto it = years.upper_bound(dynamicInfoModel.getCurrentYear()); it != years.end()) {
+    if (auto it = years.upper_bound(databaseModel.getYear()); it != years.end()) {
         databaseModel.setYear(*it);
-        updateInfo();
     }
 }
 
 void ImportYearPresenter::handleMoveYearBackward() noexcept
 {
-    if (auto it = years.lower_bound(dynamicInfoModel.getCurrentYear()); it != years.end() && it != years.begin()) {
+    if (auto it = years.lower_bound(databaseModel.getYear()); it != years.end() && it != years.begin()) {
         databaseModel.setYear(*std::prev(it));
-        updateInfo();
     }
 }
 
@@ -52,8 +61,6 @@ void ImportYearPresenter::handleSetYear(int year) noexcept
         const auto target = *lowerBound - year > year - *prev ? *prev : *lowerBound;
         databaseModel.setYear(target);
     }
-
-    updateInfo();
 }
 
 int ImportYearPresenter::handleGetMaxYear() const noexcept
@@ -66,25 +73,20 @@ int ImportYearPresenter::handleGetMinYear() const noexcept
     return *years.begin();
 }
 
-int ImportYearPresenter::handelGetYear() const noexcept
+void ImportYearPresenter::updateInfo(int year)
 {
-    return dynamicInfoModel.getCurrentYear();
-}
-
-void ImportYearPresenter::updateInfo()
-{
-    dynamicInfoModel.setCurrentYear(databaseModel.getYear());
-    if (!worker.enqueue([this](){
-            if (this->dynamicInfoModel.containsHistoricalInfo(DEFAULT_HISTORICAL_INFO_SOURCE, this->databaseModel.getYear())) {
+    onYearChange(year);
+    if (!worker.enqueue([this, year](){
+            if (this->dynamicInfoModel.containsHistoricalInfo(DEFAULT_HISTORICAL_INFO_SOURCE, year)) {
                 logger->debug("Historical info alredy exists in DynamicInfoModel from {} at year {}, skip it.", 
                               DEFAULT_HISTORICAL_INFO_SOURCE, 
-                              this->databaseModel.getYear());
+                              year);
                 return;
             }
             this->dynamicInfoModel.upsert(DEFAULT_HISTORICAL_INFO_SOURCE, 
-                                          this->databaseModel.loadHistoricalInfo());
+                                          this->databaseModel.loadHistoricalInfo(year));
         })) {
-        logger->error("Enqueue update historical info from database for year {} task fail.", databaseModel.getYear());
+        logger->error("Enqueue update historical info from database for year {} task fail.", year);
     }
 }
 }

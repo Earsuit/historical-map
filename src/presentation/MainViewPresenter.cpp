@@ -30,6 +30,6 @@ void MainViewPresenter::handleImportExportComplete()
 
 void MainViewPresenter::clearCache()
 {
-    model.removeHistoricalInfoFromSource(DEFAULT_HISTORICAL_INFO_SOURCE);
+    model.removeHistoricalInfoFromSource(DEFAULT_HISTORICAL_INFO_SOURCE, databaseModel.getYear());
 }
 }

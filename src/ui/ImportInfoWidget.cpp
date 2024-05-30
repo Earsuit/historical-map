@@ -2,6 +2,7 @@
 #include "src/ui/Util.h"
 #include "src/presentation/Util.h"
 #include "src/logger/Util.h"
+#include "src/util/Signal.h"
 
 #include "imgui.h"
 #include "ImFileDialog.h"
@@ -24,14 +25,87 @@ ImportInfoWidget::ImportInfoWidget():
     importPresenter{presentation::IMPORT_SOURCE},
     databaseSaverPresenter{SELECTION}
 {
+    util::signal::connect(&databaseInfoPresenter, 
+                          &presentation::HistoricalInfoPresenter::setCountriesUpdated,
+                          this, 
+                          &ImportInfoWidget::setRefreshDatabaseCountries);
+    util::signal::connect(&databaseInfoPresenter, 
+                          &presentation::HistoricalInfoPresenter::setCityUpdated,
+                          this, 
+                          &ImportInfoWidget::setRefreshDatabaseCities);
+    util::signal::connect(&databaseInfoPresenter, 
+                          &presentation::HistoricalInfoPresenter::setNoteUpdated,
+                          this, 
+                          &ImportInfoWidget::setRefreshDatabaseNote);
+    util::signal::connect(&importInfoPresenter, 
+                          &presentation::HistoricalInfoPresenter::setCountriesUpdated,
+                          this, 
+                          &ImportInfoWidget::setRefreshImportedCountries);
+    util::signal::connect(&importInfoPresenter, 
+                          &presentation::HistoricalInfoPresenter::setCityUpdated,
+                          this, 
+                          &ImportInfoWidget::setRefreshImportedCities);
+    util::signal::connect(&importInfoPresenter, 
+                          &presentation::HistoricalInfoPresenter::setNoteUpdated,
+                          this, 
+                          &ImportInfoWidget::setRefreshImportedNote);
+    util::signal::connect(&infoSelectorPresenter, 
+                          &presentation::InfoSelectorPresenter::setRefreshSelectAll,
+                          this, 
+                          &ImportInfoWidget::setRefreshSelectAll);
+    util::signal::connect(&yearPresenter,
+                          &presentation::ImportYearPresenter::onYearChange,
+                          this,
+                          &ImportInfoWidget::setRefreshAll);
+
     ifd::FileDialog::getInstance().open(FILE_SELECT_POPUP_NAME, FILE_SELECT_POPUP_NAME, fileExtensionFormat());
+}
+
+ImportInfoWidget::~ImportInfoWidget()
+{
+    util::signal::disconnectAll(&databaseInfoPresenter, 
+                                &presentation::HistoricalInfoPresenter::setCountriesUpdated,
+                                this);
+    util::signal::disconnectAll(&databaseInfoPresenter, 
+                                &presentation::HistoricalInfoPresenter::setCityUpdated,
+                                this);
+    util::signal::disconnectAll(&databaseInfoPresenter, 
+                                &presentation::HistoricalInfoPresenter::setNoteUpdated,
+                                this);
+    util::signal::disconnectAll(&importInfoPresenter, 
+                                &presentation::HistoricalInfoPresenter::setCountriesUpdated,
+                                this);
+    util::signal::disconnectAll(&importInfoPresenter, 
+                                &presentation::HistoricalInfoPresenter::setCityUpdated,
+                                this);
+    util::signal::disconnectAll(&importInfoPresenter, 
+                                &presentation::HistoricalInfoPresenter::setNoteUpdated,
+                                this);
+    util::signal::disconnectAll(&infoSelectorPresenter, 
+                                &presentation::InfoSelectorPresenter::setRefreshSelectAll,
+                                this);
+    util::signal::disconnectAll(&yearPresenter,
+                                &presentation::ImportYearPresenter::onYearChange,
+                                this);
+}
+
+void ImportInfoWidget::setRefreshAll(int year) noexcept
+{
+    currentYear = year;
+    setRefreshDatabaseCountries();
+    setRefreshDatabaseCities();
+    setRefreshDatabaseNote();
+    setRefreshImportedCountries();
+    setRefreshImportedCities();
+    setRefreshImportedNote();
+    setRefreshSelectAll();
 }
 
 void ImportInfoWidget::displayYearControlSection()
 {
-    currentYear = yearPresenter.handelGetYear();
-    if (ImGui::SliderInt("##", &currentYear, yearPresenter.handleGetMinYear(), yearPresenter.handleGetMaxYear(), "Year %d", ImGuiSliderFlags_AlwaysClamp)) {
-        yearPresenter.handleSetYear(currentYear);
+    int year = currentYear;
+    if (ImGui::SliderInt("##", &year, yearPresenter.handleGetMinYear(), yearPresenter.handleGetMaxYear(), "Year %d", ImGuiSliderFlags_AlwaysClamp)) {
+        yearPresenter.handleSetYear(year);
     }
     
     ImGui::SameLine();
@@ -47,8 +121,6 @@ void ImportInfoWidget::displayYearControlSection()
 
     ImGui::SameLine();
     helpMarker("Ctrl + click to maually set the year");
-
-    currentYear = yearPresenter.handelGetYear();
 }
 
 std::string ImportInfoWidget::fileExtensionFormat() const
@@ -143,6 +215,11 @@ void ImportInfoWidget::paint()
         if (importComplete) {
             displayYearControlSection();
 
+            updateCountryResources();
+            updateCityResources();
+            updateNoteResources();
+            updateSelectAll();
+
             if (ImGui::Button("Confirm")) {
                 databaseSaverPresenter.handleSaveAll();
                 ImGui::OpenPopup(WRITE_TO_DATABASE_PROGRESS_POPUP);
@@ -154,7 +231,6 @@ void ImportInfoWidget::paint()
 
             displaySaveToDatabasePopup();
 
-            selectAll = infoSelectorPresenter.handleCheckIsAllSelected();
             if (ImGui::Checkbox("Select all", &selectAll)) {
                 if (selectAll) {
                     infoSelectorPresenter.handleSelectAll();
@@ -165,40 +241,37 @@ void ImportInfoWidget::paint()
 
             if (ImGui::TreeNode("Imported")) {
                 ImGui::SeparatorText("Countries");
-                for (const auto& country : importInfoPresenter.handleRequestCountryList()) {
+                for (const auto& [country, contour] : importedCountries) {
                     selectCountry(country);
                     ImGui::SameLine();
-                    displayCountry(importInfoPresenter, country);
+                    displayCountry(country, contour);
                 }
 
                 ImGui::SeparatorText("Cities");
-                for (const auto& city : importInfoPresenter.handleRequestCityList()) {
+                for (const auto& [city, coord] : importedCities) {
                     selectCity(city);
                     ImGui::SameLine();
-                    displayCity(importInfoPresenter, city);
+                    displayCity(city, coord);
                 }
 
                 ImGui::SeparatorText("Note");
-                selectNote(importInfoPresenter);
-                displayNote(importInfoPresenter);
-
-                ImGui::TreePop();
-                ImGui::Spacing();
+                selectNote(importedNote);
+                displayNote(importedNote);
             }
 
             if (ImGui::TreeNode("Database")) {
                 ImGui::SeparatorText("Countries");
-                for (const auto& country : databaseInfoPresenter.handleRequestCountryList()) {
-                    displayCountry(databaseInfoPresenter, country);
+                for (const auto& [country, contour] : databaseCountries) {
+                    displayCountry(country, contour);
                 }
 
                 ImGui::SeparatorText("Cities");
-                for (const auto& city : databaseInfoPresenter.handleRequestCityList()) {
-                    displayCity(databaseInfoPresenter, city);
+                for (const auto& [city, coord] : databaseCities) {
+                    displayCity(city, coord);
                 }
 
                 ImGui::SeparatorText("Note");
-                displayNote(databaseInfoPresenter);
+                displayNote(databaseNote);
 
                 ImGui::TreePop();
                 ImGui::Spacing();
@@ -221,12 +294,12 @@ void ImportInfoWidget::selectCountry(const std::string& name)
     }
 }
 
-void ImportInfoWidget::displayCountry(presentation::HistoricalInfoPresenter& infoPresenter, const std::string& name)
+void ImportInfoWidget::displayCountry(const std::string& name, const std::vector<persistence::Coordinate>& contour)
 {
     if (ImGui::TreeNode((name + "##country").c_str())) {
         int idx = 0;
-        for (auto& coordinate : infoPresenter.handleRequestContour(name)) {
-            displayCoordinate(infoPresenter, name + std::to_string(idx++), coordinate);
+        for (const auto& coordinate : contour) {
+            displayCoordinate(name + std::to_string(idx++), coordinate);
         }
 
         ImGui::TreePop();
@@ -246,40 +319,41 @@ void ImportInfoWidget::selectCity(const std::string& name)
     }
 }
 
-void ImportInfoWidget::displayCity(presentation::HistoricalInfoPresenter& infoPresenter, const std::string& name)
+void ImportInfoWidget::displayCity(const std::string& name, const persistence::Coordinate& coord)
 {
-    if (const auto ret = infoPresenter.handleRequestCityCoordinate(name); ret) {
-        if (ImGui::TreeNode((name + "##city").c_str())) {
-            displayCoordinate(infoPresenter, name + "city", *ret);
-            ImGui::TreePop();
-            ImGui::Spacing();
+    if (ImGui::TreeNode((name + "##city").c_str())) {
+        displayCoordinate(name + "city", coord);
+        ImGui::TreePop();
+        ImGui::Spacing();
+    }
+}
+
+void ImportInfoWidget::selectNote(const std::string& note)
+{
+    if (note.empty()) {
+        return;
+    }
+
+    bool select = selectAll || infoSelectorPresenter.handleCheckIsNoteSelected();
+    if (ImGui::Checkbox("##note", &select)) {
+        if (select) {
+            infoSelectorPresenter.handleSelectNote();
+        } else {
+            infoSelectorPresenter.handleDeselectNote();
         }
     }
 }
 
-void ImportInfoWidget::selectNote(const presentation::HistoricalInfoPresenter& infoPresenter)
+void ImportInfoWidget::displayNote(const std::string& note)
 {
-    if (auto note = infoPresenter.handleGetNote(); !note.empty()) {
-        bool select = selectAll || infoSelectorPresenter.handleCheckIsNoteSelected();
-        if (ImGui::Checkbox("##note", &select)) {
-            if (select) {
-                infoSelectorPresenter.handleSelectNote();
-            } else {
-                infoSelectorPresenter.handleDeselectNote();
-            }
-        }
+    if (note.empty()) {
+        return;
     }
+
+    ImGui::TextUnformatted(note.c_str(), note.c_str() + note.size());
 }
 
-void ImportInfoWidget::displayNote(const presentation::HistoricalInfoPresenter& infoPresenter)
-{
-    if (auto note = infoPresenter.handleGetNote(); !note.empty()) {
-        ImGui::TextUnformatted(note.c_str(), note.c_str() + note.size());
-    }
-}
-
-void ImportInfoWidget::displayCoordinate(presentation::HistoricalInfoPresenter& infoPresenter, 
-                                         const std::string& uniqueId, 
+void ImportInfoWidget::displayCoordinate(const std::string& uniqueId, 
                                          const persistence::Coordinate& coord)
 {
     ImGui::PushItemWidth(COORDINATE_INPUT_WIDTH);
@@ -289,12 +363,12 @@ void ImportInfoWidget::displayCoordinate(presentation::HistoricalInfoPresenter& 
     ImGui::PushID(uniqueId.c_str());
     textFloatWithLabelOnLeft("latitude", latitude);
     if (ImGui::IsItemHovered()) {
-        infoPresenter.setHoveredCoord(coord);
+        databaseInfoPresenter.setHoveredCoord(coord);
     }
     ImGui::SameLine();
     textFloatWithLabelOnLeft("longitude", longitude);
     if (ImGui::IsItemHovered()) {
-        infoPresenter.setHoveredCoord(coord);
+        databaseInfoPresenter.setHoveredCoord(coord);
     }
     ImGui::PopID();
 }
@@ -309,6 +383,81 @@ void ImportInfoWidget::displaySaveToDatabasePopup()
                                     this->isComplete = true;
                                 });
         ImGui::EndPopup();
+    }
+}
+
+void ImportInfoWidget::updateCountryResources(const presentation::HistoricalInfoPresenter& presenter,
+                                              std::map<std::string, std::vector<persistence::Coordinate>>& cache)
+{
+    cache.clear();
+    for (const auto& country : presenter.handleRequestCountryList()) {
+        cache.emplace(std::make_pair(country, std::vector<persistence::Coordinate>{}));
+        for (const auto& coord : presenter.handleRequestContour(country)) {
+            cache[country].emplace_back(coord);
+        }
+    }
+}
+
+void ImportInfoWidget::updateCityResources(const presentation::HistoricalInfoPresenter& presenter, 
+                                           std::map<std::string, persistence::Coordinate>& cache)
+{
+    cache.clear();
+    for (const auto& city : presenter.handleRequestCityList()) {
+        if (const auto coord = presenter.handleRequestCityCoordinate(city); coord) {
+            cache.emplace(std::make_pair(city, *coord));
+        }
+    }
+}
+
+void ImportInfoWidget::updateNoteResources(const presentation::HistoricalInfoPresenter& presenter, std::string& cache)
+{
+    cache = presenter.handleGetNote();
+}
+
+void ImportInfoWidget::updateSelectAll()
+{
+    if (needUpdateSelectAll) {
+        needUpdateSelectAll = false;
+        selectAll = infoSelectorPresenter.handleCheckIsAllSelected();
+    }
+}
+
+void ImportInfoWidget::updateCountryResources()
+{
+    if (databaseCountryResourceUpdated) {
+        databaseCountryResourceUpdated = false;
+        updateCountryResources(databaseInfoPresenter, databaseCountries);
+    }
+
+    if (importedCountryResourceUpdated) {
+        importedCountryResourceUpdated = false;
+        updateCountryResources(importInfoPresenter, importedCountries);
+    }
+}
+
+void ImportInfoWidget::updateCityResources()
+{
+    if (databaseCityResourceUpdated) {
+        databaseCityResourceUpdated = false;
+        updateCityResources(databaseInfoPresenter, databaseCities);
+    }
+
+    if (importedCityResourceUpdated) {
+        importedCityResourceUpdated = false;
+        updateCityResources(importInfoPresenter, importedCities);
+    }
+}
+
+void ImportInfoWidget::updateNoteResources()
+{
+    if (databaseNoteResourceUpdated) {
+        databaseNoteResourceUpdated = false;
+        updateNoteResources(databaseInfoPresenter, databaseNote);
+    }
+
+    if (importedNoteResourceUpdated) {
+        importedNoteResourceUpdated = false;
+        updateNoteResources(importInfoPresenter, importedNote);
     }
 }
 }

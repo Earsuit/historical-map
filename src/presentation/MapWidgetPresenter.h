@@ -41,6 +41,7 @@ public:
 private:
     std::shared_ptr<spdlog::logger> logger;
     MapWidgetInterface& view;
+    model::DatabaseModel& databaseModel;
     model::TileModel& tileModel;
     model::DynamicInfoModel& dynamicInfoModel;
     moodycamel::BlockingConcurrentQueue<std::function<void()>> taskQueue;

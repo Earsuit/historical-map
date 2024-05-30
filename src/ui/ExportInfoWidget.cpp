@@ -2,6 +2,7 @@
 #include "src/ui/Util.h"
 #include "src/logger/Util.h"
 #include "src/presentation/Util.h"
+#include "src/util/Signal.h"
 
 #include "ImFileDialog.h"
 #include "external/imgui/imgui.h"
@@ -23,15 +24,64 @@ ExportInfoWidget::ExportInfoWidget():
     infoPresenter{presentation::DEFAULT_HISTORICAL_INFO_SOURCE},
     infoSelectorPresenter{presentation::DEFAULT_HISTORICAL_INFO_SOURCE, TO_SOURCE},
     exportPresenter{TO_SOURCE}
-{   
+{
+    util::signal::connect(&infoPresenter, 
+                          &presentation::HistoricalInfoPresenter::setCountriesUpdated,
+                          this, 
+                          &ExportInfoWidget::setRefreshCountries);
+    util::signal::connect(&infoPresenter, 
+                          &presentation::HistoricalInfoPresenter::setCityUpdated,
+                          this, 
+                          &ExportInfoWidget::setRefreshCities);
+    util::signal::connect(&infoPresenter, 
+                          &presentation::HistoricalInfoPresenter::setNoteUpdated,
+                          this, 
+                          &ExportInfoWidget::setRefreshNote);
+    util::signal::connect(&infoSelectorPresenter, 
+                          &presentation::InfoSelectorPresenter::setRefreshSelectAll,
+                          this, 
+                          &ExportInfoWidget::setRefreshSelectAll);
+    util::signal::connect(&yearPresenter, 
+                          &presentation::DatabaseYearPresenter::onYearChange,
+                          this, 
+                          &ExportInfoWidget::setRefreshAll);
+
+    currentYear = yearPresenter.handelGetYear();
+}
+
+ExportInfoWidget::~ExportInfoWidget()
+{
+    util::signal::disconnectAll(&infoPresenter, 
+                                &presentation::HistoricalInfoPresenter::setCountriesUpdated,
+                                this);
+    util::signal::disconnectAll(&infoPresenter, 
+                                &presentation::HistoricalInfoPresenter::setCityUpdated,
+                                this);
+    util::signal::disconnectAll(&infoPresenter, 
+                                &presentation::HistoricalInfoPresenter::setNoteUpdated,
+                                this);
+    util::signal::disconnectAll(&infoSelectorPresenter, 
+                                &presentation::InfoSelectorPresenter::setRefreshSelectAll,
+                                this);
+    util::signal::disconnectAll(&yearPresenter, 
+                                &presentation::DatabaseYearPresenter::onYearChange,
+                                this);
+}
+
+void ExportInfoWidget::setRefreshAll(int year) noexcept
+{
+    currentYear = year;
+    setRefreshCountries();
+    setRefreshCities();
+    setRefreshNote();
+    setRefreshSelectAll();
 }
 
 void ExportInfoWidget::displayYearControlSection()
 {
-    currentYear = yearPresenter.handelGetYear();
-
-    if (ImGui::SliderInt("##", &currentYear, yearPresenter.handleGetMinYear(), yearPresenter.handleGetMaxYear(), "Year %d", ImGuiSliderFlags_AlwaysClamp)) {
-        yearPresenter.handleSetYear(currentYear);
+    int year = currentYear;
+    if (ImGui::SliderInt("##", &year, yearPresenter.handleGetMinYear(), yearPresenter.handleGetMaxYear(), "Year %d", ImGuiSliderFlags_AlwaysClamp)) {
+        yearPresenter.handleSetYear(year);
     }
     
     ImGui::SameLine();
@@ -47,8 +97,6 @@ void ExportInfoWidget::displayYearControlSection()
 
     ImGui::SameLine();
     helpMarker("Ctrl + click to maually set the year");
-
-    currentYear = yearPresenter.handelGetYear();
 }
 
 void ExportInfoWidget::displayCoordinate(const std::string& uniqueId, const persistence::Coordinate& coord)
@@ -70,7 +118,7 @@ void ExportInfoWidget::displayCoordinate(const std::string& uniqueId, const pers
     ImGui::PopID();
 }
 
-void ExportInfoWidget::displayCountry(const std::string& name)
+void ExportInfoWidget::displayCountry(const std::string& name, const std::vector<persistence::Coordinate>& contour)
 {
     bool select = selectAll || infoSelectorPresenter.handkeCheckIsCountrySelected(name);
     if (ImGui::Checkbox(("##country" + name).c_str(), &select)) {
@@ -84,7 +132,7 @@ void ExportInfoWidget::displayCountry(const std::string& name)
 
     if (ImGui::TreeNode((name + "##country").c_str())) {
         int idx = 0;
-        for (auto& coordinate : infoPresenter.handleRequestContour(name)) {
+        for (auto& coordinate : contour) {
             displayCoordinate(name + std::to_string(idx++), coordinate);
         }
 
@@ -93,7 +141,7 @@ void ExportInfoWidget::displayCountry(const std::string& name)
     }
 }
 
-void ExportInfoWidget::displayCity(const std::string& name)
+void ExportInfoWidget::displayCity(const std::string& name, const persistence::Coordinate& coord)
 {
     bool select = selectAll || infoSelectorPresenter.handleCheckIsCitySelected(name);
     if (ImGui::Checkbox(("##city" + name).c_str(), &select)) {
@@ -105,18 +153,16 @@ void ExportInfoWidget::displayCity(const std::string& name)
     }
     ImGui::SameLine();
 
-    if (const auto ret = infoPresenter.handleRequestCityCoordinate(name); ret) {
-        if (ImGui::TreeNode((name + "##city").c_str())) {
-            displayCoordinate(name + "city", *ret);
-            ImGui::TreePop();
-            ImGui::Spacing();
-        }
+    if (ImGui::TreeNode((name + "##city").c_str())) {
+        displayCoordinate(name + "city", coord);
+        ImGui::TreePop();
+        ImGui::Spacing();
     }
 }
 
 void ExportInfoWidget::displayNote()
 {
-    if (auto note = infoPresenter.handleGetNote(); !note.empty()) {
+    if (!note.empty()) {
         ImGui::SeparatorText("Note");
 
         bool select = selectAll || infoSelectorPresenter.handleCheckIsNoteSelected();
@@ -126,7 +172,7 @@ void ExportInfoWidget::displayNote()
             } else {
                 infoSelectorPresenter.handleDeselectNote();
             }
-        }  
+        }
         ImGui::TextUnformatted(note.c_str(), note.c_str() + note.size());
     }
 }
@@ -136,6 +182,11 @@ void ExportInfoWidget::paint()
     if (ImGui::Begin(INFO_WIDGET_NAME, nullptr,  ImGuiWindowFlags_NoTitleBar)) {
         displayYearControlSection();
         infoPresenter.clearHoveredCoord();
+
+        updateCountryResources();
+        updateCityResources();
+        updateNoteResources();
+        updateSelectAll();
 
         if (ImGui::Button("Export as")) {
             ImGui::OpenPopup(SELECT_FORMAT_POPUP_NAME);
@@ -147,7 +198,6 @@ void ExportInfoWidget::paint()
 
         displayExportPopup();
 
-        selectAll = infoSelectorPresenter.handleCheckIsAllSelected();
         if (ImGui::Checkbox("Select all", &selectAll)) {
             if (selectAll) {
                 infoSelectorPresenter.handleSelectAll();
@@ -166,13 +216,13 @@ void ExportInfoWidget::paint()
         displaySelectAllForMultipleYearsPopup();
 
         ImGui::SeparatorText("Countries");
-        for (const auto& country : infoPresenter.handleRequestCountryList()) {
-            displayCountry(country);
+        for (const auto& [country, contour] : countries) {
+            displayCountry(country, contour);
         }
 
         ImGui::SeparatorText("Cities");
-        for (const auto& city : infoPresenter.handleRequestCityList()) {
-            displayCity(city);
+        for (const auto& [city, coord] : cities) {
+            displayCity(city, coord);
         }
 
         displayNote();
@@ -286,6 +336,49 @@ void ExportInfoWidget::displaySelectAllForMultipleYearsPopup()
     // the user stops the process manually
     if (!processMultiYearSelection && !processMultiYearSelectionComplete) {
         infoSelectorPresenter.handleCancelSelectAllForMultipleYears();
+    }
+}
+
+void ExportInfoWidget::updateCountryResources()
+{
+    if (countryResourceUpdated) {
+        countryResourceUpdated = false;
+        countries.clear();
+        for (const auto& country : infoPresenter.handleRequestCountryList()) {
+            countries.emplace(std::make_pair(country, std::vector<persistence::Coordinate>{}));
+            for (const auto& coord : infoPresenter.handleRequestContour(country)) {
+                countries[country].emplace_back(coord);
+            }
+        }
+    }
+}
+
+void ExportInfoWidget::updateCityResources()
+{
+    if (cityResourceUpdated) {
+        cityResourceUpdated = false;
+        cities.clear();
+        for (const auto& city : infoPresenter.handleRequestCityList()) {
+            if (const auto coord =infoPresenter.handleRequestCityCoordinate(city); coord) {
+                cities.emplace(std::make_pair(city, *coord));
+            }
+        }
+    }
+}
+
+void ExportInfoWidget::updateNoteResources()
+{
+    if (noteResourceUpdated) {
+        noteResourceUpdated = false;
+        note = infoPresenter.handleGetNote();
+    }
+}
+
+void ExportInfoWidget::updateSelectAll()
+{
+    if (needUpdateSelectAll) {
+        needUpdateSelectAll = false;
+        selectAll = infoSelectorPresenter.handleCheckIsAllSelected();
     }
 }
 }

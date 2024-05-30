@@ -4,6 +4,7 @@
 #include "src/model/DatabaseModel.h"
 #include "src/model/DynamicInfoModel.h"
 #include "src/util/Worker.h"
+#include "src/util/Signal.h"
 
 #include "spdlog/spdlog.h"
 
@@ -15,15 +16,19 @@ namespace presentation {
 class ImportYearPresenter {
 public:
     ImportYearPresenter(const std::string& source);
+    ~ImportYearPresenter();
 
     void initYearsList();
 
     void handleMoveYearForward() noexcept;
     void handleMoveYearBackward() noexcept;
     void handleSetYear(int year) noexcept;
-    int handelGetYear() const noexcept;
     int handleGetMaxYear() const noexcept;
     int handleGetMinYear() const noexcept;
+
+    void updateInfo(int year);
+
+    util::signal::Signal<void(int)> onYearChange;
 
 private:
     std::shared_ptr<spdlog::logger> logger;
@@ -32,8 +37,6 @@ private:
     std::string source;
     std::set<int> years;
     util::Worker<std::function<void()>> worker;
-
-    void updateInfo();
 };
 }
 

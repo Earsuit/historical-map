@@ -3,6 +3,7 @@
 
 #include "src/model/DynamicInfoModel.h"
 #include "src/model/DatabaseModel.h"
+#include "src/util/Signal.h"
 
 #include "spdlog/spdlog.h"
 
@@ -35,6 +36,8 @@ public:
     bool handleCheckSelectAllForMultipleYearsComplete();
     void handleCancelSelectAllForMultipleYears() noexcept { stopTask = true; };
 
+    util::signal::Signal<void()> setRefreshSelectAll;
+
 private:
     std::shared_ptr<spdlog::logger> logger;
     model::DatabaseModel& databaseModel;
@@ -47,6 +50,7 @@ private:
     std::atomic_int progress;
 
     void upsertHistoricalStroageIfNotExists(int year);
+    void onUpdate(const std::string& source, int year);
 };
 }
 

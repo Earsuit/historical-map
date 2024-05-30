@@ -26,7 +26,7 @@ bool DatabaseSaverPresenter::handleSaveSameForRange(int startYear, int endYear)
     if (!taskQueue.enqueue([this, 
                             startYear, 
                             endYear] () mutable {
-            const auto year = this->dynamicInfoModel.getCurrentYear();
+            const auto year = this->databaseModel.getYear();
             auto data = this->dynamicInfoModel.getData(this->source, year);
             auto removed = this->dynamicInfoModel.getRemoved(this->source, year);
             if (data && removed) {

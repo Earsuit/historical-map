@@ -13,19 +13,21 @@
 #include <string>
 #include <memory>
 #include <map>
+#include <atomic>
 
 namespace ui {
 class DefaultInfoWidget: public IInfoWidget {
 public:
-    DefaultInfoWidget(): 
-        logger{spdlog::get(logger::LOGGER_NAME)}, 
-        infoPresenter{presentation::DEFAULT_HISTORICAL_INFO_SOURCE},
-        databaseSaverPresenter{presentation::DEFAULT_HISTORICAL_INFO_SOURCE}
-    {
-    }
+    DefaultInfoWidget();
+    ~DefaultInfoWidget();
 
     virtual bool complete() const noexcept override { return false; };
     virtual void paint() override;
+
+    void setRefreshCountries() noexcept { countryResourceUpdated = true; }
+    void setRefreshCities() noexcept { cityResourceUpdated = true; }
+    void setRefreshNote() noexcept { noteResourceUpdated = true; }
+    void setRefreshAll(int year) noexcept;
 
 private:
     std::shared_ptr<spdlog::logger> logger;
@@ -34,10 +36,17 @@ private:
     presentation::DatabaseYearPresenter yearPresenter;
     int startYear;
     int endYear;
-    int currentYear;
+    std::atomic_int currentYear;
     std::string countryName;
+    std::atomic_bool clearNewInfoEntry = false;
     std::map<std::string, std::pair<std::string, std::string>> countryNewCoordinateCache;
     std::string newCityName, newCityLatitude, newCityLongitude;
+    std::atomic_bool countryResourceUpdated = false;
+    std::map<std::string, std::vector<persistence::Coordinate>> countries;
+    std::atomic_bool cityResourceUpdated = false;
+    std::map<std::string, persistence::Coordinate> cities;
+    std::atomic_bool noteResourceUpdated = false;
+    std::string note;
 
     void displayCountryInfos();
     void displayCityInfos();
@@ -47,9 +56,14 @@ private:
     void saveInfoRange(int startYear, int endYear);
     void savePopupWindow();
     void saveProgressPopUp();
-    void displayCountry(const std::string& name);
-    void displayCity(const std::string& name);
+    void displayCountry(const std::string& name, const std::vector<persistence::Coordinate>& contour);
+    void displayCity(const std::string& name, const persistence::Coordinate& coord);
     persistence::Coordinate displayCoordinate(const std::string& uniqueId, const persistence::Coordinate& coord);
+
+    void updateCountryResources();
+    void updateCityResources();
+    void updateNoteResources();
+    void updateNewInfoEntry();
 };
 
 }

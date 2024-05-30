@@ -1,5 +1,6 @@
 #include "src/ui/DefaultInfoWidget.h"
 #include "src/ui/Util.h"
+#include "src/util/Signal.h"
 
 #include "external/imgui/imgui.h"
 #include "external/imgui/misc/cpp/imgui_stdlib.h"
@@ -9,12 +10,52 @@ constexpr int NAME_INPUT_WIDTH = 100;
 constexpr auto POPUP_WINDOW_NAME = "Save for years";
 constexpr auto PROGRESS_POPUP_WINDOW_NAME = "Saving";
 
+DefaultInfoWidget::DefaultInfoWidget(): 
+    logger{spdlog::get(logger::LOGGER_NAME)}, 
+    infoPresenter{presentation::DEFAULT_HISTORICAL_INFO_SOURCE},
+    databaseSaverPresenter{presentation::DEFAULT_HISTORICAL_INFO_SOURCE}
+{
+    util::signal::connect(&infoPresenter, 
+                          &presentation::HistoricalInfoPresenter::setCountriesUpdated,
+                          this, 
+                          &DefaultInfoWidget::setRefreshCountries);
+    util::signal::connect(&infoPresenter, 
+                          &presentation::HistoricalInfoPresenter::setCityUpdated,
+                          this, 
+                          &DefaultInfoWidget::setRefreshCities);
+    util::signal::connect(&infoPresenter, 
+                          &presentation::HistoricalInfoPresenter::setNoteUpdated,
+                          this, 
+                          &DefaultInfoWidget::setRefreshNote);
+    util::signal::connect(&yearPresenter, 
+                          &presentation::DatabaseYearPresenter::onYearChange,
+                          this, 
+                          &DefaultInfoWidget::setRefreshAll);
+
+    currentYear = yearPresenter.handelGetYear();
+}
+
+DefaultInfoWidget::~DefaultInfoWidget()
+{
+    util::signal::disconnectAll(&infoPresenter, 
+                                &presentation::HistoricalInfoPresenter::setCountriesUpdated,
+                                this);
+    util::signal::disconnectAll(&infoPresenter, 
+                                &presentation::HistoricalInfoPresenter::setCityUpdated,
+                                this);
+    util::signal::disconnectAll(&infoPresenter, 
+                                &presentation::HistoricalInfoPresenter::setNoteUpdated,
+                                this);
+    util::signal::disconnectAll(&yearPresenter, 
+                                &presentation::DatabaseYearPresenter::onYearChange,
+                                this);
+}
+
 void DefaultInfoWidget::displayYearControlSection()
 {
-    currentYear = yearPresenter.handelGetYear();
-
-    if (ImGui::SliderInt("##", &currentYear, yearPresenter.handleGetMinYear(), yearPresenter.handleGetMaxYear(), "Year %d", ImGuiSliderFlags_AlwaysClamp)) {
-        yearPresenter.handleSetYear(currentYear);
+    int year = currentYear;
+    if (ImGui::SliderInt("##", &year, yearPresenter.handleGetMinYear(), yearPresenter.handleGetMaxYear(), "Year %d", ImGuiSliderFlags_AlwaysClamp)) {
+        yearPresenter.handleSetYear(year);
         countryNewCoordinateCache.clear();
     }
     
@@ -33,8 +74,15 @@ void DefaultInfoWidget::displayYearControlSection()
 
     ImGui::SameLine();
     helpMarker("Ctrl + click to maually set the year");
+}
 
-    currentYear = yearPresenter.handelGetYear();
+void DefaultInfoWidget::setRefreshAll(int year) noexcept
+{
+    currentYear = year;
+    clearNewInfoEntry = true;
+    setRefreshCountries();
+    setRefreshCities();
+    setRefreshNote();
 }
 
 void DefaultInfoWidget::paint()
@@ -49,6 +97,11 @@ void DefaultInfoWidget::paint()
             yearPresenter.handleSetYear(currentYear);
         }
         ImGui::SameLine();
+
+        updateCountryResources();
+        updateCityResources();
+        updateNoteResources();
+        updateNewInfoEntry();
 
         if (ImGui::Button("Save")) {
             databaseSaverPresenter.handleSaveSameForRange(currentYear, currentYear);
@@ -82,8 +135,8 @@ void DefaultInfoWidget::paint()
 
 void DefaultInfoWidget::displayCountryInfos()
 {
-    for (const auto& country : infoPresenter.handleRequestCountryList()) {
-        displayCountry(country);
+    for (const auto& [country, contour] : countries) {
+        displayCountry(country, contour);
     }
 
     ImGui::PushItemWidth(NAME_INPUT_WIDTH);
@@ -97,11 +150,11 @@ void DefaultInfoWidget::displayCountryInfos()
     }
 }
 
-void DefaultInfoWidget::displayCountry(const std::string& name)
+void DefaultInfoWidget::displayCountry(const std::string& name, const std::vector<persistence::Coordinate>& contour)
 {
     if (ImGui::TreeNode((name + "##country").c_str())) {
         int idx = 0;
-        for (auto& coordinate : infoPresenter.handleRequestContour(name)) {
+        for (const auto& coordinate : contour) {
             const auto newCoordinate = displayCoordinate(name + std::to_string(idx), coordinate);
 
             if (newCoordinate != coordinate) {
@@ -180,8 +233,8 @@ persistence::Coordinate DefaultInfoWidget::displayCoordinate(const std::string& 
 
 void DefaultInfoWidget::displayCityInfos()
 {
-    for (const auto& city : infoPresenter.handleRequestCityList()) {
-        displayCity(city);
+    for (const auto& [city, coord] : cities) {
+        displayCity(city, coord);
     }
 
     ImGui::PushItemWidth(NAME_INPUT_WIDTH);
@@ -213,30 +266,27 @@ void DefaultInfoWidget::displayCityInfos()
     }
 }
 
-void DefaultInfoWidget::displayCity(const std::string& name)
+void DefaultInfoWidget::displayCity(const std::string& name, const persistence::Coordinate& coord)
 {
-    if (const auto ret = infoPresenter.handleRequestCityCoordinate(name); ret) {
-        if (ImGui::TreeNode((name + "##city").c_str())) {
-            const auto newCoordinate = displayCoordinate(name + "city", *ret);
+    if (ImGui::TreeNode((name + "##city").c_str())) {
+        const auto newCoordinate = displayCoordinate(name + "city", coord);
 
-            if (newCoordinate != *ret) {
-                infoPresenter.handleUpdateCityCoordinate(name, newCoordinate);
-            }
-
-            if (ImGui::Button("Remove")) {
-                this->logger->debug("Delete city {}", name);
-                infoPresenter.handleRemoveCity(name);
-            }
-
-            ImGui::TreePop();
-            ImGui::Spacing();
+        if (newCoordinate != coord) {
+            infoPresenter.handleUpdateCityCoordinate(name, newCoordinate);
         }
+
+        if (ImGui::Button("Remove")) {
+            this->logger->debug("Delete city {}", name);
+            infoPresenter.handleRemoveCity(name);
+        }
+
+        ImGui::TreePop();
+        ImGui::Spacing();
     }
 }
 
 void DefaultInfoWidget::displayNote()
 {
-    auto note = infoPresenter.handleGetNote();
     if (ImGui::Button("Clear")) {
         infoPresenter.handleUpdateNote("");
     }
@@ -278,6 +328,52 @@ void DefaultInfoWidget::saveProgressPopUp()
                                 databaseSaverPresenter.isSaveComplete(),
                                 [](){});
         ImGui::EndPopup();
+    }
+}
+
+void DefaultInfoWidget::updateCountryResources()
+{
+    if (countryResourceUpdated) {
+        countryResourceUpdated = false;
+        countries.clear();
+        for (const auto& country : infoPresenter.handleRequestCountryList()) {
+            countries.emplace(std::make_pair(country, std::vector<persistence::Coordinate>{}));
+            for (const auto& coord : infoPresenter.handleRequestContour(country)) {
+                countries[country].emplace_back(coord);
+            }
+        }
+    }
+}
+
+void DefaultInfoWidget::updateCityResources()
+{
+    if (cityResourceUpdated) {
+        cityResourceUpdated = false;
+        cities.clear();
+        for (const auto& city : infoPresenter.handleRequestCityList()) {
+            if (const auto coord =infoPresenter.handleRequestCityCoordinate(city); coord) {
+                cities.emplace(std::make_pair(city, *coord));
+            }
+        }
+    }
+}
+
+void DefaultInfoWidget::updateNoteResources()
+{
+    if (noteResourceUpdated) {
+        noteResourceUpdated = false;
+        note = infoPresenter.handleGetNote();
+    }
+}
+
+void DefaultInfoWidget::updateNewInfoEntry()
+{
+    if (clearNewInfoEntry) {
+        clearNewInfoEntry = false;
+        countryNewCoordinateCache.clear();
+        newCityName.clear();
+        newCityLatitude.clear();
+        newCityLongitude.clear();
     }
 }
 }

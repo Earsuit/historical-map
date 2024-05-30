@@ -9,13 +9,22 @@
 
 #include "spdlog/spdlog.h"
 
+#include <atomic>
+
 namespace ui {
 class ExportInfoWidget: public IInfoWidget {
 public:
     ExportInfoWidget();
+    ~ExportInfoWidget();
 
     virtual void paint() override;
     virtual bool complete() const noexcept override { return isComplete; }
+
+    void setRefreshCountries() noexcept { countryResourceUpdated = true; }
+    void setRefreshCities() noexcept { cityResourceUpdated = true; }
+    void setRefreshNote() noexcept { noteResourceUpdated = true; }
+    void setRefreshSelectAll() noexcept { needUpdateSelectAll = true; }
+    void setRefreshAll(int year) noexcept;
 
 private:
     std::shared_ptr<spdlog::logger> logger;
@@ -23,7 +32,7 @@ private:
     presentation::InfoSelectorPresenter infoSelectorPresenter;
     presentation::DatabaseYearPresenter yearPresenter;
     presentation::ExportPresenter exportPresenter;
-    int currentYear;
+    std::atomic_int currentYear;
     bool selectAll;
     bool isComplete = false;
     std::string errorMsg;
@@ -34,14 +43,26 @@ private:
     int endYear;
     bool processMultiYearSelection = false;
     bool processMultiYearSelectionComplete = false;
+    std::atomic_bool countryResourceUpdated = false;
+    std::map<std::string, std::vector<persistence::Coordinate>> countries;
+    std::atomic_bool cityResourceUpdated = false;
+    std::map<std::string, persistence::Coordinate> cities;
+    std::atomic_bool noteResourceUpdated = false;
+    std::string note;
+    std::atomic_bool needUpdateSelectAll = false;
 
     void displayYearControlSection();
-    void displayCountry(const std::string& name);
-    void displayCity(const std::string& name);
+    void displayCountry(const std::string& name, const std::vector<persistence::Coordinate>& contour);
+    void displayCity(const std::string& name, const persistence::Coordinate& coord);
     void displayNote();
     void displayCoordinate(const std::string& uniqueId, const persistence::Coordinate& coord);
     void displayExportPopup();
     void displaySelectAllForMultipleYearsPopup();
+
+    void updateCountryResources();
+    void updateCityResources();
+    void updateNoteResources();
+    void updateSelectAll();
 };
 }
 
