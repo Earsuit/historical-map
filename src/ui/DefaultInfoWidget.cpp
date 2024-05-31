@@ -56,19 +56,16 @@ void DefaultInfoWidget::displayYearControlSection()
     int year = currentYear;
     if (ImGui::SliderInt("##", &year, yearPresenter.handleGetMinYear(), yearPresenter.handleGetMaxYear(), "Year %d", ImGuiSliderFlags_AlwaysClamp)) {
         yearPresenter.handleSetYear(year);
-        countryNewCoordinateCache.clear();
     }
     
     ImGui::SameLine();
     ImGui::PushButtonRepeat(true);
     if (ImGui::ArrowButton("##left", ImGuiDir_Left)) {
         yearPresenter.handleMoveYearBackward();
-        countryNewCoordinateCache.clear();
     }
     ImGui::SameLine();
     if (ImGui::ArrowButton("##right", ImGuiDir_Right)) {
         yearPresenter.handleMoveYearForward();
-        countryNewCoordinateCache.clear();
     }
     ImGui::PopButtonRepeat();
 
