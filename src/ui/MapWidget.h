@@ -14,29 +14,19 @@
 #include <utility>
 #include <memory>
 #include <optional>
+#include <map>
+#include <atomic>
 
 namespace ui {
 constexpr auto MAP_WIDGET_NAME_PREFIX = "Map plot";
 
 class MapWidget: presentation::MapWidgetInterface {
 public:
-    MapWidget(const std::string& source): 
-        logger{spdlog::get(logger::LOGGER_NAME)},
-        presenter{*this, source},
-        source{source},
-        plotName{"##" + source}
-    {
-    }
-    virtual ~MapWidget() = default;
+    MapWidget(const std::string& source);
+    virtual ~MapWidget();
 
     void paint();
 
-    virtual void renderAnnotation(const model::Vec2& coordinate, 
-                                  const std::string& name, 
-                                  const presentation::Color& color, 
-                                  const model::Vec2& offset) override;
-    virtual model::Vec2 renderPoint(const model::Vec2& coordinate, float size, const presentation::Color& color) override;
-    virtual void renderContour(const std::string& name, const std::vector<model::Vec2>& contour, const presentation::Color& color) override;
     virtual model::Range getAxisRangeX() const noexcept override;
     virtual model::Range getAxisRangeY() const noexcept override;
     virtual model::Vec2 getPlotSize() const noexcept override;
@@ -46,6 +36,22 @@ public:
     std::string getName() const noexcept { return MAP_WIDGET_NAME_PREFIX + source; }
 
 private:
+    struct Coordinate {
+        ImVec2 coord;
+        float size;
+    };
+
+    struct Country {
+        ImVec4 color;
+        std::vector<Coordinate> contour;
+        ImVec2 labelCoordinate;
+    };
+
+    struct City {
+        ImVec4 color;
+        Coordinate coordinate;
+    };
+
     std::shared_ptr<spdlog::logger> logger;
     presentation::MapWidgetPresenter presenter;
     std::string source;
@@ -57,11 +63,24 @@ private:
     std::string plotName;
     std::string newCountryName;
     std::string newCityName;
+    std::atomic_bool countryUpdated = true;
+    std::atomic_bool cityUpdated = true;
+    std::map<std::string, Country> countries;
+    std::map<std::string, City> cities;
 
     void renderMap();
     void renderOverlay();
+    void renderCountries();
+    void renderCities();
+    void updatCountries();
+    void updateCities();
+
+    void onCountryUpdate() noexcept { countryUpdated = true; }
+    void onCityUpdate() noexcept { cityUpdated = true; }
+
     virtual void renderRightClickMenu();
     virtual void prepareRenderPoint();
+    virtual ImVec2 renderPoint(const ImVec2& coordinate, float size, const ImVec4& color);
 };
 }
 

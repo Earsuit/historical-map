@@ -2,46 +2,23 @@
 #include "src/presentation/Util.h"
 #include "src/logger/Util.h"
 
-#include "mapbox/polylabel.hpp"
-
 #include <algorithm>
 #include <sstream>
 #include <iomanip>
 
 namespace presentation {
-constexpr int TILE_SIZE = 256;  
 constexpr int BBOX_ZOOM_LEVEL = 0;
 constexpr int MIN_ZOOM_LEVEL = 0;
-constexpr int MAX_ZOOM_LEVEL = 18;
-constexpr float PI_DEG = 360.0;
-constexpr float HALF_PI_DEG = 180.0;
-constexpr int PADDING = 0;
 constexpr float MAX_LONGITUDE = 180.0f;
 constexpr float MIN_LONGITUDE = -180.0f;
 constexpr float MAX_LATITUDE = 85.05112878f;
 constexpr float MIN_LATITUDE = -85.05112878f;
-constexpr float PI = M_PI;
-constexpr auto MINIMAL_POINTS_OF_POLYGON = 3;
-constexpr auto VISUAL_CENTER_PERCISION = 1.0;
 constexpr float POINT_SIZE = 2.0f;
 constexpr float HOVERED_POINT_SIZE = 4.0f;
 constexpr auto DEFAULT_ALPHA = 1.0f;
 constexpr auto NORMALIZE = 255.0f; 
 constexpr uint8_t MASK = 0xFF;
 constexpr auto TEXT_DECIMAL_PRECISION = 2;
-constexpr auto CITY_ANNOTATION_OFFSET = model::Vec2(-15, 15);
-constexpr auto COUNTRY_ANNOTATION_OFFSET = model::Vec2(0, 0);
-
-Color computeColor(const std::string& val)
-{
-    const auto hash = std::hash<std::string>{}(val);
-
-    float r = static_cast<float>((hash & MASK) / NORMALIZE);
-    float g = static_cast<float>(((hash >> 8) & MASK) / NORMALIZE);
-    float b = static_cast<float>(((hash >> 16) & MASK) / NORMALIZE);
-
-    return Color(r, g, b, DEFAULT_ALPHA);
-}
 
 float x2Longitude(float x)
 {
@@ -61,10 +38,33 @@ MapWidgetPresenter::MapWidgetPresenter(MapWidgetInterface& view, const std::stri
     dynamicInfoModel{model::DynamicInfoModel::getInstance()},
     source{source}
 {
+    util::signal::connect(&dynamicInfoModel,
+                          &model::DynamicInfoModel::onCountryUpdate,
+                          this,
+                          &MapWidgetPresenter::onCountryUpdate);
+    util::signal::connect(&dynamicInfoModel,
+                          &model::DynamicInfoModel::onCityUpdate,
+                          this,
+                          &MapWidgetPresenter::onCityUpdate);
+    util::signal::connect(&databaseModel,
+                          &model::DatabaseModel::onYearChange,
+                          this,
+                          &MapWidgetPresenter::onYearChange);
+
+    year = databaseModel.getYear();
 }
 
 MapWidgetPresenter::~MapWidgetPresenter()
 {
+    util::signal::disconnectAll(&dynamicInfoModel,
+                                &model::DynamicInfoModel::onCountryUpdate,
+                                this);
+    util::signal::disconnectAll(&dynamicInfoModel,
+                                &model::DynamicInfoModel::onCityUpdate,
+                                this);
+    util::signal::disconnectAll(&databaseModel,
+                                &model::DatabaseModel::onYearChange,
+                                this);
 }
 
 void MapWidgetPresenter::handleRenderTiles()
@@ -80,81 +80,6 @@ void MapWidgetPresenter::handleRenderTiles()
         const auto bMin = tileModel.getTileBoundMin(tile);
         view.renderTile(tile->getTexture(), bMin, bMax);
     }
-}
-
-void MapWidgetPresenter::handleRenderCountry()
-{
-    const auto year = databaseModel.getYear();
-    for (const auto& name : dynamicInfoModel.getCountryList(source, year)) {
-        // have to use double type here due to a compilation error in mapbox::polylabel if use float
-        mapbox::geometry::polygon<double> polygon{mapbox::geometry::linear_ring<double>{}};
-        std::vector<model::Vec2> points;
-        const auto color = computeColor(name);
-        int idx = 0;
-
-        for (const auto& coordinate : dynamicInfoModel.getContour(source, year, name)) {
-            const auto& [newCoord, point] = handleRenderCoordinate(coordinate, color);
-            
-            if (newCoord != coordinate) {
-                dynamicInfoModel.updateContour(source, year, name, idx, newCoord);
-            }
-
-            polygon.back().emplace_back(point.x, point.y);
-            points.emplace_back(point);
-
-            idx++;
-        }
-
-        if (points.size() >= MINIMAL_POINTS_OF_POLYGON) {
-            const auto visualCenter = mapbox::polylabel<double>(polygon, VISUAL_CENTER_PERCISION);
-            view.renderAnnotation(model::Vec2{static_cast<float>(visualCenter.x), static_cast<float>(visualCenter.y)}, 
-                                  name, 
-                                  color,
-                                  COUNTRY_ANNOTATION_OFFSET);
-            view.renderContour(name, points, color);
-        }
-    }
-}
-
-void MapWidgetPresenter::handleRenderCity()
-{
-    const auto year = databaseModel.getYear();
-    for (const auto& name : dynamicInfoModel.getCityList(source, year)) {
-        if (const auto& city = dynamicInfoModel.getCity(source, year, name); city) {
-            const auto color = computeColor(name);
-            const auto& [newCoord, point] = handleRenderCoordinate(city->coordinate, color);
-
-            if (newCoord != city->coordinate) {
-                dynamicInfoModel.updateCityCoord(source, year, name, newCoord);
-            }
-
-            view.renderAnnotation(point, city->name, color, CITY_ANNOTATION_OFFSET);
-        }
-    }
-}
-
-std::pair<persistence::Coordinate, model::Vec2> MapWidgetPresenter::handleRenderCoordinate(persistence::Coordinate coordinate,
-                                                                                           const Color& color)
-{
-    bool changed = false;
-    const auto hovered = dynamicInfoModel.getHoveredCoord();
-    const model::Vec2 point{model::longitude2X(coordinate.longitude, BBOX_ZOOM_LEVEL), 
-                            model::latitude2Y(coordinate.latitude, BBOX_ZOOM_LEVEL)};
-
-    float size = POINT_SIZE;
-    if (hovered && coordinate == *hovered) {
-        size = HOVERED_POINT_SIZE;
-    }
-
-    const auto newPoint = view.renderPoint(point, size, color);
-
-    if (newPoint != point) {
-        coordinate.latitude = y2Latitude(newPoint.y);
-        coordinate.longitude = x2Longitude(newPoint.x);
-        logger->debug("Moving point to lay {}, lon {}", coordinate.latitude, coordinate.longitude);
-    }
-
-    return {coordinate, newPoint};
 }
 
 std::string MapWidgetPresenter::handleGetOverlayText() const
@@ -195,14 +120,83 @@ bool MapWidgetPresenter::handleRequestHasRightClickMenu() const noexcept
 
 std::vector<std::string> MapWidgetPresenter::handleRequestCountryList() const
 {
-    return dynamicInfoModel.getCountryList(source, databaseModel.getYear());
+    return dynamicInfoModel.getCountryList(source, year);
+}
+
+std::vector<std::string> MapWidgetPresenter::handleRequestCityList() const
+{
+    return dynamicInfoModel.getCityList(source, year);
+}
+
+std::vector<ImVec2> MapWidgetPresenter::handleRequestContour(const std::string& name) const
+{
+    const auto contour = dynamicInfoModel.getContour(source, year, name);
+    std::vector<ImVec2> points;
+    points.reserve(contour.size());
+    for (const auto& coord : contour) {
+        points.emplace_back(model::longitude2X(coord.longitude, BBOX_ZOOM_LEVEL),
+                            model::latitude2Y(coord.latitude, BBOX_ZOOM_LEVEL));
+    }
+
+    return points;
+}
+
+ImVec4 MapWidgetPresenter::handleRequestColor(const std::string& name) const
+{
+    const auto hash = std::hash<std::string>{}(name);
+
+    float r = static_cast<float>((hash & MASK) / NORMALIZE);
+    float g = static_cast<float>(((hash >> 8) & MASK) / NORMALIZE);
+    float b = static_cast<float>(((hash >> 16) & MASK) / NORMALIZE);
+
+    return ImVec4(r, g, b, DEFAULT_ALPHA);
+}
+
+std::optional<ImVec2> MapWidgetPresenter::handleRequestCityCoord(const std::string& name) const
+{
+    if (const auto& city = dynamicInfoModel.getCity(source, year, name); city) {
+        return ImVec2{model::longitude2X(city->coordinate.longitude, BBOX_ZOOM_LEVEL), 
+                      model::latitude2Y(city->coordinate.latitude, BBOX_ZOOM_LEVEL)};
+    }
+
+    return std::nullopt;
+}
+
+float MapWidgetPresenter::handleRequestCoordSize(const ImVec2& coord) const
+{
+    if (const auto hovered = dynamicInfoModel.getHoveredCoord(); hovered) {
+        const auto point = ImVec2{model::longitude2X(hovered->longitude, BBOX_ZOOM_LEVEL), 
+                                  model::latitude2Y(hovered->latitude, BBOX_ZOOM_LEVEL)};
+        if (point.x == coord.x && point.y == coord.y) {
+            return HOVERED_POINT_SIZE;
+        }
+    }
+
+    return POINT_SIZE;
+}
+
+void MapWidgetPresenter::handleUpdateContour(const std::string& name, int idx, const ImVec2& coord)
+{
+    dynamicInfoModel.updateContour(source, 
+                                   year, 
+                                   name, 
+                                   idx, 
+                                   persistence::Coordinate{y2Latitude(coord.y), x2Longitude(coord.x)});
+}
+
+void MapWidgetPresenter::handleUpdateCity(const std::string& name, const ImVec2& coord)
+{
+    dynamicInfoModel.updateCityCoord(source, 
+                                     year, 
+                                     name, 
+                                     persistence::Coordinate{y2Latitude(coord.y), x2Longitude(coord.x)});
 }
 
 bool MapWidgetPresenter::handleExtendContour(const std::string& name, const model::Vec2& pos)
 {
     const persistence::Coordinate coord{.latitude = y2Latitude(pos.y), .longitude = x2Longitude(pos.x)};
 
-    if (dynamicInfoModel.extendContour(source, databaseModel.getYear(), name, coord)) {
+    if (dynamicInfoModel.extendContour(source, year, name, coord)) {
         return true;
     }
 
@@ -213,7 +207,7 @@ bool MapWidgetPresenter::handleExtendContour(const std::string& name, const mode
 bool MapWidgetPresenter::handleAddCountry(const std::string& name, const model::Vec2& pos)
 {
     const persistence::Country country{name, {persistence::Coordinate{.latitude = y2Latitude(pos.y), .longitude = x2Longitude(pos.x)}}};
-    if (dynamicInfoModel.addCountry(source, databaseModel.getYear(), country)) {
+    if (dynamicInfoModel.addCountry(source, year, country)) {
         return true;
     }
 
@@ -226,12 +220,40 @@ bool MapWidgetPresenter::handleAddCity(const std::string& name, const model::Vec
 {
     const persistence::City city{name, {.latitude = y2Latitude(pos.y), .longitude = x2Longitude(pos.x)}};
 
-    if (dynamicInfoModel.addCity(source, databaseModel.getYear(), city)) {
+    if (dynamicInfoModel.addCity(source, year, city)) {
         return true;
     }
 
     logger->error("Add city {} fail for source {}", name, source);
 
     return false;
+}
+
+bool MapWidgetPresenter::varifySignal(const std::string& source, int year) const noexcept
+{
+    return source == this->source && year == this->year;
+}
+
+void MapWidgetPresenter::onCountryUpdate(const std::string& source, int year)
+{
+    if (varifySignal(source, year)) {
+        logger->debug("MapWidgetPresenter onCountryUpdate for source {} at year {}", source, year);
+        countryUpdated();
+    }
+}
+
+void MapWidgetPresenter::onCityUpdate(const std::string& source, int year)
+{
+    if (varifySignal(source, year)) {
+        logger->debug("MapWidgetPresenter onCityUpdate for source {} at year {}", source, year);
+        cityUpdated();
+    }
+}
+
+void MapWidgetPresenter::onYearChange(int year)
+{
+    this->year = year;
+    countryUpdated();
+    cityUpdated();
 }
 }

@@ -9,11 +9,11 @@ void MapWidgetNoninteractive::prepareRenderPoint()
     dragPointId = 0;
 }
 
-model::Vec2 MapWidgetNoninteractive::renderPoint(const model::Vec2& coordinate, float size, const presentation::Color& color)
+ImVec2 MapWidgetNoninteractive::renderPoint(const ImVec2& coordinate, float size, const ImVec4& color)
 {
     double x = coordinate.x;
     double y = coordinate.y;
-    ImPlot::DragPoint(dragPointId++, &x, &y, ImVec4{color.red, color.green, color.blue, color.alpha}, size, ImPlotDragToolFlags_NoInputs);
+    ImPlot::DragPoint(dragPointId++, &x, &y, color, size, ImPlotDragToolFlags_NoInputs);
 
     return {static_cast<float>(x), static_cast<float>(y)};
 }

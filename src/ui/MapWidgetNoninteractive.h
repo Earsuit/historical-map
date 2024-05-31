@@ -10,7 +10,7 @@ public:
         MapWidget{source}
     {}
 
-    virtual model::Vec2 renderPoint(const model::Vec2& coordinate, float size, const presentation::Color& color) override;
+    virtual ImVec2 renderPoint(const ImVec2& coordinate, float size, const ImVec4& color) override;
 
 private:
     size_t dragPointId = 0;

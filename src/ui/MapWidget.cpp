@@ -38,8 +38,42 @@ constexpr auto INIT_X_LIMIT_MAX = 0.9349;
 constexpr auto INIT_Y_LIMIT_MIN = 0.3162;
 constexpr auto INIT_Y_LIMIT_MAX = 0.4779;
 
+constexpr auto CITY_ANNOTATION_OFFSET = ImVec2(-15, 15);
+constexpr auto COUNTRY_ANNOTATION_OFFSET = ImVec2(0, 0);
+
 const auto ADD_NEW_COUNTRY_POPUP_NAME = "Add new country";
 const auto ADD_NEW_CITY_POPUP_NAME = "Add new city";
+
+bool operator==(const ImVec2& lhs, const ImVec2& rhs)
+{
+    return lhs.x == rhs.x && lhs.y == rhs.y;
+}
+
+MapWidget::MapWidget(const std::string& source): 
+    logger{spdlog::get(logger::LOGGER_NAME)},
+    presenter{*this, source},
+    source{source},
+    plotName{"##" + source}
+{
+    util::signal::connect(&presenter,
+                          &presentation::MapWidgetPresenter::countryUpdated,
+                          this,
+                          &MapWidget::onCountryUpdate);
+    util::signal::connect(&presenter,
+                          &presentation::MapWidgetPresenter::cityUpdated,
+                          this,
+                          &MapWidget::onCityUpdate);
+}
+
+MapWidget::~MapWidget()
+{
+    util::signal::disconnectAll(&presenter,
+                                &presentation::MapWidgetPresenter::countryUpdated,
+                                this);
+    util::signal::disconnectAll(&presenter,
+                                &presentation::MapWidgetPresenter::cityUpdated,
+                                this);
+}
 
 void MapWidget::paint()
 {
@@ -51,6 +85,9 @@ void MapWidget::paint()
     ImGui::PopStyleVar(2);
 
     prepareRenderPoint();
+
+    updatCountries();
+    updateCities();
 
     renderMap();
     renderRightClickMenu();
@@ -64,41 +101,13 @@ void MapWidget::prepareRenderPoint()
     dragPointId = 0;
 }
 
-void MapWidget::renderAnnotation(const model::Vec2& coordinate, const std::string& name, const presentation::Color& color, const model::Vec2& offset)
-{
-    ImPlot::Annotation(static_cast<double>(coordinate.x), static_cast<double>(coordinate.y), 
-                       ImVec4{color.red, color.green, color.blue, color.alpha}, 
-                       ImVec2{offset.x, offset.y}, 
-                       false, 
-                       "%s", 
-                       name.c_str());
-}
-
-model::Vec2 MapWidget::renderPoint(const model::Vec2& coordinate, float size, const presentation::Color& color)
+ImVec2 MapWidget::renderPoint(const ImVec2& coordinate, float size, const ImVec4& color)
 {
     double x = coordinate.x;
     double y = coordinate.y;
-    ImPlot::DragPoint(dragPointId++, &x, &y, ImVec4{color.red, color.green, color.blue, color.alpha}, size);
+    ImPlot::DragPoint(dragPointId++, &x, &y, color, size);
 
     return {static_cast<float>(x), static_cast<float>(y)};
-}
-
-void MapWidget::renderContour(const std::string& name, const std::vector<model::Vec2>& contour, const presentation::Color& color)
-{
-    ImPlot::SetNextFillStyle(ImVec4{color.red, color.green, color.blue, color.alpha});
-    if (ImPlot::BeginItem(name.c_str(), ImPlotItemFlags_None, ImPlotCol_Fill)){
-        std::vector<ImVec2> points;
-        points.reserve(contour.size());
-
-        for (const auto& [x, y] : contour) {
-            points.emplace_back(ImPlot::PlotToPixels(ImPlotPoint(x, y)));
-        }
-
-        ImPlot::GetPlotDrawList()->AddConvexPolyFilled(points.data(), 
-                                                       points.size(), 
-                                                       IM_COL32(color.red * NORMALIZE, color.green * NORMALIZE, color.blue * NORMALIZE, FILLED_ALPHA));
-        ImPlot::EndItem();
-    }
 }
 
 model::Range MapWidget::getAxisRangeX() const noexcept
@@ -155,8 +164,8 @@ void MapWidget::renderMap()
         logger->trace("Plot size x={}, y={} pixels", plotSize.x, plotSize.y);
 
         presenter.handleRenderTiles();
-        presenter.handleRenderCountry();
-        presenter.handleRenderCity();
+        renderCountries();
+        renderCities();
 
         ImPlot::EndPlot();
     }
@@ -249,5 +258,106 @@ void MapWidget::renderOverlay()
     }
     ImGui::PopStyleColor(2);
     ImGui::End();
+}
+
+void MapWidget::updatCountries()
+{
+    if (countryUpdated) {
+        countryUpdated = false;
+
+        countries.clear();
+
+        for (const auto& name : presenter.handleRequestCountryList()) {
+            mapbox::geometry::polygon<double> polygon{mapbox::geometry::linear_ring<double>{}};
+            Country country{presenter.handleRequestColor(name)};
+
+            auto contour = presenter.handleRequestContour(name);
+
+            for (const auto& coord : contour) {
+                country.contour.emplace_back(coord, presenter.handleRequestCoordSize(coord));
+                polygon.back().emplace_back(coord.x, coord.y);
+            }
+
+            const auto visualCenter = mapbox::polylabel<double>(polygon, VISUAL_CENTER_PERCISION);
+            country.labelCoordinate = ImVec2{static_cast<float>(visualCenter.x), static_cast<float>(visualCenter.y)};
+
+            countries.emplace(std::make_pair(name, country));
+        }
+    }
+}
+
+void MapWidget::updateCities()
+{
+    if (cityUpdated) {
+        cityUpdated = false;
+
+        cities.clear();
+
+        for (const auto& city : presenter.handleRequestCityList()) {
+            if (const auto coord = presenter.handleRequestCityCoord(city); coord) {
+                cities.emplace(std::make_pair(city, City{presenter.handleRequestColor(city), 
+                                                        Coordinate{*coord, presenter.handleRequestCoordSize(*coord)}}));
+            }
+        }
+    }
+}
+
+void MapWidget::renderCountries()
+{
+    for (const auto& [name, country] : countries) {
+        int idx = 0;
+        std::vector<ImVec2> pixels;
+        pixels.reserve(country.contour.size());
+
+        for (const auto& [coord, size] : country.contour) {
+            const auto newPoint = renderPoint(coord, size, country.color);
+            if (newPoint != coord) {
+                presenter.handleUpdateContour(name, idx, newPoint);
+            }
+
+            pixels.emplace_back(ImPlot::PlotToPixels(ImPlotPoint(newPoint.x, newPoint.y)));
+
+            idx++;
+        }
+
+        if (country.contour.size() >= MINIMAL_POINTS_OF_POLYGON) {
+            ImPlot::Annotation(country.labelCoordinate.x, 
+                               country.labelCoordinate.y, 
+                               country.color, 
+                               COUNTRY_ANNOTATION_OFFSET, 
+                               false, 
+                               "%s", 
+                               name.c_str());
+
+            ImPlot::SetNextFillStyle(country.color);
+            if (ImPlot::BeginItem(name.c_str(), ImPlotItemFlags_None, ImPlotCol_Fill)) {
+                ImPlot::GetPlotDrawList()->AddConvexPolyFilled(pixels.data(), 
+                                                               pixels.size(), 
+                                                               IM_COL32(country.color.x * NORMALIZE, 
+                                                                        country.color.y * NORMALIZE, 
+                                                                        country.color.z * NORMALIZE,
+                                                                        FILLED_ALPHA));
+                ImPlot::EndItem();
+            }
+        }
+    }
+}
+
+void MapWidget::renderCities()
+{
+    for (const auto& [name, city] : cities) {
+        const auto newPoint = renderPoint(city.coordinate.coord, city.coordinate.size, city.color);
+        if (newPoint != city.coordinate.coord) {
+            presenter.handleUpdateCity(name, newPoint);
+        }
+
+        ImPlot::Annotation(city.coordinate.coord.x, 
+                           city.coordinate.coord.y, 
+                           city.color, 
+                           CITY_ANNOTATION_OFFSET, 
+                           false, 
+                           "%s", 
+                           name.c_str());
+    }
 }
 }
