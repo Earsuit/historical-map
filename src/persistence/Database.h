@@ -411,21 +411,15 @@ private:
     template<typename Table, typename Expression, typename... Assignment>
     uint64_t upsert(Expression&& expression, Assignment&&... assignment)
     {
-        uint64_t id = 0;
         // Here we can't forward the expression otherwise it will be moved inside the sqlpp,
         // and the expression used by the following update will have empty expression
-        {
-            // The returned object releases the connection after destruction
-            const auto& ret = request<Table>(expression);
-            if (ret.empty()) {
-                return insert<Table>(std::forward<Assignment>(assignment)...);
-            } else {
-                id = ret.front().id;
-            }
+        if (const auto& ret = request<Table>(expression); ret.empty()) {
+            return insert<Table>(std::forward<Assignment>(assignment)...);
+        } else {
+            uint64_t id = ret.front().id;
+            update<Table>(std::forward<Expression>(expression), std::forward<Assignment>(assignment)...);
+            return id;
         }
-        
-        update<Table>(std::forward<Expression>(expression), std::forward<Assignment>(assignment)...);
-        return id;
     }
 
     template<typename Table, typename Expression>
