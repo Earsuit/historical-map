@@ -14,6 +14,7 @@
 #include <tuple>
 #include <vector>
 #include <optional>
+#include <type_traits>
 
 namespace persistence {
 constexpr const table::Years YEARS;
@@ -24,6 +25,29 @@ constexpr const table::YearCities YEAR_CITIES;
 constexpr const table::Cities CITIES;
 constexpr const table::Notes NOTES;
 constexpr const table::YearNotes YEAR_NOTES;
+
+template <typename T>
+struct is_expression : std::false_type {};
+
+// Partial specialization for binary_expression_t
+template <typename Lhs, typename O, typename Rhs>
+struct is_expression<sqlpp::binary_expression_t<Lhs, O, Rhs>> : std::true_type {};
+
+// Partial specialization for unary_expression_t
+template <typename O, typename Rhs>
+struct is_expression<sqlpp::unary_expression_t<O, Rhs>> : std::true_type {};
+
+template <typename T>
+inline constexpr bool is_expression_v = is_expression<T>::value;
+
+template <typename T>
+struct is_column : std::false_type {};
+
+template <typename Table, typename ColumnSpec>
+struct is_column<sqlpp::column_t<Table, ColumnSpec>> : std::true_type {};
+
+template <typename T>
+inline constexpr bool is_column_v = is_column<T>::value;
 
 template<typename Connection, typename Config>
 class Database {
@@ -56,6 +80,17 @@ public:
         return countries;
     }
 
+    std::vector<std::string> loadCityList()
+    {
+        std::vector<std::string> cities;
+
+        for (const auto& row : request<table::Cities>(CITIES.name)) {
+            cities.emplace_back(row.name);
+        }
+
+        return cities;
+    }
+
     std::vector<std::string> loadCityList(int year)
     {
         std::vector<std::string> cities;
@@ -64,7 +99,7 @@ public:
             const auto yearId = years.front().id;
 
             for (const auto& row : request<table::YearCities>(YEAR_CITIES.yearId == yearId, YEAR_CITIES.cityId)) {
-                const auto& cityRows = request<table::Cities>(CITIES.id == row.cityId);
+                const auto& cityRows = request<table::Cities>(CITIES.id == row.cityId, CITIES.name);
                 const auto& city = cityRows.front();
 
                 cities.emplace_back(city.name);
@@ -335,7 +370,16 @@ private:
         return conn(sqlpp::select(sqlpp::all_of(table)).from(table).unconditionally());
     }
 
+    template<typename Table, typename... Column>
+    requires (is_column_v<std::remove_cvref_t<Column>>&&...)
+    auto request(Column&&... column)
+    {
+        constexpr const Table table;
+        return conn(sqlpp::select(std::forward<Column>(column)...).from(table).unconditionally());
+    }
+
     template<typename Table, typename Expression, typename... Column>
+    requires (is_expression_v<std::remove_cvref_t<Expression>>)
     auto request(Expression&& expression, Column&&... column)
     {
         constexpr const Table table;
@@ -343,6 +387,7 @@ private:
     }
 
     template<typename Table, typename Expression>
+    requires (is_expression_v<std::remove_cvref_t<Expression>>)
     auto request(Expression&& expression)
     {
         constexpr const Table table;

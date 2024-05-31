@@ -401,6 +401,26 @@ TEST_F(DatabaseTest, InsertTwoCitiesSameYearSeparately)
     EXPECT_EQ(database.load(year), expect);
 }
 
+TEST_F(DatabaseTest, InsertOneCityDifferentCoordDifferntYear)
+{
+    int year1 = 1900;
+    int year2 = 2000;
+    persistence::Data data1{year1}, data2{year2};
+    const persistence::City city1{"One", {1, 2}};
+    const persistence::City city2{"One", {3, 4}};
+    data1.cities.emplace_back(city1);
+    data2.cities.emplace_back(city2);
+
+    database.upsert(data1);
+    database.upsert(data2);
+
+    const persistence::Data expect1{year1, {}, {city2}};
+    EXPECT_EQ(database.load(year1), expect1);
+
+    const persistence::Data expect2{year2, {}, {city2}};
+    EXPECT_EQ(database.load(year2), expect2);
+}
+
 TEST_F(DatabaseTest, InsertTwoCitiesSameYearTogether)
 {
     int year = 1900;
@@ -669,5 +689,16 @@ TEST_F(DatabaseTest, LoadCity)
     EXPECT_TRUE(ret);
 
     EXPECT_EQ(*ret, city2);
+}
+
+TEST_F(DatabaseTest, LoadAllCities)
+{
+    std::vector<std::string> names{"one", "two"};
+    const persistence::City city1{names[0], {1,2}};
+    const persistence::City city2{names[1], {3,4}};
+    database.upsert(persistence::Data{1900, {}, {city1}});
+    database.upsert(persistence::Data{2000, {}, {city2}});
+
+    EXPECT_EQ(database.loadCityList(), names);
 }
 }
