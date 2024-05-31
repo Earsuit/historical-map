@@ -160,6 +160,17 @@ public:
         return std::nullopt;
     }
 
+    std::optional<City> loadCity(const std::string& name)
+    {
+        if (const auto& ret = request<table::Cities>(CITIES.name == name); !ret.empty()) {
+            const auto& city = ret.front();
+
+            return City{city.name, Coordinate{static_cast<float>(city.latitude), static_cast<float>(city.longitude)}};
+        }
+
+        return std::nullopt;
+    }
+
     Data load(int year) 
     {
         Data data{.year = year};

@@ -674,7 +674,7 @@ TEST_F(DatabaseTest, LoadCountry)
     EXPECT_EQ(*ret, country2);
 }
 
-TEST_F(DatabaseTest, LoadCity)
+TEST_F(DatabaseTest, LoadCityWithYear)
 {
     int year = 1900;
     std::string name1 = "One";
@@ -689,6 +689,25 @@ TEST_F(DatabaseTest, LoadCity)
     EXPECT_TRUE(ret);
 
     EXPECT_EQ(*ret, city2);
+}
+
+TEST_F(DatabaseTest, LoadCityWithoutYear)
+{
+    int year = 1900;
+    std::string name1 = "One";
+    std::string name2 = "Two";
+    const persistence::City city1{name1, {1,2}};
+    const persistence::City city2{name2, {3,4}};
+    persistence::Data data{year, {}, {city1, city2}};
+    database.upsert(data);
+
+    const auto ret = database.loadCity(name2);
+
+    EXPECT_TRUE(ret);
+
+    EXPECT_EQ(*ret, city2);
+
+    EXPECT_FALSE(database.loadCity("Three"));
 }
 
 TEST_F(DatabaseTest, LoadAllCities)
