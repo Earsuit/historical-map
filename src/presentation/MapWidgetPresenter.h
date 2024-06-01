@@ -10,6 +10,7 @@
 #include "src/model/DatabaseModel.h"
 #include "src/model/CacheModel.h"
 #include "src/util/Signal.h"
+#include "src/util/Worker.h"
 
 #include "spdlog/spdlog.h"
 #include "imgui.h"
@@ -55,6 +56,8 @@ private:
     model::CacheModel& cacheModel;
     std::string source;
     std::atomic_int year;
+    util::Worker<std::function<void()>> worker;
+    
 
     void onCountryUpdate(const std::string& source, int year);
     void onCityUpdate(const std::string& source, int year);

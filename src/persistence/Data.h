@@ -10,13 +10,31 @@
 #include <cstdint>
 #include <list>
 #include <optional>
+#include <cmath>
 
 namespace persistence {
 struct Coordinate {
     float latitude = 0;
     float longitude = 0;
 
-    auto operator<=>(const Coordinate&) const = default;
+    static constexpr float EPSILON = 1e-2;
+
+    auto operator<=>(const Coordinate& other) const {
+        if (std::fabs(latitude - other.latitude) < EPSILON &&
+            std::fabs(longitude - other.longitude) < EPSILON) {
+            return std::partial_ordering::equivalent;
+        } else if (latitude < other.latitude || 
+                  (std::fabs(latitude - other.latitude) < EPSILON && longitude < other.longitude)) {
+            return std::partial_ordering::less;
+        } else {
+            return std::partial_ordering::greater;
+        }
+    }
+
+    bool operator==(const Coordinate& other) const {
+        return std::fabs(latitude - other.latitude) < EPSILON &&
+               std::fabs(longitude - other.longitude) < EPSILON;
+    }
 
     template <class Archive>
     void serialize(Archive& ar) {

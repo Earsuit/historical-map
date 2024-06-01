@@ -67,6 +67,21 @@ public:
         std::lock_guard lk(cacheLock);
         if (cache.contains(source)) {
             logger->debug("Upsert CacheModel cache for source {} at year {}", source, info.year);
+
+            for (const auto& city : info.cities) {
+                if (cityToYear[source].contains(city.name)) {
+                    cityToYear[source][city.name].emplace(info.year);
+                } else {
+                    cityToYear[source].emplace(std::make_pair(city.name, std::set<int>{info.year}));
+                }
+
+                if (yearToCity[source].contains(info.year)) {
+                    yearToCity[source][info.year].emplace(city.name);
+                } else {
+                    yearToCity[source].emplace(std::make_pair(info.year, std::set<std::string>{city.name}));
+                }
+            }
+
             cache[source][info.year] = persistence::HistoricalCache{std::forward<T>(info)};
 
             onCountryUpdate(source, info.year);
@@ -99,6 +114,9 @@ private:
     mutable std::mutex hoveredLock;
     mutable std::recursive_mutex cacheLock;
     std::map<std::string, std::map<int, persistence::HistoricalCache>> cache;
+    // same city should have the same coordinate for all years
+    std::map<std::string, std::map<std::string, std::set<int>>> cityToYear; // source -> city list -> years
+    std::map<std::string, std::map<int, std::set<std::string>>> yearToCity; // source -> year -> cities
     persistence::Data removed;
 };
 }

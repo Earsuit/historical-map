@@ -27,6 +27,8 @@ public:
     int getMinYear() const noexcept;
 
     persistence::Data loadHistoricalInfo(int year);
+    std::vector<std::string> loadCityList();
+    std::optional<persistence::City> loadCity(const std::string& name);
     void updateHistoricalInfo(const persistence::Data& info);
     void removeHistoricalInfo(const persistence::Data& info);
 

@@ -99,4 +99,18 @@ void DatabaseModel::removeHistoricalInfo(const persistence::Data& info)
     std::scoped_lock lk{lock};
     database.remove(info);
 }
+
+std::vector<std::string> DatabaseModel::loadCityList()
+{
+    logger->debug("Load city list for all years.");
+    std::scoped_lock lk{lock};
+    return database.loadCityList();
+}
+
+std::optional<persistence::City> DatabaseModel::loadCity(const std::string& name)
+{
+    logger->debug("Load city {}.", name);
+    std::scoped_lock lk{lock};
+    return database.loadCity(name);
+}
 }

@@ -4,6 +4,7 @@
 #include "src/model/CacheModel.h"
 #include "src/model/DatabaseModel.h"
 #include "src/util/Signal.h"
+#include "src/util/Worker.h"
 #include "src/logger/Util.h"
 
 #include "spdlog/spdlog.h"
@@ -44,6 +45,7 @@ private:
     model::DatabaseModel& databaseModel;
     model::CacheModel& cacheModel;
     std::string source;
+    util::Worker<std::function<void()>> worker;
 
     bool varifySignal(const std::string& source, int year) const noexcept;
     void onCountryUpdate(const std::string& source, int year);
