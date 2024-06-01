@@ -35,10 +35,12 @@ public:
     std::optional<persistence::Coordinate> handleRequestCityCoordinate(const std::string& name) const;
     void handleUpdateCityCoordinate(const std::string& name, const persistence::Coordinate& coord);
     void handleClearHistoricalInfo();
+    bool handleCheckIsModified();
 
     util::signal::Signal<void()> setCountriesUpdated;
     util::signal::Signal<void()> setCityUpdated;
     util::signal::Signal<void()> setNoteUpdated;
+    util::signal::Signal<void(bool)> setModificationState;
 
 private:
     std::shared_ptr<spdlog::logger> logger;
@@ -51,6 +53,7 @@ private:
     void onCountryUpdate(const std::string& source, int year);
     void onCityUpdate(const std::string& source, int year);
     void onNoteUpdate(const std::string& source, int year);
+    void onModificationChange(const std::string& source, int year, bool isModified);
 };
 }
 

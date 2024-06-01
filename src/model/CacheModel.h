@@ -23,6 +23,7 @@ constexpr auto PERMENANT_SOURCE = "Database";
 class CacheModel {
 public:
     static CacheModel& getInstance();
+    ~CacheModel();
 
     void setHoveredCoord(persistence::Coordinate coord);
     void clearHoveredCoord() noexcept;
@@ -60,6 +61,9 @@ public:
     std::optional<persistence::Data> getRemoved(const std::string& source, int year) const noexcept;
     bool clearRemoved(const std::string& source, int year) noexcept;
 
+    void setModificationState(const std::string& source, int year, bool isModified);
+    bool isModified(const std::string& source, int year);
+
     template<typename T>
     requires (std::is_same_v<std::remove_cvref_t<T>, persistence::Data>)
     bool upsert(const std::string& source, T&& info)
@@ -87,6 +91,7 @@ public:
             onCountryUpdate(source, info.year);
             onCityUpdate(source, info.year);
             onNoteUpdate(source, info.year);
+            onModificationChange(source, info.year, false);
             return true;
         }
 
@@ -101,13 +106,10 @@ public:
     util::signal::Signal<void(const std::string& source, int year)> onCountryUpdate;
     util::signal::Signal<void(const std::string& source, int year)> onCityUpdate;
     util::signal::Signal<void(const std::string& source, int year)> onNoteUpdate;
+    util::signal::Signal<void(const std::string& source, int year, bool)> onModificationChange;
 
 private:
-    CacheModel():
-        logger{spdlog::get(logger::LOGGER_NAME)}
-    {
-        addSource(PERMENANT_SOURCE);
-    }
+    CacheModel();
 
     std::shared_ptr<spdlog::logger> logger;
     std::optional<persistence::Coordinate> hovered;

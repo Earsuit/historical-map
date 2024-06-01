@@ -9,6 +9,23 @@ CacheModel& CacheModel::getInstance()
     return model;
 }
 
+CacheModel::CacheModel():
+    logger{spdlog::get(logger::LOGGER_NAME)}
+{
+    addSource(PERMENANT_SOURCE);
+    util::signal::connect(this,
+                          &CacheModel::onModificationChange,
+                          this,
+                          &CacheModel::setModificationState);
+}
+
+CacheModel::~CacheModel()
+{
+    util::signal::disconnectAll(this,
+                                &CacheModel::onModificationChange,
+                                this);
+}
+
 void CacheModel::setHoveredCoord(persistence::Coordinate coord)
 {
     std::lock_guard lk(hoveredLock);
@@ -84,6 +101,7 @@ void CacheModel::removeHistoricalInfoFromSource(const std::string& source, int y
             yearToCity[source].erase(year);
         }
 
+        onModificationChange(source, year, false);
         onCountryUpdate(source, year);
         onCityUpdate(source, year);
         onNoteUpdate(source, year);
@@ -225,8 +243,10 @@ bool CacheModel::extendContour(const std::string& source, int year, const std::s
     std::lock_guard lk(cacheLock);
 
     if (containsCountry(source, year, name)) {
-        auto& country = cache.at(source).at(year).getCountry(name);
+        auto& infoCache = cache.at(source).at(year);
+        auto& country = infoCache.getCountry(name);
         country.borderContour.emplace_back(coord);
+        onModificationChange(source, year, true);
         onCountryUpdate(source, year);
         return true;
     }
@@ -239,10 +259,12 @@ bool CacheModel::delectFromContour(const std::string& source, int year, const st
     std::lock_guard lk(cacheLock);
 
     if (containsCountry(source, year, name)) {
-        auto& contour = cache.at(source).at(year).getCountry(name).borderContour;
+        auto& infoCache = cache.at(source).at(year);
+        auto& contour = infoCache.getCountry(name).borderContour;
         if (idx < contour.size()) {
             auto it = std::next(contour.begin(), idx);
             contour.erase(it);
+            onModificationChange(source, year, true);
             onCountryUpdate(source, year);
             return true;
         }
@@ -256,9 +278,11 @@ bool CacheModel::updateContour(const std::string& source, int year, const std::s
     std::lock_guard lk(cacheLock);
 
     if (containsCountry(source, year, name)) {
-        auto& contour = cache.at(source).at(year).getCountry(name).borderContour;
+        auto& infoCache = cache.at(source).at(year);
+        auto& contour = infoCache.getCountry(name).borderContour;
         auto it = std::next(contour.begin(), idx);
         *it = coord;
+        onModificationChange(source, year, true);
         onCountryUpdate(source, year);
         return true;
     }
@@ -279,8 +303,11 @@ bool CacheModel::updateCityCoord(const std::string& source, int year, const std:
                               name);
                 continue;
             }
-            auto& city = cache.at(source).at(cityAtYear).getCity(name);
+
+            auto& infoCache = cache.at(source).at(cityAtYear);
+            auto& city = infoCache.getCity(name);
             city.coordinate = coord;
+            onModificationChange(source, cityAtYear, true);
             onCityUpdate(source, cityAtYear);
         }
         
@@ -295,7 +322,9 @@ bool CacheModel::removeCountry(const std::string& source, int year, const std::s
     std::lock_guard lk(cacheLock);
 
     if (containsCountry(source, year, name)) {
-        cache.at(source).at(year).removeCountry(name);
+        auto& infoCache = cache.at(source).at(year);
+        infoCache.removeCountry(name);
+        onModificationChange(source, year, true);
         onCountryUpdate(source, year);
         return true;
     }
@@ -325,8 +354,10 @@ bool CacheModel::removeCity(const std::string& source, int year, const std::stri
                 cityToYear[source].erase(name);
             }
         }
-        
-        cache.at(source).at(year).removeCity(name);
+
+        auto& infoCache = cache.at(source).at(year);
+        infoCache.removeCity(name);
+        onModificationChange(source, year, true);
         onCityUpdate(source, year);
         return true;
     }
@@ -339,7 +370,9 @@ bool CacheModel::removeNote(const std::string& source, int year)
     std::lock_guard lk(cacheLock);
 
     if (containsNote(source, year)) {
-        cache.at(source).at(year).removeNote();
+        auto& infoCache = cache.at(source).at(year);
+        infoCache.removeNote();
+        onModificationChange(source, year, true);
         onNoteUpdate(source, year);
         return true;
     }
@@ -352,7 +385,9 @@ bool CacheModel::addCountry(const std::string& source, int year, const std::stri
     std::lock_guard lk(cacheLock);
 
     if (containsHistoricalInfo(source, year)) {
-        if (cache.at(source).at(year).addCountry(name)) {
+        auto& infoCache = cache.at(source).at(year);
+        if (infoCache.addCountry(name)) {
+            onModificationChange(source, year, true);
             onCountryUpdate(source, year);
             return true;
         }
@@ -366,7 +401,9 @@ bool CacheModel::addCountry(const std::string& source, int year, const persisten
     std::lock_guard lk(cacheLock);
 
     if (containsHistoricalInfo(source, year)) {
-        if (cache.at(source).at(year).addCountry(country)) {
+        auto& infoCache = cache.at(source).at(year);
+        if (infoCache.addCountry(country)) {
+            onModificationChange(source, year, true);
             onCountryUpdate(source, year);
             return true;
         }
@@ -380,7 +417,9 @@ bool CacheModel::addNote(const std::string& source, int year, const std::string&
     std::lock_guard lk(cacheLock);
 
     if (containsHistoricalInfo(source, year)) {
-        if (cache.at(source).at(year).addNote(note)) {
+        auto& infoCache = cache.at(source).at(year);
+        if (infoCache.addNote(note)) {
+            onModificationChange(source, year, true);
             onNoteUpdate(source, year);
             return true;
         }
@@ -412,7 +451,8 @@ bool CacheModel::addCity(const std::string& source, int year, const persistence:
             }
         }
 
-        if (cache.at(source).at(year).addCity(city)) {
+        auto& infoCache = cache.at(source).at(year);
+        if (infoCache.addCity(city)) {
             if (cityToYear[source].contains(city.name)) {
                 cityToYear[source][city.name].emplace(year);
             } else {
@@ -425,6 +465,7 @@ bool CacheModel::addCity(const std::string& source, int year, const persistence:
                 yearToCity[source].emplace(std::make_pair(year, std::set<std::string>{city.name}));
             }
 
+            onModificationChange(source, year, true);
             onCityUpdate(source, year);
             return true;
         } 
@@ -464,4 +505,21 @@ bool CacheModel::clearRemoved(const std::string& source, int year) noexcept
     return false;
 }
 
+void CacheModel::setModificationState(const std::string& source, int year, bool isModified)
+{
+    std::lock_guard lk(cacheLock);
+    if (containsHistoricalInfo(source, year)) {
+        cache.at(source).at(year).setModificationState(isModified);
+    }
+}
+
+bool CacheModel::isModified(const std::string& source, int year)
+{
+    std::lock_guard lk(cacheLock);
+    if (containsHistoricalInfo(source, year)) {
+        return cache.at(source).at(year).isMidified();
+    }
+
+    return false;
+}
 }

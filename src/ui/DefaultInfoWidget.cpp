@@ -27,10 +27,14 @@ DefaultInfoWidget::DefaultInfoWidget():
                           &presentation::HistoricalInfoPresenter::setNoteUpdated,
                           this, 
                           &DefaultInfoWidget::setRefreshNote);
+    util::signal::connect(&infoPresenter, 
+                          &presentation::HistoricalInfoPresenter::setModificationState,
+                          this, 
+                          &DefaultInfoWidget::setUnsavedState);
     util::signal::connect(&yearPresenter, 
                           &presentation::DatabaseYearPresenter::onYearChange,
                           this, 
-                          &DefaultInfoWidget::setRefreshAll);
+                          &DefaultInfoWidget::setOnYearChange);
 
     currentYear = yearPresenter.handelGetYear();
 }
@@ -45,6 +49,9 @@ DefaultInfoWidget::~DefaultInfoWidget()
                                 this);
     util::signal::disconnectAll(&infoPresenter, 
                                 &presentation::HistoricalInfoPresenter::setNoteUpdated,
+                                this);
+    util::signal::disconnectAll(&infoPresenter, 
+                                &presentation::HistoricalInfoPresenter::setModificationState,
                                 this);
     util::signal::disconnectAll(&yearPresenter, 
                                 &presentation::DatabaseYearPresenter::onYearChange,
@@ -73,10 +80,11 @@ void DefaultInfoWidget::displayYearControlSection()
     helpMarker("Ctrl + click to maually set the year");
 }
 
-void DefaultInfoWidget::setRefreshAll(int year) noexcept
+void DefaultInfoWidget::setOnYearChange(int year) noexcept
 {
     currentYear = year;
     clearNewInfoEntry = true;
+    isUnsaved = infoPresenter.handleCheckIsModified();
     setRefreshCountries();
     setRefreshCities();
     setRefreshNote();
@@ -100,22 +108,27 @@ void DefaultInfoWidget::paint()
         updateNoteResources();
         updateNewInfoEntry();
 
+        if (!isUnsaved) {
+            ImGui::BeginDisabled();
+        }
         if (ImGui::Button("Save")) {
             databaseSaverPresenter.handleSaveSameForRange(currentYear, currentYear);
             ImGui::OpenPopup(PROGRESS_POPUP_WINDOW_NAME);
         }
+        if (!isUnsaved) {
+            ImGui::EndDisabled();
+        }
 
-        if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
+        ImGui::SameLine();
+        if (ImGui::Button("Duplicate")) {
             startYear = endYear = currentYear;
             ImGui::OpenPopup(POPUP_WINDOW_NAME);
         }
+
         savePopupWindow();
         saveProgressPopUp();
 
         infoPresenter.clearHoveredCoord();
-
-        ImGui::SameLine();
-        helpMarker("Right click \"Save\" button to save for several years.");
 
         ImGui::SeparatorText("Countries");
         displayCountryInfos();

@@ -39,11 +39,18 @@ public:
     persistence::Data getRemoved() const noexcept { return removed; }
     void clearRemoved() noexcept { removed = persistence::Data{cache.year}; }
 
+    void setModificationState(bool isModified) noexcept { modified = isModified; }
+    bool isMidified() const noexcept { return modified; }
+
 private:
     persistence::Data cache;
     persistence::Data removed;
     std::map<std::string, std::list<persistence::Country>::iterator> countries;
     std::map<std::string, std::list<persistence::City>::iterator> cities;
+    // we don't track if it is the same as the database
+    // once it is modified, even though it may be modified back to the same 
+    // as the counterpart in the database, we still treat it as modified.
+    bool modified = false;
 
     void constructCountryInfo();
     void constructCityInfo();

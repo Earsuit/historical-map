@@ -19,6 +19,10 @@ HistoricalInfoPresenter::HistoricalInfoPresenter(const std::string& source):
                           &model::CacheModel::onNoteUpdate,
                           this,
                           &HistoricalInfoPresenter::onNoteUpdate);
+    util::signal::connect(&cacheModel,
+                          &model::CacheModel::onModificationChange,
+                          this,
+                          &HistoricalInfoPresenter::onModificationChange);
 }
 
 HistoricalInfoPresenter::~HistoricalInfoPresenter()
@@ -31,6 +35,9 @@ HistoricalInfoPresenter::~HistoricalInfoPresenter()
                                 this);
     util::signal::disconnectAll(&cacheModel,
                                 &model::CacheModel::onNoteUpdate,
+                                this);
+    util::signal::disconnectAll(&cacheModel,
+                                &model::CacheModel::onModificationChange,
                                 this);
 }
 
@@ -151,6 +158,11 @@ void HistoricalInfoPresenter::handleClearHistoricalInfo()
     cacheModel.removeHistoricalInfoFromSource(source, databaseModel.getYear());
 }
 
+bool HistoricalInfoPresenter::handleCheckIsModified()
+{
+    return cacheModel.isModified(source, databaseModel.getYear());
+}
+
 bool HistoricalInfoPresenter::varifySignal(const std::string& source, int year) const noexcept
 {
     return source == this->source && year == databaseModel.getYear();
@@ -177,6 +189,14 @@ void HistoricalInfoPresenter::onNoteUpdate(const std::string& source, int year)
     if (varifySignal(source, year)) {
         logger->debug("HistoricalInfoPresenter onNoteUpdate for source {} at year {}", source, year);
         setNoteUpdated();
+    }
+}
+
+void HistoricalInfoPresenter::onModificationChange(const std::string& source, int year, bool isModified)
+{
+    if (varifySignal(source, year)) {
+        logger->debug("HistoricalInfoPresenter onModificationChange {} for source {} at year {}", isModified, source, year);
+        setModificationState(isModified);
     }
 }
 }

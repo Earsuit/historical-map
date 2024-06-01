@@ -27,7 +27,8 @@ public:
     void setRefreshCountries() noexcept { countryResourceUpdated = true; }
     void setRefreshCities() noexcept { cityResourceUpdated = true; }
     void setRefreshNote() noexcept { noteResourceUpdated = true; }
-    void setRefreshAll(int year) noexcept;
+    void setOnYearChange(int year) noexcept;
+    void setUnsavedState(bool isUnsaved) noexcept { this->isUnsaved = isUnsaved; }
 
 private:
     std::shared_ptr<spdlog::logger> logger;
@@ -47,6 +48,7 @@ private:
     std::map<std::string, persistence::Coordinate> cities;
     std::atomic_bool noteResourceUpdated = false;
     std::string note;
+    std::atomic_bool isUnsaved;
 
     void displayCountryInfos();
     void displayCityInfos();
