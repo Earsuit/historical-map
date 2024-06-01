@@ -36,20 +36,15 @@ public:
     std::string getName() const noexcept { return MAP_WIDGET_NAME_PREFIX + source; }
 
 private:
-    struct Coordinate {
-        ImVec2 coord;
-        float size;
-    };
-
     struct Country {
         ImVec4 color;
-        std::vector<Coordinate> contour;
+        std::vector<ImVec2> contour;
         ImVec2 labelCoordinate;
     };
 
     struct City {
         ImVec4 color;
-        Coordinate coordinate;
+        ImVec2 coordinate;
     };
 
     std::shared_ptr<spdlog::logger> logger;

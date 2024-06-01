@@ -165,9 +165,9 @@ std::optional<ImVec2> MapWidgetPresenter::handleRequestCityCoord(const std::stri
 float MapWidgetPresenter::handleRequestCoordSize(const ImVec2& coord) const
 {
     if (const auto hovered = cacheModel.getHoveredCoord(); hovered) {
-        const auto point = ImVec2{model::longitude2X(hovered->longitude, BBOX_ZOOM_LEVEL), 
-                                  model::latitude2Y(hovered->latitude, BBOX_ZOOM_LEVEL)};
-        if (point.x == coord.x && point.y == coord.y) {
+        const auto point = persistence::Coordinate{y2Latitude(coord.y), 
+                                                   x2Longitude(coord.x)};
+        if (point == *hovered) {
             return HOVERED_POINT_SIZE;
         }
     }
@@ -178,18 +178,18 @@ float MapWidgetPresenter::handleRequestCoordSize(const ImVec2& coord) const
 void MapWidgetPresenter::handleUpdateContour(const std::string& name, int idx, const ImVec2& coord)
 {
     cacheModel.updateContour(source, 
-                                   year, 
-                                   name, 
-                                   idx, 
-                                   persistence::Coordinate{y2Latitude(coord.y), x2Longitude(coord.x)});
+                             year, 
+                             name, 
+                             idx, 
+                             persistence::Coordinate{y2Latitude(coord.y), x2Longitude(coord.x)});
 }
 
 void MapWidgetPresenter::handleUpdateCity(const std::string& name, const ImVec2& coord)
 {
     cacheModel.updateCityCoord(source, 
-                                     year, 
-                                     name, 
-                                     persistence::Coordinate{y2Latitude(coord.y), x2Longitude(coord.x)});
+                               year, 
+                               name, 
+                               persistence::Coordinate{y2Latitude(coord.y), x2Longitude(coord.x)});
 }
 
 bool MapWidgetPresenter::handleExtendContour(const std::string& name, const model::Vec2& pos)

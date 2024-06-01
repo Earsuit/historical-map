@@ -43,10 +43,12 @@ constexpr auto COUNTRY_ANNOTATION_OFFSET = ImVec2(0, 0);
 
 const auto ADD_NEW_COUNTRY_POPUP_NAME = "Add new country";
 const auto ADD_NEW_CITY_POPUP_NAME = "Add new city";
+constexpr float EPSILON = 1e-2;
 
 bool operator==(const ImVec2& lhs, const ImVec2& rhs)
 {
-    return lhs.x == rhs.x && lhs.y == rhs.y;
+    return std::fabs(lhs.x - rhs.x) < EPSILON &&
+           std::fabs(lhs.y - rhs.y) < EPSILON;
 }
 
 MapWidget::MapWidget(const std::string& source): 
@@ -274,7 +276,7 @@ void MapWidget::updatCountries()
             auto contour = presenter.handleRequestContour(name);
 
             for (const auto& coord : contour) {
-                country.contour.emplace_back(coord, presenter.handleRequestCoordSize(coord));
+                country.contour.emplace_back(coord);
                 polygon.back().emplace_back(coord.x, coord.y);
             }
 
@@ -295,8 +297,7 @@ void MapWidget::updateCities()
 
         for (const auto& city : presenter.handleRequestCityList()) {
             if (const auto coord = presenter.handleRequestCityCoord(city); coord) {
-                cities.emplace(std::make_pair(city, City{presenter.handleRequestColor(city), 
-                                                        Coordinate{*coord, presenter.handleRequestCoordSize(*coord)}}));
+                cities.emplace(std::make_pair(city, City{presenter.handleRequestColor(city), *coord}));
             }
         }
     }
@@ -309,7 +310,8 @@ void MapWidget::renderCountries()
         std::vector<ImVec2> pixels;
         pixels.reserve(country.contour.size());
 
-        for (const auto& [coord, size] : country.contour) {
+        for (const auto& coord : country.contour) {
+            const auto size = presenter.handleRequestCoordSize(coord);
             const auto newPoint = renderPoint(coord, size, country.color);
             if (newPoint != coord) {
                 presenter.handleUpdateContour(name, idx, newPoint);
@@ -346,13 +348,14 @@ void MapWidget::renderCountries()
 void MapWidget::renderCities()
 {
     for (const auto& [name, city] : cities) {
-        const auto newPoint = renderPoint(city.coordinate.coord, city.coordinate.size, city.color);
-        if (newPoint != city.coordinate.coord) {
+        const auto size = presenter.handleRequestCoordSize(city.coordinate);
+        const auto newPoint = renderPoint(city.coordinate, size, city.color);
+        if (newPoint != city.coordinate) {
             presenter.handleUpdateCity(name, newPoint);
         }
 
-        ImPlot::Annotation(city.coordinate.coord.x, 
-                           city.coordinate.coord.y, 
+        ImPlot::Annotation(city.coordinate.x, 
+                           city.coordinate.y, 
                            city.color, 
                            CITY_ANNOTATION_OFFSET, 
                            false, 
