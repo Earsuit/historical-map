@@ -32,6 +32,16 @@ if (MSVC)
 else()
     # -ftemplate-depth for the DEFAULT_FILE_ICON and DEFAULT_FOLDER_ICON
     add_compile_options(-fno-char8_t -ftemplate-depth=2048)
+    if (APPLE)
+        # https://github.com/llvm/llvm-project/issues/48757, use -Wno-elaborated-enum-base to suppress the enum bug on Apple
+        # and also suppress some other warnings from Apple whcih we can't fix now
+        add_compile_options(-Wno-elaborated-enum-base 
+                            -ObjC++ 
+                            -DGL_SILENCE_DEPRECATION 
+                            -Wno-deprecated-declarations
+                            -Wno-deprecated-anon-enum-enum-conversion
+                            -Wno-missing-declarations)
+    endif()
 endif()
 
 include(FetchContent)
@@ -100,6 +110,7 @@ if (APPLE)
 # On macos we have to specify glfw GLEW::GLEW when compiling main.cpp because it includes HistoricalMap.h
 # which includes glfw and glew
 target_link_libraries(HistoricalMap PRIVATE glfw GLEW::GLEW libui libpresentation  -Wl,-force_load libpersistence liblogger)
+target_link_libraries(HistoricalMap PRIVATE "-framework CoreFoundation" "-framework CoreGraphics" "-framework ImageIO" "-framework AppKit")
 else()
 target_link_libraries(HistoricalMap PRIVATE libui libpresentation -Wl,--whole-archive libpersistence -Wl,--no-whole-archive liblogger)
 endif()
