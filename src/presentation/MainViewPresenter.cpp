@@ -4,14 +4,14 @@
 namespace presentation {
 std::string MainViewPresenter::handleGetDefaultMapWidgetSouceName() const noexcept
 {
-    return DEFAULT_HISTORICAL_INFO_SOURCE;
+    return model::PERMENANT_SOURCE;
 }
 
 void MainViewPresenter::handleClickImport()
 {
     clearCache();
     view.clearMapWidgets();
-    view.addNoninteractiveMapWidget(DEFAULT_HISTORICAL_INFO_SOURCE);
+    view.addNoninteractiveMapWidget(model::PERMENANT_SOURCE);
     view.addNoninteractiveMapWidget(IMPORT_SOURCE);
 }
 
@@ -19,17 +19,17 @@ void MainViewPresenter::handleClickExport()
 {
     clearCache();
     view.clearMapWidgets();
-    view.addNoninteractiveMapWidget(DEFAULT_HISTORICAL_INFO_SOURCE);
+    view.addNoninteractiveMapWidget(model::PERMENANT_SOURCE);
 }
 
 void MainViewPresenter::handleImportExportComplete()
 {
     view.clearMapWidgets();
-    view.addInteractiveMapWidget(DEFAULT_HISTORICAL_INFO_SOURCE);
+    view.addInteractiveMapWidget(model::PERMENANT_SOURCE);
 }
 
 void MainViewPresenter::clearCache()
 {
-    model.removeHistoricalInfoFromSource(DEFAULT_HISTORICAL_INFO_SOURCE, databaseModel.getYear());
+    model.removeHistoricalInfoFromSource(model::PERMENANT_SOURCE, databaseModel.getYear());
 }
 }

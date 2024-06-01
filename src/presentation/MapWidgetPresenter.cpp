@@ -111,7 +111,7 @@ std::string MapWidgetPresenter::handleGetOverlayText() const
 
 bool MapWidgetPresenter::handleRequestHasRightClickMenu() const noexcept
 {
-    if (source == DEFAULT_HISTORICAL_INFO_SOURCE) {
+    if (source == model::PERMENANT_SOURCE) {
         return true;
     }
     

@@ -7,7 +7,6 @@
 #include <memory>
 
 namespace presentation {
-constexpr auto DEFAULT_HISTORICAL_INFO_SOURCE = "Database";
 const auto IMPORT_SOURCE = "Import";
 
 struct Color {

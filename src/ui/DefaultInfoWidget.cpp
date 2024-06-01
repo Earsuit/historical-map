@@ -12,8 +12,8 @@ constexpr auto PROGRESS_POPUP_WINDOW_NAME = "Saving";
 
 DefaultInfoWidget::DefaultInfoWidget(): 
     logger{spdlog::get(logger::LOGGER_NAME)}, 
-    infoPresenter{presentation::DEFAULT_HISTORICAL_INFO_SOURCE},
-    databaseSaverPresenter{presentation::DEFAULT_HISTORICAL_INFO_SOURCE}
+    infoPresenter{model::PERMENANT_SOURCE},
+    databaseSaverPresenter{model::PERMENANT_SOURCE}
 {
     util::signal::connect(&infoPresenter, 
                           &presentation::HistoricalInfoPresenter::setCountriesUpdated,

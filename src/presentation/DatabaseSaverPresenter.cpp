@@ -35,7 +35,7 @@ bool DatabaseSaverPresenter::handleSaveSameForRange(int startYear, int endYear)
                     removed->year = year;
                     this->databaseModel.updateHistoricalInfo(*data);
                     this->databaseModel.removeHistoricalInfo(*removed);
-                    this->cacheModel.upsert(DEFAULT_HISTORICAL_INFO_SOURCE, this->databaseModel.loadHistoricalInfo(year));
+                    this->cacheModel.upsert(model::PERMENANT_SOURCE, this->databaseModel.loadHistoricalInfo(year));
                     this->progress++;
                 }
             }
@@ -62,7 +62,7 @@ void DatabaseSaverPresenter::handleSaveAll()
                 if (data && removed) {
                     this->databaseModel.updateHistoricalInfo(*data);
                     this->databaseModel.removeHistoricalInfo(*removed);
-                    this->cacheModel.upsert(DEFAULT_HISTORICAL_INFO_SOURCE, this->databaseModel.loadHistoricalInfo(year));
+                    this->cacheModel.upsert(model::PERMENANT_SOURCE, this->databaseModel.loadHistoricalInfo(year));
                 }
                 this->progress++;
             }

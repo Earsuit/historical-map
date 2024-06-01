@@ -18,7 +18,7 @@ constexpr auto WRITE_TO_DATABASE_PROGRESS_POPUP = "Write to database";
 
 ImportInfoWidget::ImportInfoWidget():
     logger{spdlog::get(logger::LOGGER_NAME)}, 
-    databaseInfoPresenter{presentation::DEFAULT_HISTORICAL_INFO_SOURCE},
+    databaseInfoPresenter{model::PERMENANT_SOURCE},
     importInfoPresenter{presentation::IMPORT_SOURCE},
     infoSelectorPresenter{presentation::IMPORT_SOURCE, SELECTION},
     yearPresenter{presentation::IMPORT_SOURCE},

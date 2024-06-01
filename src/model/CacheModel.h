@@ -15,8 +15,11 @@
 #include <map>
 #include <atomic>
 #include <type_traits>
+#include <set>
 
 namespace model {
+constexpr auto PERMENANT_SOURCE = "Database";
+
 class CacheModel {
 public:
     static CacheModel& getInstance();
@@ -88,6 +91,7 @@ private:
     CacheModel():
         logger{spdlog::get(logger::LOGGER_NAME)}
     {
+        addSource(PERMENANT_SOURCE);
     }
 
     std::shared_ptr<spdlog::logger> logger;

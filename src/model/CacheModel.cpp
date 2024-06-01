@@ -52,6 +52,11 @@ std::vector<std::string> CacheModel::getSourceList() const noexcept
 
 void CacheModel::removeSource(const std::string& source)
 {
+    if (source == PERMENANT_SOURCE) {
+        logger->debug("Trying to remove permanent source {}, abort.", PERMENANT_SOURCE);
+        return;
+    }
+
     logger->debug("Remove source {}", source);
     std::lock_guard lk(cacheLock);
     cache.erase(source);
@@ -384,4 +389,5 @@ bool CacheModel::clearRemoved(const std::string& source, int year) noexcept
 
     return false;
 }
+
 }

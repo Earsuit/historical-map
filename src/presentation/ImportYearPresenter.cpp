@@ -79,14 +79,14 @@ void ImportYearPresenter::updateInfo(int year)
 {
     onYearChange(year);
     if (!worker.enqueue([this, year](){
-            if (this->cacheModel.containsHistoricalInfo(DEFAULT_HISTORICAL_INFO_SOURCE, year)) {
+            if (this->cacheModel.containsHistoricalInfo(model::PERMENANT_SOURCE, year)) {
                 logger->debug("Historical info alredy exists in CacheModel from {} at year {}, skip it.", 
-                              DEFAULT_HISTORICAL_INFO_SOURCE, 
+                              model::PERMENANT_SOURCE, 
                               year);
                 return;
             }
-            this->cacheModel.upsert(DEFAULT_HISTORICAL_INFO_SOURCE, 
-                                          this->databaseModel.loadHistoricalInfo(year));
+            this->cacheModel.upsert(model::PERMENANT_SOURCE, 
+                                    this->databaseModel.loadHistoricalInfo(year));
         })) {
         logger->error("Enqueue update historical info from database for year {} task fail.", year);
     }

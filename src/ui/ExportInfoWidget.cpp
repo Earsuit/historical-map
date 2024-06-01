@@ -21,8 +21,8 @@ constexpr auto PROGRESS_BAR_SIZE = ImVec2{400, 0};
 
 ExportInfoWidget::ExportInfoWidget():
     logger{spdlog::get(logger::LOGGER_NAME)}, 
-    infoPresenter{presentation::DEFAULT_HISTORICAL_INFO_SOURCE},
-    infoSelectorPresenter{presentation::DEFAULT_HISTORICAL_INFO_SOURCE, TO_SOURCE},
+    infoPresenter{model::PERMENANT_SOURCE},
+    infoSelectorPresenter{model::PERMENANT_SOURCE, TO_SOURCE},
     exportPresenter{TO_SOURCE}
 {
     util::signal::connect(&infoPresenter, 
