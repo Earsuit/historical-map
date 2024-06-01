@@ -6,10 +6,9 @@
 #include "src/persistence/Data.h"
 #include "src/presentation/Util.h"
 #include "src/presentation/MapWidgetInterface.h"
-#include "src/persistence/HistoricalStorage.h"
 #include "src/model/TileModel.h"
 #include "src/model/DatabaseModel.h"
-#include "src/model/DynamicInfoModel.h"
+#include "src/model/CacheModel.h"
 #include "src/util/Signal.h"
 
 #include "spdlog/spdlog.h"
@@ -53,7 +52,7 @@ private:
     MapWidgetInterface& view;
     model::DatabaseModel& databaseModel;
     model::TileModel& tileModel;
-    model::DynamicInfoModel& dynamicInfoModel;
+    model::CacheModel& cacheModel;
     std::string source;
     std::atomic_int year;
 

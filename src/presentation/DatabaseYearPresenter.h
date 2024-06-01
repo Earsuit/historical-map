@@ -2,7 +2,7 @@
 #define SRC_PRESENTATION_DATABASE_YEAR_PRESENTER_H
 
 #include "src/model/DatabaseModel.h"
-#include "src/model/DynamicInfoModel.h"
+#include "src/model/CacheModel.h"
 #include "src/util/Worker.h"
 #include "src/util/Signal.h"
 
@@ -30,7 +30,7 @@ public:
 private:
     std::shared_ptr<spdlog::logger> logger;
     model::DatabaseModel& databaseModel;
-    model::DynamicInfoModel& dynamicInfoModel;
+    model::CacheModel& cacheModel;
     util::Worker<std::function<void()>> worker;
 
     void updateInfo(int year);

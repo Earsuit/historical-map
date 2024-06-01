@@ -35,15 +35,15 @@ MapWidgetPresenter::MapWidgetPresenter(MapWidgetInterface& view, const std::stri
     view{view},
     databaseModel{model::DatabaseModel::getInstance()},
     tileModel{model::TileModel::getInstance()},
-    dynamicInfoModel{model::DynamicInfoModel::getInstance()},
+    cacheModel{model::CacheModel::getInstance()},
     source{source}
 {
-    util::signal::connect(&dynamicInfoModel,
-                          &model::DynamicInfoModel::onCountryUpdate,
+    util::signal::connect(&cacheModel,
+                          &model::CacheModel::onCountryUpdate,
                           this,
                           &MapWidgetPresenter::onCountryUpdate);
-    util::signal::connect(&dynamicInfoModel,
-                          &model::DynamicInfoModel::onCityUpdate,
+    util::signal::connect(&cacheModel,
+                          &model::CacheModel::onCityUpdate,
                           this,
                           &MapWidgetPresenter::onCityUpdate);
     util::signal::connect(&databaseModel,
@@ -56,11 +56,11 @@ MapWidgetPresenter::MapWidgetPresenter(MapWidgetInterface& view, const std::stri
 
 MapWidgetPresenter::~MapWidgetPresenter()
 {
-    util::signal::disconnectAll(&dynamicInfoModel,
-                                &model::DynamicInfoModel::onCountryUpdate,
+    util::signal::disconnectAll(&cacheModel,
+                                &model::CacheModel::onCountryUpdate,
                                 this);
-    util::signal::disconnectAll(&dynamicInfoModel,
-                                &model::DynamicInfoModel::onCityUpdate,
+    util::signal::disconnectAll(&cacheModel,
+                                &model::CacheModel::onCityUpdate,
                                 this);
     util::signal::disconnectAll(&databaseModel,
                                 &model::DatabaseModel::onYearChange,
@@ -120,17 +120,17 @@ bool MapWidgetPresenter::handleRequestHasRightClickMenu() const noexcept
 
 std::vector<std::string> MapWidgetPresenter::handleRequestCountryList() const
 {
-    return dynamicInfoModel.getCountryList(source, year);
+    return cacheModel.getCountryList(source, year);
 }
 
 std::vector<std::string> MapWidgetPresenter::handleRequestCityList() const
 {
-    return dynamicInfoModel.getCityList(source, year);
+    return cacheModel.getCityList(source, year);
 }
 
 std::vector<ImVec2> MapWidgetPresenter::handleRequestContour(const std::string& name) const
 {
-    const auto contour = dynamicInfoModel.getContour(source, year, name);
+    const auto contour = cacheModel.getContour(source, year, name);
     std::vector<ImVec2> points;
     points.reserve(contour.size());
     for (const auto& coord : contour) {
@@ -154,7 +154,7 @@ ImVec4 MapWidgetPresenter::handleRequestColor(const std::string& name) const
 
 std::optional<ImVec2> MapWidgetPresenter::handleRequestCityCoord(const std::string& name) const
 {
-    if (const auto& city = dynamicInfoModel.getCity(source, year, name); city) {
+    if (const auto& city = cacheModel.getCity(source, year, name); city) {
         return ImVec2{model::longitude2X(city->coordinate.longitude, BBOX_ZOOM_LEVEL), 
                       model::latitude2Y(city->coordinate.latitude, BBOX_ZOOM_LEVEL)};
     }
@@ -164,7 +164,7 @@ std::optional<ImVec2> MapWidgetPresenter::handleRequestCityCoord(const std::stri
 
 float MapWidgetPresenter::handleRequestCoordSize(const ImVec2& coord) const
 {
-    if (const auto hovered = dynamicInfoModel.getHoveredCoord(); hovered) {
+    if (const auto hovered = cacheModel.getHoveredCoord(); hovered) {
         const auto point = ImVec2{model::longitude2X(hovered->longitude, BBOX_ZOOM_LEVEL), 
                                   model::latitude2Y(hovered->latitude, BBOX_ZOOM_LEVEL)};
         if (point.x == coord.x && point.y == coord.y) {
@@ -177,7 +177,7 @@ float MapWidgetPresenter::handleRequestCoordSize(const ImVec2& coord) const
 
 void MapWidgetPresenter::handleUpdateContour(const std::string& name, int idx, const ImVec2& coord)
 {
-    dynamicInfoModel.updateContour(source, 
+    cacheModel.updateContour(source, 
                                    year, 
                                    name, 
                                    idx, 
@@ -186,7 +186,7 @@ void MapWidgetPresenter::handleUpdateContour(const std::string& name, int idx, c
 
 void MapWidgetPresenter::handleUpdateCity(const std::string& name, const ImVec2& coord)
 {
-    dynamicInfoModel.updateCityCoord(source, 
+    cacheModel.updateCityCoord(source, 
                                      year, 
                                      name, 
                                      persistence::Coordinate{y2Latitude(coord.y), x2Longitude(coord.x)});
@@ -196,7 +196,7 @@ bool MapWidgetPresenter::handleExtendContour(const std::string& name, const mode
 {
     const persistence::Coordinate coord{.latitude = y2Latitude(pos.y), .longitude = x2Longitude(pos.x)};
 
-    if (dynamicInfoModel.extendContour(source, year, name, coord)) {
+    if (cacheModel.extendContour(source, year, name, coord)) {
         return true;
     }
 
@@ -207,7 +207,7 @@ bool MapWidgetPresenter::handleExtendContour(const std::string& name, const mode
 bool MapWidgetPresenter::handleAddCountry(const std::string& name, const model::Vec2& pos)
 {
     const persistence::Country country{name, {persistence::Coordinate{.latitude = y2Latitude(pos.y), .longitude = x2Longitude(pos.x)}}};
-    if (dynamicInfoModel.addCountry(source, year, country)) {
+    if (cacheModel.addCountry(source, year, country)) {
         return true;
     }
 
@@ -220,7 +220,7 @@ bool MapWidgetPresenter::handleAddCity(const std::string& name, const model::Vec
 {
     const persistence::City city{name, {.latitude = y2Latitude(pos.y), .longitude = x2Longitude(pos.x)}};
 
-    if (dynamicInfoModel.addCity(source, year, city)) {
+    if (cacheModel.addCity(source, year, city)) {
         return true;
     }
 

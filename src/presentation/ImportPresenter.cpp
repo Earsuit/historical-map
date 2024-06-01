@@ -13,15 +13,15 @@ constexpr int PERIOD_INDEX = 1;
 
 ImportPresenter::ImportPresenter(const std::string& source):
     logger{spdlog::get(logger::LOGGER_NAME)}, 
-    dynamicInfoModel{model::DynamicInfoModel::getInstance()},
+    cacheModel{model::CacheModel::getInstance()},
     source{source}
 {
-    dynamicInfoModel.addSource(source);
+    cacheModel.addSource(source);
 }
 
 ImportPresenter::~ImportPresenter()
 {
-    dynamicInfoModel.removeSource(source);
+    cacheModel.removeSource(source);
 }
 
 void ImportPresenter::handleDoImport(const std::string& file)
@@ -39,7 +39,7 @@ void ImportPresenter::handleDoImport(const std::string& file)
 
                 if (const auto& ret = loader.getValue(); ret) {
                     auto info = ret.value();
-                    this->dynamicInfoModel.upsert(this->source, std::move(info));
+                    this->cacheModel.upsert(this->source, std::move(info));
                     count++;
                 } else {
                     return tl::unexpected{ret.error()};

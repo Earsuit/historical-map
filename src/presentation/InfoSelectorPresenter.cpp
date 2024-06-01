@@ -10,56 +10,56 @@ using namespace std::chrono_literals;
 InfoSelectorPresenter::InfoSelectorPresenter(const std::string& fromSource, const std::string& toSource):
     logger{spdlog::get(logger::LOGGER_NAME)},
     databaseModel{model::DatabaseModel::getInstance()},
-    dynamicInfoModel{model::DynamicInfoModel::getInstance()},
+    cacheModel{model::CacheModel::getInstance()},
     fromSource{fromSource},
     toSource{toSource}
 {
-    dynamicInfoModel.addSource(toSource);
+    cacheModel.addSource(toSource);
 
-    util::signal::connect(&dynamicInfoModel, 
-                          &model::DynamicInfoModel::onCountryUpdate, 
+    util::signal::connect(&cacheModel, 
+                          &model::CacheModel::onCountryUpdate, 
                           this, 
                           &InfoSelectorPresenter::onUpdate);
-    util::signal::connect(&dynamicInfoModel,
-                          &model::DynamicInfoModel::onCityUpdate,
+    util::signal::connect(&cacheModel,
+                          &model::CacheModel::onCityUpdate,
                           this,
                           &InfoSelectorPresenter::onUpdate);
-    util::signal::connect(&dynamicInfoModel,
-                          &model::DynamicInfoModel::onNoteUpdate,
+    util::signal::connect(&cacheModel,
+                          &model::CacheModel::onNoteUpdate,
                           this,
                           &InfoSelectorPresenter::onUpdate);
 }
 
 InfoSelectorPresenter::~InfoSelectorPresenter()
 {
-    util::signal::disconnectAll(&dynamicInfoModel, 
-                                &model::DynamicInfoModel::onCountryUpdate, 
+    util::signal::disconnectAll(&cacheModel, 
+                                &model::CacheModel::onCountryUpdate, 
                                 this);
-    util::signal::disconnectAll(&dynamicInfoModel,
-                                &model::DynamicInfoModel::onCityUpdate,
+    util::signal::disconnectAll(&cacheModel,
+                                &model::CacheModel::onCityUpdate,
                                 this);
-    util::signal::disconnectAll(&dynamicInfoModel,
-                                &model::DynamicInfoModel::onNoteUpdate,
+    util::signal::disconnectAll(&cacheModel,
+                                &model::CacheModel::onNoteUpdate,
                                 this);
 
-    dynamicInfoModel.removeSource(toSource);
+    cacheModel.removeSource(toSource);
 }
 
 void InfoSelectorPresenter::upsertHistoricalStroageIfNotExists(int year)
 {
-    if (dynamicInfoModel.containsHistoricalInfo(toSource, year)) {
+    if (cacheModel.containsHistoricalInfo(toSource, year)) {
         return;
     }
 
-    dynamicInfoModel.upsert(toSource, persistence::Data{year});
+    cacheModel.upsert(toSource, persistence::Data{year});
 }
 
 void InfoSelectorPresenter::handleSelectCountry(const std::string& name)
 {
     const auto year = databaseModel.getYear();
     upsertHistoricalStroageIfNotExists(year);
-    if (const auto country = dynamicInfoModel.getCountry(fromSource, year, name); country) {
-        if (dynamicInfoModel.addCountry(toSource, year, country.value())) {
+    if (const auto country = cacheModel.getCountry(fromSource, year, name); country) {
+        if (cacheModel.addCountry(toSource, year, country.value())) {
             return;
         }
     }
@@ -71,8 +71,8 @@ void InfoSelectorPresenter::handleSelectCity(const std::string& name)
 {
     const auto year = databaseModel.getYear();
     upsertHistoricalStroageIfNotExists(year);
-    if (const auto city = dynamicInfoModel.getCity(fromSource, year, name); city) {
-        if (dynamicInfoModel.addCity(toSource, year, city.value())) {
+    if (const auto city = cacheModel.getCity(fromSource, year, name); city) {
+        if (cacheModel.addCity(toSource, year, city.value())) {
             return;
         }
     }
@@ -84,8 +84,8 @@ void InfoSelectorPresenter::handleSelectNote()
 {
     const auto year = databaseModel.getYear();
     upsertHistoricalStroageIfNotExists(year);
-    if (const auto note = dynamicInfoModel.getNote(fromSource, year); note) {
-        if (dynamicInfoModel.addNote(toSource, year, note.value())) {
+    if (const auto note = cacheModel.getNote(fromSource, year); note) {
+        if (cacheModel.addNote(toSource, year, note.value())) {
             return;
         }
     }
@@ -96,46 +96,46 @@ void InfoSelectorPresenter::handleSelectNote()
 void InfoSelectorPresenter::handleDeselectCountry(const std::string& name)
 {
     const auto year = databaseModel.getYear();
-    dynamicInfoModel.removeCountry(toSource, year, name);
-    dynamicInfoModel.clearRemoved(toSource, year);
+    cacheModel.removeCountry(toSource, year, name);
+    cacheModel.clearRemoved(toSource, year);
 }
 
 void InfoSelectorPresenter::handleDeselectCity(const std::string& name)
 {
     const auto year = databaseModel.getYear();
-    dynamicInfoModel.removeCity(toSource, year, name);
-    dynamicInfoModel.clearRemoved(toSource, year);
+    cacheModel.removeCity(toSource, year, name);
+    cacheModel.clearRemoved(toSource, year);
 }
 
 void InfoSelectorPresenter::handleDeselectNote()
 {
     const auto year = databaseModel.getYear();
-    dynamicInfoModel.removeNote(toSource, year);
-    dynamicInfoModel.clearRemoved(toSource, year);
+    cacheModel.removeNote(toSource, year);
+    cacheModel.clearRemoved(toSource, year);
 }
 
 bool InfoSelectorPresenter::handkeCheckIsCountrySelected(const std::string& name)
 {
-    return dynamicInfoModel.containsCountry(toSource, databaseModel.getYear(), name);
+    return cacheModel.containsCountry(toSource, databaseModel.getYear(), name);
 }
 
 bool InfoSelectorPresenter::handleCheckIsCitySelected(const std::string& name)
 {
-    return dynamicInfoModel.containsCity(toSource, databaseModel.getYear(), name);
+    return cacheModel.containsCity(toSource, databaseModel.getYear(), name);
 }
 
 bool InfoSelectorPresenter::handleCheckIsNoteSelected()
 {
-    return dynamicInfoModel.containsNote(toSource, databaseModel.getYear());
+    return cacheModel.containsNote(toSource, databaseModel.getYear());
 }
 
 bool InfoSelectorPresenter::handleCheckIsAllSelected()
 {
     const auto year = databaseModel.getYear();
-    const auto toCountries = dynamicInfoModel.getCountryList(toSource, year);
-    const auto toCities = dynamicInfoModel.getCityList(toSource, year);
-    const auto fromCountries = dynamicInfoModel.getCountryList(fromSource, year);
-    const auto fromCities = dynamicInfoModel.getCityList(fromSource, year);
+    const auto toCountries = cacheModel.getCountryList(toSource, year);
+    const auto toCities = cacheModel.getCityList(toSource, year);
+    const auto fromCountries = cacheModel.getCountryList(fromSource, year);
+    const auto fromCities = cacheModel.getCityList(fromSource, year);
     std::unordered_set<std::string> selectedCountries{toCountries.cbegin(), toCountries.cend()};
     std::unordered_set<std::string> selectedCitiess{toCities.cbegin(), toCities.cend()};
 
@@ -145,7 +145,7 @@ bool InfoSelectorPresenter::handleCheckIsAllSelected()
 
     if (toCountries.empty() && 
         toCities.empty() &&
-        !dynamicInfoModel.containsNote(toSource, year)) {
+        !cacheModel.containsNote(toSource, year)) {
         return false;
     }
 
@@ -161,19 +161,19 @@ bool InfoSelectorPresenter::handleCheckIsAllSelected()
         }
     }
 
-    return dynamicInfoModel.containsNote(toSource, year) == dynamicInfoModel.containsNote(fromSource, year);
+    return cacheModel.containsNote(toSource, year) == cacheModel.containsNote(fromSource, year);
 }
 
 void InfoSelectorPresenter::handleSelectAll()
 {
-    if (auto data = dynamicInfoModel.getData(fromSource, databaseModel.getYear()); data) {
-        dynamicInfoModel.upsert(toSource, *data);
+    if (auto data = cacheModel.getData(fromSource, databaseModel.getYear()); data) {
+        cacheModel.upsert(toSource, *data);
     }
 }
 
 void InfoSelectorPresenter::handleDeselectAll()
 {
-    dynamicInfoModel.removeHistoricalInfoFromSource(toSource, databaseModel.getYear());
+    cacheModel.removeHistoricalInfoFromSource(toSource, databaseModel.getYear());
 }
 
 void InfoSelectorPresenter::handleSelectAllForMultipleYears(int startYear, int endYear)
@@ -188,8 +188,8 @@ void InfoSelectorPresenter::handleSelectAllForMultipleYears(int startYear, int e
 
             this->databaseModel.setYear(year);
             
-            if (!this->dynamicInfoModel.containsHistoricalInfo(this->fromSource, year)) {
-                this->dynamicInfoModel.upsert(this->fromSource, 
+            if (!this->cacheModel.containsHistoricalInfo(this->fromSource, year)) {
+                this->cacheModel.upsert(this->fromSource, 
                                               this->databaseModel.loadHistoricalInfo(year));
             }
 

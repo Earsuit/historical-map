@@ -2,7 +2,7 @@
 #define SRC_PRESENTATION_MAIN_VIEW_PRESENTER_H
 
 #include "src/presentation/MainViewInterface.h"
-#include "src/model/DynamicInfoModel.h"
+#include "src/model/CacheModel.h"
 #include "src/model/DatabaseModel.h"
 
 #include <string>
@@ -13,7 +13,7 @@ public:
     MainViewPresenter(MainViewInterface& view):
         view{view},
         databaseModel{model::DatabaseModel::getInstance()},
-        model{model::DynamicInfoModel::getInstance()}
+        model{model::CacheModel::getInstance()}
     {}
 
     std::string handleGetDefaultMapWidgetSouceName() const noexcept;
@@ -24,7 +24,7 @@ public:
 private:
     MainViewInterface& view;
     model::DatabaseModel& databaseModel;
-    model::DynamicInfoModel& model;
+    model::CacheModel& model;
 
     void clearCache();
 };

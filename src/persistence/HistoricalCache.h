@@ -1,5 +1,5 @@
-#ifndef SRC_PERSISTENCE_HISTORICAL_STORAGE_H
-#define SRC_PERSISTENCE_HISTORICAL_STORAGE_H
+#ifndef SRC_PERSISTENCE_HISTORICAL_CACHE_H
+#define SRC_PERSISTENCE_HISTORICAL_CACHE_H
 
 #include "src/persistence/Data.h"
 
@@ -11,11 +11,11 @@
 #include <vector>
 
 namespace persistence {
-class HistoricalStorage {
+class HistoricalCache {
 public:
-    HistoricalStorage() = default;
-    explicit HistoricalStorage(const persistence::Data& info);
-    explicit HistoricalStorage(persistence::Data&& info);
+    HistoricalCache() = default;
+    explicit HistoricalCache(const persistence::Data& info);
+    explicit HistoricalCache(persistence::Data&& info);
 
     bool containsCountry(const std::string& name) const { return countries.contains(name); }
     bool containsCity(const std::string& name) const { return cities.contains(name); }

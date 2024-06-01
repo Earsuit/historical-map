@@ -1,7 +1,7 @@
 #ifndef SRC_PRESENTATION_IMPORT_PRESENTER_H
 #define SRC_PRESENTATION_IMPORT_PRESENTER_H
 
-#include "src/model/DynamicInfoModel.h"
+#include "src/model/CacheModel.h"
 #include "src/model/ImportModel.h"
 #include "src/util/Error.h"
 
@@ -22,13 +22,13 @@ public:
 
     void handleDoImport(const std::string& file);
     tl::expected<bool, util::Error> handleCheckImportComplete();
-    auto handleGetImportedYears() const { return dynamicInfoModel.getYearList(source); }
+    auto handleGetImportedYears() const { return cacheModel.getYearList(source); }
     std::vector<std::string> handleGetSupportedFormat() const { return importModel.getSupportedFormat(); }
     void handleCancelImport() { stopImport = true; }
 
 private:
     std::shared_ptr<spdlog::logger> logger;
-    model::DynamicInfoModel& dynamicInfoModel;
+    model::CacheModel& cacheModel;
     model::ImportModel importModel;
     std::string source;
     std::future<tl::expected<void, util::Error>> task;

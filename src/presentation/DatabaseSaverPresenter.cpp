@@ -6,7 +6,7 @@ namespace presentation {
 DatabaseSaverPresenter::DatabaseSaverPresenter(const std::string& source):
     logger{spdlog::get(logger::LOGGER_NAME)},
     databaseModel{model::DatabaseModel::getInstance()},
-    dynamicInfoModel{model::DynamicInfoModel::getInstance()},
+    cacheModel{model::CacheModel::getInstance()},
     source{source}
 {
     startWorkerThread();
@@ -27,15 +27,15 @@ bool DatabaseSaverPresenter::handleSaveSameForRange(int startYear, int endYear)
                             startYear, 
                             endYear] () mutable {
             const auto year = this->databaseModel.getYear();
-            auto data = this->dynamicInfoModel.getData(this->source, year);
-            auto removed = this->dynamicInfoModel.getRemoved(this->source, year);
+            auto data = this->cacheModel.getData(this->source, year);
+            auto removed = this->cacheModel.getRemoved(this->source, year);
             if (data && removed) {
                 for (int year = startYear; year <= endYear; year++) {
                     data->year = year;
                     removed->year = year;
                     this->databaseModel.updateHistoricalInfo(*data);
                     this->databaseModel.removeHistoricalInfo(*removed);
-                    this->dynamicInfoModel.upsert(DEFAULT_HISTORICAL_INFO_SOURCE, this->databaseModel.loadHistoricalInfo(year));
+                    this->cacheModel.upsert(DEFAULT_HISTORICAL_INFO_SOURCE, this->databaseModel.loadHistoricalInfo(year));
                     this->progress++;
                 }
             }
@@ -51,18 +51,18 @@ bool DatabaseSaverPresenter::handleSaveSameForRange(int startYear, int endYear)
 
 void DatabaseSaverPresenter::handleSaveAll()
 {
-    const auto years = this->dynamicInfoModel.getYearList(this->source);
+    const auto years = this->cacheModel.getYearList(this->source);
     total = years.size();
 
     if (!taskQueue.enqueue([this, years] () mutable {
             for (const auto year : years) {
-                auto data = this->dynamicInfoModel.getData(this->source, year);
-                auto removed = this->dynamicInfoModel.getRemoved(this->source, year);
+                auto data = this->cacheModel.getData(this->source, year);
+                auto removed = this->cacheModel.getRemoved(this->source, year);
 
                 if (data && removed) {
                     this->databaseModel.updateHistoricalInfo(*data);
                     this->databaseModel.removeHistoricalInfo(*removed);
-                    this->dynamicInfoModel.upsert(DEFAULT_HISTORICAL_INFO_SOURCE, this->databaseModel.loadHistoricalInfo(year));
+                    this->cacheModel.upsert(DEFAULT_HISTORICAL_INFO_SOURCE, this->databaseModel.loadHistoricalInfo(year));
                 }
                 this->progress++;
             }

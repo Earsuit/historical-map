@@ -1,8 +1,8 @@
-#ifndef SRC_MODEL_DYNAMIC_INFO_MODEL_H
-#define SRC_MODEL_DYNAMIC_INFO_MODEL_H
+#ifndef SRC_MODEL_CACHE_MODEL_H
+#define SRC_MODEL_CACHE_MODEL_H
 
 #include "src/persistence/Data.h"
-#include "src/persistence/HistoricalStorage.h"
+#include "src/persistence/HistoricalCache.h"
 #include "src/logger/Util.h"
 #include "src/util/Signal.h"
 
@@ -17,9 +17,9 @@
 #include <type_traits>
 
 namespace model {
-class DynamicInfoModel {
+class CacheModel {
 public:
-    static DynamicInfoModel& getInstance();
+    static CacheModel& getInstance();
 
     void setHoveredCoord(persistence::Coordinate coord);
     void clearHoveredCoord() noexcept;
@@ -63,8 +63,8 @@ public:
     {
         std::lock_guard lk(cacheLock);
         if (cache.contains(source)) {
-            logger->debug("Upsert DynamicInfoModel cache for source {} at year {}", source, info.year);
-            cache[source][info.year] = persistence::HistoricalStorage{std::forward<T>(info)};
+            logger->debug("Upsert CacheModel cache for source {} at year {}", source, info.year);
+            cache[source][info.year] = persistence::HistoricalCache{std::forward<T>(info)};
 
             onCountryUpdate(source, info.year);
             onCityUpdate(source, info.year);
@@ -72,20 +72,20 @@ public:
             return true;
         }
 
-        logger->error("Failed to upsert DynamicInfoModel cache for source {} at year {}, please add source first.", source, info.year);
+        logger->error("Failed to upsert CacheModel cache for source {} at year {}, please add source first.", source, info.year);
         return false;
     }
 
-    DynamicInfoModel(DynamicInfoModel&&) = delete;
-    DynamicInfoModel(const DynamicInfoModel&) = delete;
-    DynamicInfoModel& operator=(const DynamicInfoModel&) = delete;
+    CacheModel(CacheModel&&) = delete;
+    CacheModel(const CacheModel&) = delete;
+    CacheModel& operator=(const CacheModel&) = delete;
 
     util::signal::Signal<void(const std::string& source, int year)> onCountryUpdate;
     util::signal::Signal<void(const std::string& source, int year)> onCityUpdate;
     util::signal::Signal<void(const std::string& source, int year)> onNoteUpdate;
 
 private:
-    DynamicInfoModel():
+    CacheModel():
         logger{spdlog::get(logger::LOGGER_NAME)}
     {
     }
@@ -94,7 +94,7 @@ private:
     std::optional<persistence::Coordinate> hovered;
     mutable std::mutex hoveredLock;
     mutable std::recursive_mutex cacheLock;
-    std::map<std::string, std::map<int, persistence::HistoricalStorage>> cache;
+    std::map<std::string, std::map<int, persistence::HistoricalCache>> cache;
     persistence::Data removed;
 };
 }

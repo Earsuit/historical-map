@@ -1,7 +1,7 @@
 #ifndef SRC_PRESENTATION_INFO_SELECTOR_PRESENTER_H
 #define SRC_PRESENTATION_INFO_SELECTOR_PRESENTER_H
 
-#include "src/model/DynamicInfoModel.h"
+#include "src/model/CacheModel.h"
 #include "src/model/DatabaseModel.h"
 #include "src/util/Signal.h"
 
@@ -41,7 +41,7 @@ public:
 private:
     std::shared_ptr<spdlog::logger> logger;
     model::DatabaseModel& databaseModel;
-    model::DynamicInfoModel& dynamicInfoModel;
+    model::CacheModel& cacheModel;
     std::string fromSource;
     std::string toSource;
     std::future<void> task;

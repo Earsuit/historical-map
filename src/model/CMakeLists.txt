@@ -1,8 +1,8 @@
 set(MODEL_SRC
     DatabaseModel.h
     DatabaseModel.cpp
-    DynamicInfoModel.h
-    DynamicInfoModel.cpp
+    CacheModel.h
+    CacheModel.cpp
     TileModel.h
     TileModel.cpp
     Util.h

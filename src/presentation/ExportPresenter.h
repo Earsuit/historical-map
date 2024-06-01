@@ -2,7 +2,7 @@
 #define SRC_PRESENTATION_EXPORT_PRESENTER_H
 
 #include "src/model/ExportModel.h"
-#include "src/model/DynamicInfoModel.h"
+#include "src/model/CacheModel.h"
 
 #include "spdlog/spdlog.h"
 
@@ -25,7 +25,7 @@ public:
 
 private:
     std::shared_ptr<spdlog::logger> logger;
-    model::DynamicInfoModel& dynamicModel;
+    model::CacheModel& dynamicModel;
     model::ExportModel exportModel;
     std::string source;
     std::future<tl::expected<void, util::Error>> task;

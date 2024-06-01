@@ -1,4 +1,4 @@
-#include "src/persistence/HistoricalStorage.h"
+#include "src/persistence/HistoricalCache.h"
 
 #include <cassert>
 
@@ -13,21 +13,21 @@ auto mapKeyToVector(T&& constainer)
     return keys;
 }
 
-void HistoricalStorage::constructCountryInfo()
+void HistoricalCache::constructCountryInfo()
 {
     for (auto it = cache.countries.begin(); it != cache.countries.end(); it++) {
         countries.emplace(std::make_pair(it->name, it));
     }
 }
 
-void HistoricalStorage::constructCityInfo()
+void HistoricalCache::constructCityInfo()
 {
     for (auto it = cache.cities.begin(); it != cache.cities.end(); it++) {
         cities.emplace(std::make_pair(it->name, it));
     }
 }
 
-HistoricalStorage::HistoricalStorage(const persistence::Data& info):
+HistoricalCache::HistoricalCache(const persistence::Data& info):
     cache{info},
     removed{info.year}
 {
@@ -35,7 +35,7 @@ HistoricalStorage::HistoricalStorage(const persistence::Data& info):
     constructCityInfo();
 }
 
-HistoricalStorage::HistoricalStorage(persistence::Data&& info):
+HistoricalCache::HistoricalCache(persistence::Data&& info):
     cache{std::move(info)},
     removed{info.year}
 {
@@ -43,66 +43,66 @@ HistoricalStorage::HistoricalStorage(persistence::Data&& info):
     constructCityInfo();
 }
 
-persistence::Country& HistoricalStorage::getCountry(const std::string& name)
+persistence::Country& HistoricalCache::getCountry(const std::string& name)
 {
     return *countries.at(name);
 }
 
-persistence::City& HistoricalStorage::getCity(const std::string& name)
+persistence::City& HistoricalCache::getCity(const std::string& name)
 {
     return *cities.at(name);
 }
 
-persistence::Note& HistoricalStorage::getNote()
+persistence::Note& HistoricalCache::getNote()
 {
     return *cache.note;
 }
 
-const persistence::Country& HistoricalStorage::getCountry(const std::string& name) const
+const persistence::Country& HistoricalCache::getCountry(const std::string& name) const
 {
     return *countries.at(name);
 }
 
-const persistence::City& HistoricalStorage::getCity(const std::string& name) const
+const persistence::City& HistoricalCache::getCity(const std::string& name) const
 {
     return *cities.at(name);
 }
 
-const persistence::Note& HistoricalStorage::getNote() const
+const persistence::Note& HistoricalCache::getNote() const
 {
     return *cache.note;
 }
 
-std::vector<std::string> HistoricalStorage::getCountryList() const
+std::vector<std::string> HistoricalCache::getCountryList() const
 {
     return mapKeyToVector(countries);
 }
 
-std::vector<std::string> HistoricalStorage::getCityList() const
+std::vector<std::string> HistoricalCache::getCityList() const
 {
     return mapKeyToVector(cities);
 }
 
-void HistoricalStorage::removeCountry(const std::string& name)
+void HistoricalCache::removeCountry(const std::string& name)
 {
     removed.countries.emplace_back(*countries[name]);
     cache.countries.erase(countries[name]);
     countries.erase(name);
 }
 
-void HistoricalStorage::removeCity(const std::string& name)
+void HistoricalCache::removeCity(const std::string& name)
 {
     removed.cities.emplace_back(*cities[name]);
     cache.cities.erase(cities[name]);
     cities.erase(name);
 }
 
-bool HistoricalStorage::addCountry(const std::string& name)
+bool HistoricalCache::addCountry(const std::string& name)
 {
     return addCountry(persistence::Country{name});
 }
 
-bool HistoricalStorage::addCountry(const persistence::Country& country)
+bool HistoricalCache::addCountry(const persistence::Country& country)
 {
     if (countries.contains(country.name)) {
         return false;
@@ -114,7 +114,7 @@ bool HistoricalStorage::addCountry(const persistence::Country& country)
     return true;
 }
 
-bool HistoricalStorage::addCity(const persistence::City& city)
+bool HistoricalCache::addCity(const persistence::City& city)
 {
     if (cities.contains(city.name)) {
         return false;
@@ -126,7 +126,7 @@ bool HistoricalStorage::addCity(const persistence::City& city)
     return true;
 }
 
-bool HistoricalStorage::addNote(const std::string& note)
+bool HistoricalCache::addNote(const std::string& note)
 {
     if (cache.note) {
         cache.note->text = note;
@@ -137,7 +137,7 @@ bool HistoricalStorage::addNote(const std::string& note)
     return true;
 }
 
-void HistoricalStorage::removeNote()
+void HistoricalCache::removeNote()
 {
     removed.note = cache.note;
     cache.note = std::nullopt;

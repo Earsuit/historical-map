@@ -1,7 +1,7 @@
 #ifndef SRC_PRESENTATION_HISTORICAL_INFO_PRESENTER_H
 #define SRC_PRESENTATION_HISTORICAL_INFO_PRESENTER_H
 
-#include "src/model/DynamicInfoModel.h"
+#include "src/model/CacheModel.h"
 #include "src/model/DatabaseModel.h"
 #include "src/util/Signal.h"
 #include "src/logger/Util.h"
@@ -42,7 +42,7 @@ public:
 private:
     std::shared_ptr<spdlog::logger> logger;
     model::DatabaseModel& databaseModel;
-    model::DynamicInfoModel& dynamicInfoModel;
+    model::CacheModel& cacheModel;
     std::string source;
 
     bool varifySignal(const std::string& source, int year) const noexcept;

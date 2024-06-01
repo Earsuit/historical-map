@@ -1,7 +1,7 @@
 #ifndef SRC_PRESENTATION_DATABASE_SAVER_PRESENTER_H
 #define SRC_PRESENTATION_DATABASE_SAVER_PRESENTER_H
 
-#include "src/model/DynamicInfoModel.h"
+#include "src/model/CacheModel.h"
 #include "src/model/DatabaseModel.h"
 
 #include "spdlog/spdlog.h"
@@ -26,7 +26,7 @@ public:
 private:
     std::shared_ptr<spdlog::logger> logger;
     model::DatabaseModel& databaseModel;
-    model::DynamicInfoModel& dynamicInfoModel;
+    model::CacheModel& cacheModel;
     std::string source;
     moodycamel::BlockingConcurrentQueue<std::function<void()>> taskQueue;
     std::atomic_int progress;

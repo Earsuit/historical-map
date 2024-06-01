@@ -33,8 +33,8 @@ set(PERSISTENCE_SRC
   exporterImporter/IExporterImporter.h
   exporterImporter/ImportManager.cpp
   exporterImporter/ImportManager.h
-  HistoricalStorage.h
-  HistoricalStorage.cpp
+  HistoricalCache.h
+  HistoricalCache.cpp
   Data.h
   Database.h
 )

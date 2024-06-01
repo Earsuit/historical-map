@@ -8,7 +8,7 @@ using namespace std::chrono_literals;
 
 ExportPresenter::ExportPresenter(const std::string& source):
     logger{spdlog::get(logger::LOGGER_NAME)}, 
-    dynamicModel{model::DynamicInfoModel::getInstance()},
+    dynamicModel{model::CacheModel::getInstance()},
     source{source}
 {
 }
