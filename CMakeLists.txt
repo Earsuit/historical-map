@@ -25,7 +25,6 @@ endif()
 
 if (LINUX)
     pkg_check_modules(GIO2 REQUIRED IMPORTED_TARGET gio-2.0)
-    pkg_check_modules(GTK3 REQUIRED IMPORTED_TARGET gtk+-3.0)
 endif()
 
 if (MSVC)
