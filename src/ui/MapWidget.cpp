@@ -44,6 +44,7 @@ constexpr auto COUNTRY_ANNOTATION_OFFSET = ImVec2(0, 0);
 const auto ADD_NEW_COUNTRY_POPUP_NAME = "Add new country";
 const auto ADD_NEW_CITY_POPUP_NAME = "Add new city";
 constexpr float EPSILON = 1e-2;
+constexpr bool ALWAYS_SHOW_ANNOTATION = true;
 
 bool operator==(const ImVec2& lhs, const ImVec2& rhs)
 {
@@ -353,7 +354,7 @@ void MapWidget::renderCountries()
                                country.labelCoordinate.y, 
                                country.color, 
                                COUNTRY_ANNOTATION_OFFSET, 
-                               false, 
+                               ALWAYS_SHOW_ANNOTATION, 
                                "%s", 
                                name.c_str());
 
@@ -383,7 +384,7 @@ void MapWidget::renderCities()
                            city.coordinate.y, 
                            city.color, 
                            CITY_ANNOTATION_OFFSET, 
-                           false, 
+                           ALWAYS_SHOW_ANNOTATION, 
                            "%s", 
                            name.c_str());
     }
