@@ -35,6 +35,7 @@ constexpr auto MAP_WIDGETS_DOCKSPACE_WINDOW_NAME = "MapDockSpace";
 constexpr ImGuiDockNodeFlags DOCKSPACE_FLAG = ImGuiDockNodeFlags_PassthruCentralNode | ImGuiDockNodeFlags_AutoHideTabBar;
 constexpr int MAX_MAP_WIDGET_NUM = 2;
 constexpr ImVec2 DOCKSPACE_DEFAULT_ARG = ImVec2{0.0f, 0.0f};
+constexpr float ROUNDING = 3;
 
 namespace {
 static void glfwErrorCallback(int error, const char* description)
@@ -152,6 +153,12 @@ void HistoricalMap::start()
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
+
+        ImGui::GetStyle().FrameRounding = ROUNDING;
+        ImGui::GetStyle().WindowRounding = ROUNDING;
+        ImGui::GetStyle().PopupRounding = ROUNDING;
+        ImGui::GetStyle().ChildRounding = ROUNDING;
+        ImGui::GetStyle().TabRounding = ROUNDING;
 
         buildDockSpace();
 
