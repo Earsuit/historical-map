@@ -7,7 +7,7 @@
 
 namespace ui {
 constexpr int NAME_INPUT_WIDTH = 100;
-constexpr auto POPUP_WINDOW_NAME = "Save for years";
+constexpr auto POPUP_WINDOW_NAME = "Save to years";
 constexpr auto PROGRESS_POPUP_WINDOW_NAME = "Saving";
 
 DefaultInfoWidget::DefaultInfoWidget(): 
@@ -60,8 +60,13 @@ DefaultInfoWidget::~DefaultInfoWidget()
 
 void DefaultInfoWidget::displayYearControlSection()
 {
+    std::string yearLabel = "Year %d";
+    if (isUnsaved) {
+        yearLabel += " *";
+    }
+
     int year = currentYear;
-    if (ImGui::SliderInt("##", &year, yearPresenter.handleGetMinYear(), yearPresenter.handleGetMaxYear(), "Year %d", ImGuiSliderFlags_AlwaysClamp)) {
+    if (ImGui::SliderInt("##", &year, yearPresenter.handleGetMinYear(), yearPresenter.handleGetMaxYear(), yearLabel.c_str(), ImGuiSliderFlags_AlwaysClamp)) {
         yearPresenter.handleSetYear(year);
     }
     
@@ -108,19 +113,13 @@ void DefaultInfoWidget::paint()
         updateNoteResources();
         updateNewInfoEntry();
 
-        if (!isUnsaved) {
-            ImGui::BeginDisabled();
-        }
-        if (ImGui::Button("Save")) {
+        if (ImGui::Button("Save current year")) {
             databaseSaverPresenter.handleSaveSameForRange(currentYear, currentYear);
             ImGui::OpenPopup(PROGRESS_POPUP_WINDOW_NAME);
         }
-        if (!isUnsaved) {
-            ImGui::EndDisabled();
-        }
 
         ImGui::SameLine();
-        if (ImGui::Button("Duplicate")) {
+        if (ImGui::Button("Save to years")) {
             startYear = endYear = currentYear;
             ImGui::OpenPopup(POPUP_WINDOW_NAME);
         }
@@ -314,7 +313,7 @@ void DefaultInfoWidget::savePopupWindow()
         ImGui::InputInt("Start", &startYear);
         ImGui::InputInt("End", &endYear);
         
-        if (ImGui::Button("Save##ForYears")) {
+        if (ImGui::Button("Save")) {
             if (databaseSaverPresenter.handleSaveSameForRange(startYear, endYear)) {
                 ImGui::CloseCurrentPopup();
                 openSavePopup = true;
