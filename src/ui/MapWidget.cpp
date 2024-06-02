@@ -103,13 +103,21 @@ void MapWidget::prepareRenderPoint()
     dragPointId = 0;
 }
 
-ImVec2 MapWidget::renderPoint(const ImVec2& coordinate, float size, const ImVec4& color)
+bool MapWidget::renderPoint(ImVec2& coordinate, float size, const ImVec4& color)
 {
     double x = coordinate.x;
     double y = coordinate.y;
-    ImPlot::DragPoint(dragPointId++, &x, &y, color, size);
+    if (ImPlot::DragPoint(dragPointId++, 
+                          &x, 
+                          &y, 
+                          color, 
+                          size)) {
+        coordinate.x = static_cast<float>(x);
+        coordinate.y = static_cast<float>(y);
+        return true;
+    }
 
-    return {static_cast<float>(x), static_cast<float>(y)};
+    return false;
 }
 
 model::Range MapWidget::getAxisRangeX() const noexcept
@@ -305,19 +313,18 @@ void MapWidget::updateCities()
 
 void MapWidget::renderCountries()
 {
-    for (const auto& [name, country] : countries) {
+    for (auto& [name, country] : countries) {
         int idx = 0;
         std::vector<ImVec2> pixels;
         pixels.reserve(country.contour.size());
 
-        for (const auto& coord : country.contour) {
+        for (auto& coord : country.contour) {
             const auto size = presenter.handleRequestCoordSize(coord);
-            const auto newPoint = renderPoint(coord, size, country.color);
-            if (newPoint != coord) {
-                presenter.handleUpdateContour(name, idx, newPoint);
+            if (renderPoint(coord, size, country.color)) {
+                presenter.handleUpdateContour(name, idx, coord);
             }
 
-            pixels.emplace_back(ImPlot::PlotToPixels(ImPlotPoint(newPoint.x, newPoint.y)));
+            pixels.emplace_back(ImPlot::PlotToPixels(ImPlotPoint(coord.x, coord.y)));
 
             idx++;
         }
@@ -347,11 +354,10 @@ void MapWidget::renderCountries()
 
 void MapWidget::renderCities()
 {
-    for (const auto& [name, city] : cities) {
+    for (auto& [name, city] : cities) {
         const auto size = presenter.handleRequestCoordSize(city.coordinate);
-        const auto newPoint = renderPoint(city.coordinate, size, city.color);
-        if (newPoint != city.coordinate) {
-            presenter.handleUpdateCity(name, newPoint);
+        if (renderPoint(city.coordinate, size, city.color)) {
+            presenter.handleUpdateCity(name, city.coordinate);
         }
 
         ImPlot::Annotation(city.coordinate.x, 

@@ -186,10 +186,12 @@ void MapWidgetPresenter::handleUpdateContour(const std::string& name, int idx, c
 
 void MapWidgetPresenter::handleUpdateCity(const std::string& name, const ImVec2& coord)
 {
-    cacheModel.updateCityCoord(source, 
-                               year, 
-                               name, 
-                               persistence::Coordinate{y2Latitude(coord.y), x2Longitude(coord.x)});
+    worker.enqueue([this, name, coord](){
+        this->cacheModel.updateCityCoord(this->source, 
+                                         this->year, 
+                                         name, 
+                                         persistence::Coordinate{y2Latitude(coord.y), x2Longitude(coord.x)});
+    });
 }
 
 bool MapWidgetPresenter::handleExtendContour(const std::string& name, const model::Vec2& pos)

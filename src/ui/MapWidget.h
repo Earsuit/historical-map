@@ -75,7 +75,7 @@ private:
 
     virtual void renderRightClickMenu();
     virtual void prepareRenderPoint();
-    virtual ImVec2 renderPoint(const ImVec2& coordinate, float size, const ImVec4& color);
+    virtual bool renderPoint(ImVec2& coordinate, float size, const ImVec4& color);
 };
 }
 

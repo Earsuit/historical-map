@@ -10,14 +10,12 @@ public:
         MapWidget{source}
     {}
 
-    virtual ImVec2 renderPoint(const ImVec2& coordinate, float size, const ImVec4& color) override;
-
 private:
     size_t dragPointId = 0;
 
     virtual void renderRightClickMenu() override {};
-
     virtual void prepareRenderPoint() override;
+    virtual bool renderPoint(ImVec2& coordinate, float size, const ImVec4& color) override;
 };
 }
 
