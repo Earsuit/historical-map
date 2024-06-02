@@ -65,6 +65,10 @@ MapWidget::MapWidget(const std::string& source):
                           &presentation::MapWidgetPresenter::cityUpdated,
                           this,
                           &MapWidget::onCityUpdate);
+    util::signal::connect(&presenter,
+                          &presentation::MapWidgetPresenter::databaseCityListUpdated,
+                          this,
+                          &MapWidget::onDatabaseCityListUpdate);
 }
 
 MapWidget::~MapWidget()
@@ -74,6 +78,9 @@ MapWidget::~MapWidget()
                                 this);
     util::signal::disconnectAll(&presenter,
                                 &presentation::MapWidgetPresenter::cityUpdated,
+                                this);
+    util::signal::disconnectAll(&presenter,
+                                &presentation::MapWidgetPresenter::databaseCityListUpdated,
                                 this);
 }
 
@@ -189,6 +196,7 @@ void MapWidget::renderRightClickMenu()
     if (presenter.handleRequestHasRightClickMenu() && ImGui::BeginPopupContextItem(plotName.c_str(), ImGuiMouseButton_Right)) {
         if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && mousePos) {
             rightClickMenuPos = *mousePos;
+            presenter.handleRequestCitiesFromDatabase();
         }
 
         if (ImGui::MenuItem("Add new country")) {
@@ -208,6 +216,17 @@ void MapWidget::renderRightClickMenu()
 
         if (ImGui::MenuItem("Add new city")) {
             openAddNewCityPopup = true;
+        }
+
+        if (ImGui::BeginMenu("Add city from database")) {
+            std::scoped_lock lk{lock};
+            for (const auto& city : databaseCities) {
+                if (ImGui::MenuItem(city.c_str())) {
+                    presenter.handleAddCityFromDatabase(city);
+                    break;
+                }
+            }
+            ImGui::EndMenu();
         }
 
         ImGui::EndPopup();
@@ -368,5 +387,11 @@ void MapWidget::renderCities()
                            "%s", 
                            name.c_str());
     }
+}
+
+void MapWidget::onDatabaseCityListUpdate(std::vector<std::string>&& cities)
+{
+    std::scoped_lock lk{lock};
+    databaseCities = std::move(cities);
 }
 }

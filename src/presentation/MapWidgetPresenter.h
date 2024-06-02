@@ -44,9 +44,12 @@ public:
     bool handleExtendContour(const std::string& name, const model::Vec2& pos);
     bool handleAddCountry(const std::string& name, const model::Vec2& pos);
     bool handleAddCity(const std::string& name, const model::Vec2& pos);
+    void handleAddCityFromDatabase(const std::string& name);
+    void handleRequestCitiesFromDatabase();
 
     util::signal::Signal<void()> countryUpdated;
     util::signal::Signal<void()> cityUpdated;
+    util::signal::Signal<void(std::vector<std::string>&&)> databaseCityListUpdated;
 
 private:
     std::shared_ptr<spdlog::logger> logger;
@@ -57,7 +60,6 @@ private:
     std::string source;
     std::atomic_int year;
     util::Worker<std::function<void()>> worker;
-    
 
     void onCountryUpdate(const std::string& source, int year);
     void onCityUpdate(const std::string& source, int year);

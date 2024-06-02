@@ -230,6 +230,19 @@ bool MapWidgetPresenter::handleAddCity(const std::string& name, const model::Vec
     return true;
 }
 
+void MapWidgetPresenter::handleAddCityFromDatabase(const std::string& name)
+{
+    worker.enqueue([this, name](){
+        if (const auto& city = this->databaseModel.loadCity(name); city) {
+            if (!this->cacheModel.addCity(this->source, this->year, *city)) {
+                this->logger->error("Add city {} fail for source {} at year {}", name, this->source, this->year);
+            }
+        } else {
+            logger->error("Add city fail beacuse {} doesn't exist in the database.", name);
+        }
+    });
+}
+
 bool MapWidgetPresenter::varifySignal(const std::string& source, int year) const noexcept
 {
     return source == this->source && year == this->year;
@@ -256,5 +269,12 @@ void MapWidgetPresenter::onYearChange(int year)
     this->year = year;
     countryUpdated();
     cityUpdated();
+}
+
+void MapWidgetPresenter::handleRequestCitiesFromDatabase()
+{
+    worker.enqueue([this](){
+        this->databaseCityListUpdated(this->databaseModel.loadCityList());
+    });
 }
 }

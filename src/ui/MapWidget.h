@@ -16,6 +16,7 @@
 #include <optional>
 #include <map>
 #include <atomic>
+#include <mutex>
 
 namespace ui {
 constexpr auto MAP_WIDGET_NAME_PREFIX = "Map plot";
@@ -62,6 +63,8 @@ private:
     std::atomic_bool cityUpdated = true;
     std::map<std::string, Country> countries;
     std::map<std::string, City> cities;
+    std::mutex lock;
+    std::vector<std::string> databaseCities;
 
     void renderMap();
     void renderOverlay();
@@ -72,6 +75,7 @@ private:
 
     void onCountryUpdate() noexcept { countryUpdated = true; }
     void onCityUpdate() noexcept { cityUpdated = true; }
+    void onDatabaseCityListUpdate(std::vector<std::string>&& cities); 
 
     virtual void renderRightClickMenu();
     virtual void prepareRenderPoint();
