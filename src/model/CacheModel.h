@@ -78,12 +78,6 @@ public:
                 } else {
                     cityToYear[source].emplace(std::make_pair(city.name, std::set<int>{info.year}));
                 }
-
-                if (yearToCity[source].contains(info.year)) {
-                    yearToCity[source][info.year].emplace(city.name);
-                } else {
-                    yearToCity[source].emplace(std::make_pair(info.year, std::set<std::string>{city.name}));
-                }
             }
 
             cache[source][info.year] = persistence::HistoricalCache{std::forward<T>(info)};
@@ -116,9 +110,8 @@ private:
     mutable std::mutex hoveredLock;
     mutable std::recursive_mutex cacheLock;
     std::map<std::string, std::map<int, persistence::HistoricalCache>> cache;
-    // same city should have the same coordinate for all years
-    std::map<std::string, std::map<std::string, std::set<int>>> cityToYear; // source -> city list -> years
-    std::map<std::string, std::map<int, std::set<std::string>>> yearToCity; // source -> year -> cities
+    // source -> city list -> years, track a city exists in which year
+    std::map<std::string, std::map<std::string, std::set<int>>> cityToYear;
     persistence::Data removed;
 };
 }

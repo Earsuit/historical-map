@@ -58,18 +58,9 @@ void HistoricalInfoPresenter::handleExtendContour(const std::string& name,
 
 void HistoricalInfoPresenter::handleAddCity(const std::string& name, const persistence::Coordinate& coordinate)
 {
-    worker.enqueue([this, name, coordinate](){
-        if (this->source == model::PERMENANT_SOURCE) {
-            if (const auto& city = this->databaseModel.loadCity(name); city && city->coordinate != coordinate) {
-                logger->error("Add city {} fail for source {} because it exists!", name, source);
-                return;
-            }
-        }
-
-        if (!this->cacheModel.addCity(source, this->databaseModel.getYear(), persistence::City{name, coordinate})) {
-            logger->error("Add city {} fail for source {}", name, source);
-        }
-    });
+    if (!this->cacheModel.addCity(source, this->databaseModel.getYear(), persistence::City{name, coordinate})) {
+        logger->error("Add city {} fail for source {}", name, source);
+    }
 }
 
 void HistoricalInfoPresenter::handleRemoveCountry(const std::string& name)

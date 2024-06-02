@@ -222,18 +222,10 @@ bool MapWidgetPresenter::handleAddCity(const std::string& name, const model::Vec
 {
     const persistence::City city{name, {.latitude = y2Latitude(pos.y), .longitude = x2Longitude(pos.x)}};
 
-    worker.enqueue([this, city](){
-        if (this->source == model::PERMENANT_SOURCE) {
-            if (const auto& ret = this->databaseModel.loadCity(city.name); ret && ret->coordinate != city.coordinate) {
-                logger->error("Add city {} fail for source {} because it exists!", city.name, this->source);
-                return;
-            }
-        }
-
-        if (!cacheModel.addCity(this->source, this->year, city)) {
-            this->logger->error("Add city {} fail for source {}", city.name, source);
-        }
-    });
+    if (!cacheModel.addCity(this->source, this->year, city)) {
+        this->logger->error("Add city {} fail for source {}", city.name, source);
+        return false;
+    }
 
     return true;
 }

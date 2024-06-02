@@ -51,7 +51,6 @@ bool CacheModel::addSource(const std::string& source)
     if (!cache.contains(source)) {
         cache.emplace(std::make_pair(source, std::map<int, persistence::HistoricalCache>{}));
         cityToYear.emplace(std::make_pair(source, std::map<std::string, std::set<int>>{}));
-        yearToCity.emplace(std::make_pair(source, std::map<int, std::set<std::string>>{}));
         return true;
     }
 
@@ -80,7 +79,6 @@ void CacheModel::removeSource(const std::string& source)
     std::lock_guard lk(cacheLock);
     cache.erase(source);
     cityToYear.erase(source);
-    yearToCity.erase(source);
 }
 
 void CacheModel::removeHistoricalInfoFromSource(const std::string& source, int year)
@@ -88,18 +86,17 @@ void CacheModel::removeHistoricalInfoFromSource(const std::string& source, int y
     logger->debug("Clear historical info from source {} at year {}", source, year);
     std::lock_guard lk(cacheLock);
     if (cache.contains(source)) {
-        cache[source].erase(year);
-
-        if (yearToCity[source].contains(year)) {
-            for (const auto& city : yearToCity[source][year]) {
+        if (containsHistoricalInfo(source, year)) {
+            for (const auto& city : cache[source][year].getCityList()) {
                 cityToYear[source][city].erase(year);
 
                 if (cityToYear[source][city].empty()) {
                     cityToYear[source].erase(city);
                 }
             }
-            yearToCity[source].erase(year);
         }
+
+        cache[source].erase(year);
 
         onModificationChange(source, year, false);
         onCountryUpdate(source, year);
@@ -297,6 +294,7 @@ bool CacheModel::updateCityCoord(const std::string& source, int year, const std:
     if (containsCity(source, year, name)) {
         for (const auto cityAtYear : cityToYear[source][name]) {
             if (!containsCity(source, cityAtYear, name)) {
+                // it should exists
                 logger->error("Cache of source {} at year {} doesn't exist when updateing the city {} coord",
                               source, 
                               cityAtYear, 
@@ -337,16 +335,6 @@ bool CacheModel::removeCity(const std::string& source, int year, const std::stri
     std::lock_guard lk(cacheLock);
 
     if (containsCity(source, year, name)) {
-        cityToYear[source].erase(name);
-
-        if (yearToCity[source].contains(year)) {
-            yearToCity[source][year].erase(name);
-
-            if (yearToCity[source][year].empty()) {
-                yearToCity[source].erase(year);
-            }
-        }
-
         if (cityToYear[source].contains(name)) {
             cityToYear[source][name].erase(year);
 
@@ -433,36 +421,12 @@ bool CacheModel::addCity(const std::string& source, int year, const persistence:
     std::lock_guard lk(cacheLock);
 
     if (containsHistoricalInfo(source, year)) {
-        if (cityToYear[source].contains(city.name)) {
-            const auto cityAtYear = *cityToYear[source][city.name].begin();
-            if (containsHistoricalInfo(source, cityAtYear)) {
-                if(cache[source][cityAtYear].getCity(city.name) != city) {
-                    logger->error("Failed to add city {} to source {} because it's already exists at year {}",
-                                  city.name,
-                                  source,
-                                  cityAtYear);
-                    return false;
-                }
-            } else {
-                logger->error("Cache of source {} at year {} doesn't exist when adding a city {}",
-                              source, 
-                              cityAtYear, 
-                              city.name);
-            }
-        }
-
         auto& infoCache = cache.at(source).at(year);
         if (infoCache.addCity(city)) {
             if (cityToYear[source].contains(city.name)) {
                 cityToYear[source][city.name].emplace(year);
             } else {
                 cityToYear[source].emplace(std::make_pair(city.name, std::set<int>{year}));
-            }
-
-            if (yearToCity[source].contains(year)) {
-                yearToCity[source][year].emplace(city.name);
-            } else {
-                yearToCity[source].emplace(std::make_pair(year, std::set<std::string>{city.name}));
             }
 
             onModificationChange(source, year, true);
