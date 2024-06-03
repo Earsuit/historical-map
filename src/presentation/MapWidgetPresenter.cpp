@@ -73,12 +73,27 @@ void MapWidgetPresenter::handleRenderTiles()
     const auto yAxis = view.getAxisRangeY();
     const auto plotSize = view.getPlotSize();
     const auto tiles = tileModel.getTiles(xAxis, yAxis, plotSize);
+    std::vector<Tile> newTile;
+    bool allLoaded = true;
+
+    for (const auto& tile : previsouTiles) {
+        view.renderTile(tile.tile->getTexture(), tile.bMin, tile.bMax);
+    }
 
     for (const auto tile : tiles) {
-        const auto coord = tile->getCoordinate();
-        const auto bMax = tileModel.getTileBoundMax(tile);
-        const auto bMin = tileModel.getTileBoundMin(tile);
-        view.renderTile(tile->getTexture(), bMin, bMax);
+        if (tile) {
+            const auto coord = tile->getCoordinate();
+            const auto bMax = tileModel.getTileBoundMax(tile);
+            const auto bMin = tileModel.getTileBoundMin(tile);
+            view.renderTile(tile->getTexture(), bMin, bMax);
+            newTile.emplace_back(tile, bMax, bMin);
+        } else {
+            allLoaded = false;
+        }
+    }
+
+    if (allLoaded) {
+        previsouTiles = std::move(newTile);
     }
 }
 

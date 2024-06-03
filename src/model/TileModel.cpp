@@ -47,6 +47,8 @@ std::vector<std::shared_ptr<tile::Tile>> TileModel::getTiles(const Range& xAxis,
         for (auto y = yMin; y <= yMax; y++) {
             if (auto tile = tileLoader.loadTile({x, y, zoom}); tile) {
                 tiles.emplace_back(*tile);
+            } else {
+                tiles.emplace_back(nullptr);
             }
         }
     }

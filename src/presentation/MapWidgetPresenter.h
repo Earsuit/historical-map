@@ -52,6 +52,12 @@ public:
     util::signal::Signal<void(std::vector<std::string>&&)> databaseCityListUpdated;
 
 private:
+    struct Tile {
+        std::shared_ptr<tile::Tile> tile;
+        model::Vec2 bMax;
+        model::Vec2 bMin;
+    };
+
     std::shared_ptr<spdlog::logger> logger;
     MapWidgetInterface& view;
     model::DatabaseModel& databaseModel;
@@ -59,6 +65,7 @@ private:
     model::CacheModel& cacheModel;
     std::string source;
     std::atomic_int year;
+    std::vector<Tile> previsouTiles;
     util::Worker<std::function<void()>> worker;
 
     void onCountryUpdate(const std::string& source, int year);
