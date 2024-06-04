@@ -17,9 +17,6 @@ constexpr auto AXIS_FLAGS = ImPlotAxisFlags_NoLabel | ImPlotAxisFlags_NoGridLine
                             ImPlotAxisFlags_NoTickMarks | ImPlotAxisFlags_NoTickLabels |
                             ImPlotAxisFlags_NoInitialFit | ImPlotAxisFlags_NoMenus |
                             ImPlotAxisFlags_NoMenus | ImPlotAxisFlags_NoHighlight;
-constexpr ImGuiWindowFlags OVERLAY_WINDOW_FLAGS = ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoMove |
-                                                  ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | 
-                                                  ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
 
 constexpr ImVec4 OVERLAY_BACKGROUND_COLOR = {0.0f, 0.0f, 0.0f, 0.35f};
 constexpr ImVec4 TRANSPARENT = {0.0f, 0.0f, 0.0f, 0.0f};
@@ -319,13 +316,15 @@ void MapWidget::renderOverlay()
     ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always);
     ImGui::SetNextWindowViewport(viewport->ID);
 
-    ImGui::PushStyleColor(ImGuiCol_TitleBg, OVERLAY_BACKGROUND_COLOR);
-    ImGui::PushStyleColor(ImGuiCol_WindowBg, OVERLAY_BACKGROUND_COLOR);
-    if (ImGui::Begin((source + "##Overlay").c_str(), nullptr, OVERLAY_WINDOW_FLAGS)) {
-        ImGui::Text("%s", presenter.handleGetOverlayText().c_str());
-    }
-    ImGui::PopStyleColor(2);
-    ImGui::End();
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, OVERLAY_BACKGROUND_COLOR);
+    ImGui::BeginChild("##Overlay", 
+                      ImVec2(0, 0), 
+                      ImGuiChildFlags_AlwaysUseWindowPadding | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_AlwaysAutoResize, 
+                      ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove);
+    ImGui::Text("%s", source.c_str());
+    ImGui::Text("%s", presenter.handleGetOverlayText().c_str());
+    ImGui::PopStyleColor(1);
+    ImGui::EndChild();
 }
 
 void MapWidget::renderButtons()
@@ -339,8 +338,8 @@ void MapWidget::renderButtons()
     ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always);
     ImGui::SetNextWindowViewport(viewport->ID);
 
-    ImGui::BeginChild("##controls", ImVec2(0, 0),ImGuiChildFlags_None, ImGuiWindowFlags_NoDecoration | 
-                                                                       ImGuiWindowFlags_NoBackground);
+    ImGui::BeginChild("##controls", ImVec2(0, 0), ImGuiChildFlags_None, ImGuiWindowFlags_NoDecoration | 
+                                                                        ImGuiWindowFlags_NoBackground);
     ImGui::PushButtonRepeat(true);
     if (ImGui::Button("+")) {
         zoomIn = true;
