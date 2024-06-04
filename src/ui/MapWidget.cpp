@@ -17,8 +17,12 @@ constexpr auto AXIS_FLAGS = ImPlotAxisFlags_NoLabel | ImPlotAxisFlags_NoGridLine
                             ImPlotAxisFlags_NoTickMarks | ImPlotAxisFlags_NoTickLabels |
                             ImPlotAxisFlags_NoInitialFit | ImPlotAxisFlags_NoMenus |
                             ImPlotAxisFlags_NoMenus | ImPlotAxisFlags_NoHighlight;
+constexpr ImGuiWindowFlags OVERLAY_WINDOW_FLAGS = ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoMove |
+                                                  ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | 
+                                                  ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
 
 constexpr ImVec4 OVERLAY_BACKGROUND_COLOR = {0.0f, 0.0f, 0.0f, 0.35f};
+constexpr ImVec4 TRANSPARENT = {0.0f, 0.0f, 0.0f, 0.0f};
 constexpr float OVERLAY_PAD = 10.0f;
 
 constexpr float POINT_SIZE = 2.0f;
@@ -46,10 +50,33 @@ const auto ADD_NEW_CITY_POPUP_NAME = "Add new city";
 constexpr float EPSILON = 1e-2;
 constexpr bool ALWAYS_SHOW_ANNOTATION = true;
 
+constexpr float ZOOM_RATE = 0.1;
+constexpr float ZOOM_SPEED = 0.5;
+constexpr float EQUAL_ZOOM_CORRECTION = 0.5;
+constexpr float ZOOM_FACOTR = EQUAL_ZOOM_CORRECTION * ZOOM_SPEED;
+
 bool operator==(const ImVec2& lhs, const ImVec2& rhs)
 {
     return std::fabs(lhs.x - rhs.x) < EPSILON &&
            std::fabs(lhs.y - rhs.y) < EPSILON;
+}
+
+void manualZoomAxis(float zoomRate)
+{
+    auto& axisX = GImPlot->CurrentPlot->Axes[ImAxis_X1];
+    auto& axisY = GImPlot->CurrentPlot->Axes[ImAxis_Y1];
+    const auto& rect = GImPlot->CurrentPlot->PlotRect;
+    const auto& size = rect.GetSize();
+    const double minX = axisX.PixelsToPlot(rect.Min.x - size.x * ZOOM_FACOTR * zoomRate);
+    const double maxX = axisX.PixelsToPlot(rect.Max.x + size.x * ZOOM_FACOTR * zoomRate);
+    const double minY = axisY.PixelsToPlot(rect.Min.y - size.y * ZOOM_FACOTR * zoomRate);
+    const double maxY = axisY.PixelsToPlot(rect.Max.y + size.y * ZOOM_FACOTR * zoomRate);
+    axisX.SetMin(minX);
+    axisX.SetMax(maxX);
+    axisY.SetMin(minY);
+    axisY.SetMax(maxY);
+    axisX.OrthoAxis->SetAspect(axisX.GetAspect());
+    axisY.OrthoAxis->SetAspect(axisY.GetAspect());
 }
 
 MapWidget::MapWidget(const std::string& source): 
@@ -100,6 +127,7 @@ void MapWidget::paint()
     updateCities();
 
     renderMap();
+    renderButtons();
     renderRightClickMenu();
     renderOverlay();
 
@@ -159,6 +187,7 @@ std::optional<model::Vec2> MapWidget::getMousePos() const
 
 void MapWidget::renderMap()
 {
+    ImGui::PushItemFlag(ImGuiItemFlags_AllowOverlap, true);
     if (ImPlot::BeginPlot(plotName.c_str(), ImGui::GetContentRegionAvail(), (ImPlotFlags_CanvasOnly ^ ImPlotFlags_NoLegend) | ImPlotFlags_Equal)) {
         ImPlot::SetupLegend(ImPlotLocation_NorthEast, ImPlotLegendFlags_NoButtons);
         ImPlot::SetupAxis(ImAxis_X1, nullptr, AXIS_FLAGS);
@@ -167,9 +196,20 @@ void MapWidget::renderMap()
         ImPlot::SetupAxisLimitsConstraints(ImAxis_X1, MIN_AXIS_RANGE, MAX_AXIS_RANGE);
         ImPlot::SetupAxisLimits(ImAxis_X1, INIT_X_LIMIT_MIN, INIT_X_LIMIT_MAX);
         ImPlot::SetupAxisLimits(ImAxis_Y1, INIT_Y_LIMIT_MIN, INIT_Y_LIMIT_MAX);
+        ImPlot::SetupFinish();
         
         plotSize = ImPlot::GetPlotSize();
         plotRect = ImPlot::GetPlotLimits(ImAxis_X1, ImAxis_Y1);
+
+        if (zoomIn) {
+            zoomIn = false;
+            manualZoomAxis(-ZOOM_RATE);
+        } 
+        if (zoomOut) {
+            zoomOut = false;
+            manualZoomAxis(ZOOM_RATE);
+        }
+
         if (const auto cursor = ImPlot::GetPlotMousePos(); 
             inBound(cursor.x, plotRect.X.Min, plotRect.X.Max) &&
             inBound(cursor.y, plotRect.Y.Min, plotRect.Y.Max)) {
@@ -187,6 +227,8 @@ void MapWidget::renderMap()
 
         ImPlot::EndPlot();
     }
+
+    ImGui::PopItemFlag();
 }
 
 void MapWidget::renderRightClickMenu()
@@ -268,10 +310,6 @@ void MapWidget::renderRightClickMenu()
 
 void MapWidget::renderOverlay()
 {
-    const ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoMove |
-                                         ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | 
-                                         ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
-
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
 
     ImVec2 work_pos = ImGui::GetWindowPos(); // Use work area to avoid menu-bar/task-bar, if any!
@@ -283,11 +321,37 @@ void MapWidget::renderOverlay()
 
     ImGui::PushStyleColor(ImGuiCol_TitleBg, OVERLAY_BACKGROUND_COLOR);
     ImGui::PushStyleColor(ImGuiCol_WindowBg, OVERLAY_BACKGROUND_COLOR);
-    if (ImGui::Begin((source + "##Overlay").c_str(), nullptr, windowFlags)) {
+    if (ImGui::Begin((source + "##Overlay").c_str(), nullptr, OVERLAY_WINDOW_FLAGS)) {
         ImGui::Text("%s", presenter.handleGetOverlayText().c_str());
     }
     ImGui::PopStyleColor(2);
     ImGui::End();
+}
+
+void MapWidget::renderButtons()
+{
+    const ImGuiViewport* viewport = ImGui::GetMainViewport();
+
+    ImVec2 work_pos = ImGui::GetWindowPos(); // Use work area to avoid menu-bar/task-bar, if any!;
+    ImVec2 window_pos;
+    window_pos.x = work_pos.x + ImGui::GetWindowWidth() / 2 ;
+    window_pos.y = work_pos.y + OVERLAY_PAD * 2;
+    ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always);
+    ImGui::SetNextWindowViewport(viewport->ID);
+
+    ImGui::BeginChild("##controls", ImVec2(0, 0),ImGuiChildFlags_None, ImGuiWindowFlags_NoDecoration | 
+                                                                       ImGuiWindowFlags_NoBackground);
+    ImGui::PushButtonRepeat(true);
+    if (ImGui::Button("+")) {
+        zoomIn = true;
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("-")) {
+        zoomOut = true;
+    }
+    ImGui::PopButtonRepeat();
+
+    ImGui::EndChild();
 }
 
 void MapWidget::updatCountries()

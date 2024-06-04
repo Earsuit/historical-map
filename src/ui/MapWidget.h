@@ -65,11 +65,14 @@ private:
     std::map<std::string, City> cities;
     std::mutex lock;
     std::vector<std::string> databaseCities;
+    bool zoomIn = false;
+    bool zoomOut = false;
 
     void renderMap();
     void renderOverlay();
     void renderCountries();
     void renderCities();
+    void renderButtons();
     void updatCountries();
     void updateCities();
 
