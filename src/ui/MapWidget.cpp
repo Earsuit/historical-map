@@ -48,7 +48,7 @@ constexpr float EPSILON = 1e-2;
 constexpr bool ALWAYS_SHOW_ANNOTATION = true;
 
 constexpr float ZOOM_RATE = 0.1;
-constexpr float ZOOM_SPEED = 0.5;
+constexpr float ZOOM_SPEED = 1;
 constexpr float EQUAL_ZOOM_CORRECTION = 0.5;
 constexpr float ZOOM_FACOTR = EQUAL_ZOOM_CORRECTION * ZOOM_SPEED;
 
