@@ -195,9 +195,6 @@ void MapWidget::renderMap()
         ImPlot::SetupAxisLimits(ImAxis_Y1, INIT_Y_LIMIT_MIN, INIT_Y_LIMIT_MAX);
         ImPlot::SetupFinish();
         
-        plotSize = ImPlot::GetPlotSize();
-        plotRect = ImPlot::GetPlotLimits(ImAxis_X1, ImAxis_Y1);
-
         if (zoomIn) {
             zoomIn = false;
             manualZoomAxis(-ZOOM_RATE);
@@ -206,6 +203,16 @@ void MapWidget::renderMap()
             zoomOut = false;
             manualZoomAxis(ZOOM_RATE);
         }
+        if (resetZoom) {
+            resetZoom = false;
+            GImPlot->CurrentPlot->Axes[ImAxis_X1].SetMin(INIT_X_LIMIT_MIN);
+            GImPlot->CurrentPlot->Axes[ImAxis_X1].SetMax(INIT_X_LIMIT_MAX);
+            GImPlot->CurrentPlot->Axes[ImAxis_Y1].SetMin(INIT_Y_LIMIT_MIN);
+            GImPlot->CurrentPlot->Axes[ImAxis_Y1].SetMax(INIT_Y_LIMIT_MAX);
+        }
+
+        plotSize = ImPlot::GetPlotSize();
+        plotRect = ImPlot::GetPlotLimits(ImAxis_X1, ImAxis_Y1);
 
         if (const auto cursor = ImPlot::GetPlotMousePos(); 
             inBound(cursor.x, plotRect.X.Min, plotRect.X.Max) &&
@@ -349,6 +356,10 @@ void MapWidget::renderButtons()
         zoomOut = true;
     }
     ImGui::PopButtonRepeat();
+    ImGui::SameLine();
+    if (ImGui::Button("reset")) {
+        resetZoom = true;
+    }
 
     ImGui::EndChild();
 }

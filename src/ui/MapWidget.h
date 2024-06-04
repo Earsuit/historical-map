@@ -67,6 +67,7 @@ private:
     std::vector<std::string> databaseCities;
     bool zoomIn = false;
     bool zoomOut = false;
+    bool resetZoom = false;
 
     void renderMap();
     void renderOverlay();
