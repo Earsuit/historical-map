@@ -124,8 +124,8 @@ void MapWidget::paint()
     updateCities();
 
     renderMap();
-    renderButtons();
     renderRightClickMenu();
+    renderButtons();
     renderOverlay();
 
     ImGui::End();
