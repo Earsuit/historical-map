@@ -3,16 +3,14 @@
 
 #include "src/presentation/MapWidgetPresenter.h"
 #include "src/presentation/MapWidgetInterface.h"
-#include "src/logger/Util.h"
+#include "src/logger/ModuleLogger.h"
 #include "src/persistence/Data.h"
 #include "src/ui/IInfoWidget.h"
 
 #include "external/imgui/imgui.h"
-#include "spdlog/spdlog.h"
 #include "external/implot/implot.h"
 
 #include <utility>
-#include <memory>
 #include <optional>
 #include <map>
 #include <atomic>
@@ -48,7 +46,7 @@ private:
         ImVec2 coordinate;
     };
 
-    std::shared_ptr<spdlog::logger> logger;
+    logger::ModuleLogger logger;
     presentation::MapWidgetPresenter presenter;
     std::string source;
     size_t dragPointId = 0;

@@ -26,4 +26,4 @@ SET(PRESENTATION_SRC
 )
 
 add_library(libpresentation STATIC ${PRESENTATION_SRC})
-target_link_libraries(libpresentation PRIVATE libtile libmodel)
+target_link_libraries(libpresentation PRIVATE libtile libmodel liblogger)

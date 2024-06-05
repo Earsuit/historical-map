@@ -6,8 +6,7 @@
 #include "src/presentation/HistoricalInfoPresenter.h"
 #include "src/presentation/DatabaseYearPresenter.h"
 #include "src/presentation/ExportPresenter.h"
-
-#include "spdlog/spdlog.h"
+#include "src/logger/ModuleLogger.h"
 
 #include <atomic>
 
@@ -27,7 +26,7 @@ public:
     void setRefreshAll(int year) noexcept;
 
 private:
-    std::shared_ptr<spdlog::logger> logger;
+    logger::ModuleLogger logger;
     presentation::HistoricalInfoPresenter infoPresenter;
     presentation::InfoSelectorPresenter infoSelectorPresenter;
     presentation::DatabaseYearPresenter yearPresenter;

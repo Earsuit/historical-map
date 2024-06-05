@@ -1,8 +1,11 @@
 #include "src/model/CacheModel.h"
+#include "src/logger/LoggerManager.h"
 
 #include <ranges>
 
 namespace model {
+constexpr auto LOGGER_NAME = "CacheModel";
+
 CacheModel& CacheModel::getInstance()
 {
     static CacheModel model;
@@ -10,7 +13,7 @@ CacheModel& CacheModel::getInstance()
 }
 
 CacheModel::CacheModel():
-    logger{spdlog::get(logger::LOGGER_NAME)}
+    logger{logger::LoggerManager::getInstance().getLogger(LOGGER_NAME)}
 {
     addSource(PERMENANT_SOURCE);
     util::signal::connect(this,
@@ -46,7 +49,7 @@ std::optional<persistence::Coordinate> CacheModel::getHoveredCoord() const
 
 bool CacheModel::addSource(const std::string& source)
 {
-    logger->debug("Add source {}", source);
+    logger.debug("Add source {}", source);
     std::lock_guard lk(cacheLock);
     if (!cache.contains(source)) {
         cache.emplace(std::make_pair(source, std::map<int, persistence::HistoricalCache>{}));
@@ -71,11 +74,11 @@ std::vector<std::string> CacheModel::getSourceList() const noexcept
 void CacheModel::removeSource(const std::string& source)
 {
     if (source == PERMENANT_SOURCE) {
-        logger->debug("Trying to remove permanent source {}, abort.", PERMENANT_SOURCE);
+        logger.debug("Trying to remove permanent source {}, abort.", PERMENANT_SOURCE);
         return;
     }
 
-    logger->debug("Remove source {}", source);
+    logger.debug("Remove source {}", source);
     std::lock_guard lk(cacheLock);
     cache.erase(source);
     cityToYear.erase(source);
@@ -83,7 +86,7 @@ void CacheModel::removeSource(const std::string& source)
 
 void CacheModel::removeHistoricalInfoFromSource(const std::string& source, int year)
 {
-    logger->debug("Clear historical info from source {} at year {}", source, year);
+    logger.debug("Clear historical info from source {} at year {}", source, year);
     std::lock_guard lk(cacheLock);
     if (cache.contains(source)) {
         if (containsHistoricalInfo(source, year)) {
@@ -115,7 +118,7 @@ std::vector<int> CacheModel::getYearList(const std::string& source) const
             years.emplace_back(year);
         }
     } else {
-        logger->error("Failed to get year list for source {} because it doesn't exists", source);
+        logger.error("Failed to get year list for source {} because it doesn't exists", source);
     }
 
     return years;
@@ -295,7 +298,7 @@ bool CacheModel::updateCityCoord(const std::string& source, int year, const std:
         for (const auto cityAtYear : cityToYear[source][name]) {
             if (!containsCity(source, cityAtYear, name)) {
                 // it should exists
-                logger->error("Cache of source {} at year {} doesn't exist when updateing the city {} coord",
+                logger.error("Cache of source {} at year {} doesn't exist when updateing the city {} coord",
                               source, 
                               cityAtYear, 
                               name);

@@ -1,5 +1,5 @@
 #include "src/model/TileModel.h"
-#include "src/logger/Util.h"
+#include "src/logger/LoggerManager.h"
 
 #include <algorithm>
 
@@ -7,6 +7,7 @@ namespace model {
 constexpr int MIN_ZOOM_LEVEL = 0;
 constexpr int MAX_ZOOM_LEVEL = 18;
 constexpr int PADDING = 0;
+constexpr auto LOGGER_NAME = "TileModel";
 
 TileModel& TileModel::getInstance()
 {
@@ -15,7 +16,7 @@ TileModel& TileModel::getInstance()
 }
 
 TileModel::TileModel():
-    logger{spdlog::get(logger::LOGGER_NAME)},
+    logger{logger::LoggerManager::getInstance().getLogger(LOGGER_NAME)},
     tileLoader{tile::TileLoader::getInstance()},
     supportedSourceType{"URL"}
 {}
@@ -31,7 +32,7 @@ std::vector<std::shared_ptr<tile::Tile>> TileModel::getTiles(const Range& xAxis,
     const auto south = y2Latitude(yAxis.max, BBOX_ZOOM_LEVEL);
     bbox = {west, south, east, north};
 
-    logger->trace("west={}, north={}, east={}, south={}", west, north, east, south);
+    logger.trace("west={}, north={}, east={}, south={}", west, north, east, south);
 
     zoom = std::clamp(bestZoomLevel(bbox, PADDING, plotSize.x, plotSize.y), MIN_ZOOM_LEVEL, MAX_ZOOM_LEVEL);
 
@@ -41,7 +42,7 @@ std::vector<std::shared_ptr<tile::Tile>> TileModel::getTiles(const Range& xAxis,
     const auto yMin = std::clamp(static_cast<int>(latitude2Y(north, zoom)), 0, limit);
     const auto yMax = std::clamp(static_cast<int>(latitude2Y(south, zoom)), 0, limit);
 
-    logger->trace("Zoom {} tile X from [{}, {}], Y from [{}, {}]", zoom, xMin, xMax, yMin, yMax);
+    logger.trace("Zoom {} tile X from [{}, {}], Y from [{}, {}]", zoom, xMin, xMax, yMin, yMax);
 
     for (auto x = xMin; x <= xMax; x++) {
         for (auto y = yMin; y <= yMax; y++) {

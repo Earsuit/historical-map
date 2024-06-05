@@ -1,5 +1,5 @@
 #include "src/ui/HistoricalMap.h"
-#include "src/logger/Util.h"
+#include "src/logger/LoggerManager.h"
 #include "src/ui/IInfoWidget.h"
 #include "src/ui/DefaultInfoWidget.h"
 #include "src/ui/ExportInfoWidget.h"
@@ -12,8 +12,6 @@
 #include "external/imgui/backends/imgui_impl_opengl3.h"
 #include "external/implot/implot.h"
 #include "ImFileDialog.h"
-
-#include "spdlog/spdlog.h"
 
 #include <stdexcept>
 #include <string>
@@ -36,6 +34,7 @@ constexpr ImGuiDockNodeFlags DOCKSPACE_FLAG = ImGuiDockNodeFlags_PassthruCentral
 constexpr int MAX_MAP_WIDGET_NUM = 2;
 constexpr ImVec2 DOCKSPACE_DEFAULT_ARG = ImVec2{0.0f, 0.0f};
 constexpr float ROUNDING = 3;
+constexpr auto LOGGER_NAME = "HistoricalMap";
 
 namespace {
 static void glfwErrorCallback(int error, const char* description)
@@ -61,6 +60,7 @@ void HistoricalMap::clearMapWidgets()
 }
 
 HistoricalMap::HistoricalMap():
+    logger{logger::LoggerManager::getInstance().getLogger(LOGGER_NAME)},
     infoWidget{std::make_unique<DefaultInfoWidget>()},
     tileSourceWidget{},
     presenter{*this}
@@ -127,7 +127,7 @@ HistoricalMap::HistoricalMap():
 		glDeleteTextures(1, &texID);
 	};
 
-    spdlog::get(logger::LOGGER_NAME)->info("Initialization complete.");
+    logger.info("Initialization complete.");
 }
 
 HistoricalMap::~HistoricalMap()

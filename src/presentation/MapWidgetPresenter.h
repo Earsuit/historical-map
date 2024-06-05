@@ -11,13 +11,12 @@
 #include "src/model/CacheModel.h"
 #include "src/util/Signal.h"
 #include "src/util/Worker.h"
+#include "src/logger/ModuleLogger.h"
 
-#include "spdlog/spdlog.h"
 #include "imgui.h"
 
 #include <cstddef>
 #include <vector>
-#include <memory>
 #include <functional>
 #include <string>
 #include <optional>
@@ -58,7 +57,7 @@ private:
         model::Vec2 bMin;
     };
 
-    std::shared_ptr<spdlog::logger> logger;
+    logger::ModuleLogger logger;
     MapWidgetInterface& view;
     model::DatabaseModel& databaseModel;
     model::TileModel& tileModel;

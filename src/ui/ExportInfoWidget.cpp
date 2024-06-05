@@ -1,6 +1,6 @@
 #include "src/ui/ExportInfoWidget.h"
 #include "src/ui/Util.h"
-#include "src/logger/Util.h"
+#include "src/logger/LoggerManager.h"
 #include "src/presentation/Util.h"
 #include "src/util/Signal.h"
 
@@ -18,9 +18,10 @@ constexpr auto SELECT_MULTIPLE_YEAR_POPUP_NAME = "Select multiple years";
 constexpr auto SELECT_MULTI_YEAR_YEAR_CONSTRAINTS = "Start year must be less than end year.";
 constexpr auto PROCESS_MULTI_YEAR_SELECTION_POPUP_NAME = "Selecting";
 constexpr auto PROGRESS_BAR_SIZE = ImVec2{400, 0};
+constexpr auto LOGGER_NAME = "ExportInfoWidget";
 
 ExportInfoWidget::ExportInfoWidget():
-    logger{spdlog::get(logger::LOGGER_NAME)}, 
+    logger{logger::LoggerManager::getInstance().getLogger(LOGGER_NAME)}, 
     infoPresenter{model::PERMENANT_SOURCE},
     infoSelectorPresenter{model::PERMENANT_SOURCE, TO_SOURCE},
     exportPresenter{TO_SOURCE}
@@ -240,7 +241,7 @@ void ExportInfoWidget::displayExportPopup()
                     ImGui::CloseCurrentPopup();
                     ifd::FileDialog::getInstance().save(SAVE_DIALOG_KEY, "Export historical info", "*." + format + " {." + format +"}");
                 } else {
-                    logger->error("Not supported export format {}", format);
+                    logger.error("Not supported export format {}", format);
                 }
             }
         }
@@ -309,7 +310,7 @@ void ExportInfoWidget::displaySelectAllForMultipleYearsPopup()
                 processMultiYearSelectionComplete = false;
                 ImGui::CloseCurrentPopup();
             } else {
-                logger->error(SELECT_MULTI_YEAR_YEAR_CONSTRAINTS);
+                logger.error(SELECT_MULTI_YEAR_YEAR_CONSTRAINTS);
             }
         }
 

@@ -5,11 +5,9 @@
 #include "src/model/CacheModel.h"
 #include "src/util/Worker.h"
 #include "src/util/Signal.h"
-
-#include "spdlog/spdlog.h"
+#include "src/logger/ModuleLogger.h"
 
 #include <string>
-#include <memory>
 #include <set>
 
 namespace presentation {
@@ -29,7 +27,7 @@ public:
     util::signal::Signal<void(int)> onYearChange;
 
 private:
-    std::shared_ptr<spdlog::logger> logger;
+    logger::ModuleLogger logger;
     model::DatabaseModel& databaseModel;
     model::CacheModel& cacheModel;
     std::string source;

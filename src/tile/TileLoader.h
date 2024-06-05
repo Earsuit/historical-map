@@ -6,8 +6,7 @@
 #include "src/tile/Util.h"
 #include "src/tile/TileEngine.h"
 #include "src/util/Cache.h"
-
-#include "spdlog/spdlog.h"
+#include "src/logger/ModuleLogger.h"
 
 #include <memory>
 #include <optional>
@@ -31,7 +30,7 @@ public:
 private:
     TileLoader();
 
-    std::shared_ptr<spdlog::logger> logger;
+    logger::ModuleLogger logger;
     std::shared_ptr<TileSource> tileSource;
     std::shared_ptr<TileEngine> tileEngine;
     util::Cache<Coordinate, std::shared_ptr<Tile>> cache;

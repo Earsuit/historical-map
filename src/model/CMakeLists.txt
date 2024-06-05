@@ -14,4 +14,4 @@ set(MODEL_SRC
 )
 
 add_library(libmodel STATIC ${MODEL_SRC})
-target_link_libraries(libmodel PRIVATE libpersistence libtile)
+target_link_libraries(libmodel PRIVATE libpersistence libtile liblogger)

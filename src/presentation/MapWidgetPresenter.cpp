@@ -1,6 +1,6 @@
 #include "src/presentation/MapWidgetPresenter.h"
 #include "src/presentation/Util.h"
-#include "src/logger/Util.h"
+#include "src/logger/LoggerManager.h"
 
 #include <algorithm>
 #include <sstream>
@@ -19,6 +19,7 @@ constexpr auto DEFAULT_ALPHA = 1.0f;
 constexpr auto NORMALIZE = 255.0f; 
 constexpr uint8_t MASK = 0xFF;
 constexpr auto TEXT_DECIMAL_PRECISION = 2;
+constexpr auto LOGGER_NAME = "MapWidgetPresenter";
 
 float x2Longitude(float x)
 {
@@ -31,7 +32,7 @@ float y2Latitude(float y)
 }
 
 MapWidgetPresenter::MapWidgetPresenter(MapWidgetInterface& view, const std::string& source):
-    logger{spdlog::get(logger::LOGGER_NAME)},
+    logger{logger::LoggerManager::getInstance().getLogger(LOGGER_NAME)},
     view{view},
     databaseModel{model::DatabaseModel::getInstance()},
     tileModel{model::TileModel::getInstance()},
@@ -217,7 +218,7 @@ bool MapWidgetPresenter::handleExtendContour(const std::string& name, const mode
         return true;
     }
 
-    logger->error("Extend country {} contour fail for source", name, source);
+    logger.error("Extend country {} contour fail for source", name, source);
     return false;
 }
 
@@ -228,7 +229,7 @@ bool MapWidgetPresenter::handleAddCountry(const std::string& name, const model::
         return true;
     }
 
-    logger->error("Add country {} fail for source {}", name, source);
+    logger.error("Add country {} fail for source {}", name, source);
 
     return false;
 }
@@ -238,7 +239,7 @@ bool MapWidgetPresenter::handleAddCity(const std::string& name, const model::Vec
     const persistence::City city{name, {.latitude = y2Latitude(pos.y), .longitude = x2Longitude(pos.x)}};
 
     if (!cacheModel.addCity(this->source, this->year, city)) {
-        this->logger->error("Add city {} fail for source {}", city.name, source);
+        this->logger.error("Add city {} fail for source {}", city.name, source);
         return false;
     }
 
@@ -250,10 +251,10 @@ void MapWidgetPresenter::handleAddCityFromDatabase(const std::string& name)
     worker.enqueue([this, name](){
         if (const auto& city = this->databaseModel.loadCity(name); city) {
             if (!this->cacheModel.addCity(this->source, this->year, *city)) {
-                this->logger->error("Add city {} fail for source {} at year {}", name, this->source, this->year);
+                this->logger.error("Add city {} fail for source {} at year {}", name, this->source, this->year);
             }
         } else {
-            logger->error("Add city fail beacuse {} doesn't exist in the database.", name);
+            logger.error("Add city fail beacuse {} doesn't exist in the database.", name);
         }
     });
 }
@@ -266,7 +267,7 @@ bool MapWidgetPresenter::varifySignal(const std::string& source, int year) const
 void MapWidgetPresenter::onCountryUpdate(const std::string& source, int year)
 {
     if (varifySignal(source, year)) {
-        logger->debug("MapWidgetPresenter onCountryUpdate for source {} at year {}", source, year);
+        logger.debug("MapWidgetPresenter onCountryUpdate for source {} at year {}", source, year);
         countryUpdated();
     }
 }
@@ -274,7 +275,7 @@ void MapWidgetPresenter::onCountryUpdate(const std::string& source, int year)
 void MapWidgetPresenter::onCityUpdate(const std::string& source, int year)
 {
     if (varifySignal(source, year)) {
-        logger->debug("MapWidgetPresenter onCityUpdate for source {} at year {}", source, year);
+        logger.debug("MapWidgetPresenter onCityUpdate for source {} at year {}", source, year);
         cityUpdated();
     }
 }

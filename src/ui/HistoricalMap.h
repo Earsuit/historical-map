@@ -8,9 +8,9 @@
 #include "src/ui/LogWidget.h"
 #include "src/ui/MapWidget.h"
 #include "src/ui/IInfoWidget.h"
-#include "src/logger/StringSink.h"
 #include "src/presentation/MainViewInterface.h"
 #include "src/presentation/MainViewPresenter.h"
+#include "src/logger/ModuleLogger.h"
 
 #include <memory>
 #include <vector>
@@ -31,6 +31,7 @@ public:
 private:
     GLFWwindow* window;
     LogWidget logWidget;
+    logger::ModuleLogger logger;
     std::unique_ptr<IInfoWidget> infoWidget;
     std::vector<std::unique_ptr<MapWidget>> mapWidgets;
     TileSourceWidget tileSourceWidget;

@@ -1,14 +1,15 @@
 #include "src/presentation/InfoSelectorPresenter.h"
-
-#include "src/logger/Util.h"
+#include "src/logger/LoggerManager.h"
 
 #include <chrono>
 
 namespace presentation {
 using namespace std::chrono_literals;
 
+constexpr auto LOGGER_NAME = "InfoSelectorPresenter";
+
 InfoSelectorPresenter::InfoSelectorPresenter(const std::string& fromSource, const std::string& toSource):
-    logger{spdlog::get(logger::LOGGER_NAME)},
+    logger{logger::LoggerManager::getInstance().getLogger(LOGGER_NAME)},
     databaseModel{model::DatabaseModel::getInstance()},
     cacheModel{model::CacheModel::getInstance()},
     fromSource{fromSource},
@@ -64,7 +65,7 @@ void InfoSelectorPresenter::handleSelectCountry(const std::string& name)
         }
     }
 
-    logger->error("Select country {} fail", name);
+    logger.error("Select country {} fail", name);
 }
 
 void InfoSelectorPresenter::handleSelectCity(const std::string& name)
@@ -77,7 +78,7 @@ void InfoSelectorPresenter::handleSelectCity(const std::string& name)
         }
     }
 
-    logger->error("Select city {} fail", name);
+    logger.error("Select city {} fail", name);
 }
 
 void InfoSelectorPresenter::handleSelectNote()
@@ -90,7 +91,7 @@ void InfoSelectorPresenter::handleSelectNote()
         }
     }
 
-    logger->error("Select note fail");
+    logger.error("Select note fail");
 }
 
 void InfoSelectorPresenter::handleDeselectCountry(const std::string& name)
@@ -217,7 +218,7 @@ bool InfoSelectorPresenter::handleCheckSelectAllForMultipleYearsComplete()
 void InfoSelectorPresenter::onUpdate(const std::string& source, int year)
 {
     if (source == this->toSource && year == databaseModel.getYear()) {
-        logger->debug("InfoSelectorPresenter onUpdate for source {} at year {}", source, year);
+        logger.debug("InfoSelectorPresenter onUpdate for source {} at year {}", source, year);
         setRefreshSelectAll();
     }
 }

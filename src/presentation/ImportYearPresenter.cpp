@@ -1,15 +1,16 @@
 #include "src/presentation/ImportYearPresenter.h"
 #include "src/presentation/Util.h"
-
-#include "src/logger/Util.h"
+#include "src/logger/LoggerManager.h"
 
 #include <optional>
 
 namespace presentation {
+constexpr auto LOGGER_NAME = "ImportYearPresenter";
+
 // the year list of source is not constucted because we haven't done import 
 // when instantiate it
 ImportYearPresenter::ImportYearPresenter(const std::string& source):
-    logger{spdlog::get(logger::LOGGER_NAME)},
+    logger{logger::LoggerManager::getInstance().getLogger(LOGGER_NAME)},
     databaseModel{model::DatabaseModel::getInstance()},
     cacheModel{model::CacheModel::getInstance()},
     source{source}
@@ -80,7 +81,7 @@ void ImportYearPresenter::updateInfo(int year)
     onYearChange(year);
     if (!worker.enqueue([this, year](){
             if (this->cacheModel.containsHistoricalInfo(model::PERMENANT_SOURCE, year)) {
-                logger->debug("Historical info alredy exists in CacheModel from {} at year {}, skip it.", 
+                logger.debug("Historical info alredy exists in CacheModel from {} at year {}, skip it.", 
                               model::PERMENANT_SOURCE, 
                               year);
                 return;
@@ -88,7 +89,7 @@ void ImportYearPresenter::updateInfo(int year)
             this->cacheModel.upsert(model::PERMENANT_SOURCE, 
                                     this->databaseModel.loadHistoricalInfo(year));
         })) {
-        logger->error("Enqueue update historical info from database for year {} task fail.", year);
+        logger.error("Enqueue update historical info from database for year {} task fail.", year);
     }
 }
 }

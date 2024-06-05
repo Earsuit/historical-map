@@ -1,6 +1,7 @@
 #include "src/ui/DefaultInfoWidget.h"
 #include "src/ui/Util.h"
 #include "src/util/Signal.h"
+#include "src/logger/LoggerManager.h"
 
 #include "external/imgui/imgui.h"
 #include "external/imgui/misc/cpp/imgui_stdlib.h"
@@ -9,9 +10,10 @@ namespace ui {
 constexpr int NAME_INPUT_WIDTH = 100;
 constexpr auto POPUP_WINDOW_NAME = "Save to years";
 constexpr auto PROGRESS_POPUP_WINDOW_NAME = "Saving";
+constexpr auto LOGGER_NAME = "DefaultInfoWidget";
 
 DefaultInfoWidget::DefaultInfoWidget(): 
-    logger{spdlog::get(logger::LOGGER_NAME)}, 
+    logger{logger::LoggerManager::getInstance().getLogger(LOGGER_NAME)}, 
     infoPresenter{model::PERMENANT_SOURCE},
     databaseSaverPresenter{model::PERMENANT_SOURCE}
 {
@@ -101,7 +103,7 @@ void DefaultInfoWidget::paint()
         displayYearControlSection();
 
         if (ImGui::Button("Refresh")) {
-            logger->debug("Refresh data of year {} from database.", currentYear);
+            logger.debug("Refresh data of year {} from database.", currentYear);
             
             infoPresenter.handleClearHistoricalInfo();
             yearPresenter.handleSetYear(currentYear);
@@ -153,7 +155,7 @@ void DefaultInfoWidget::displayCountryInfos()
     ImGui::PopItemWidth();
     ImGui::SameLine();
     if (ImGui::Button("Add country") && !countryName.empty()) {
-        logger->debug("Add country button pressed to add country {} at year {}", countryName, currentYear);
+        logger.debug("Add country button pressed to add country {} at year {}", countryName, currentYear);
         infoPresenter.handleAddCountry(countryName);
         countryName.clear();
     }
@@ -198,18 +200,18 @@ void DefaultInfoWidget::displayCountry(const std::string& name, const std::vecto
                 lon = std::stod(longitude);
             }
             catch (const std::exception &exc) {
-                logger->error("Invalid value for new coordinate for country {}.", name);
+                logger.error("Invalid value for new coordinate for country {}.", name);
                 return;
             }
 
-            logger->debug("Add coordinate lat={}, lon={}.", latitude, longitude);
+            logger.debug("Add coordinate lat={}, lon={}.", latitude, longitude);
             infoPresenter.handleExtendContour(name, persistence::Coordinate{lat, lon});
             latitude.clear();
             longitude.clear();
         }
 
         if (ImGui::Button("Delete country")) {
-            this->logger->debug("Delete country {}", name);
+            this->logger.debug("Delete country {}", name);
             infoPresenter.handleRemoveCountry(name);
         }
 
@@ -263,12 +265,12 @@ void DefaultInfoWidget::displayCityInfos()
             lon = std::stod(newCityLongitude);
         }
         catch (const std::exception &exc) {
-            logger->error("Invalid value of new coordinate for city {}.", newCityName);
+            logger.error("Invalid value of new coordinate for city {}.", newCityName);
             return;
         }
 
         infoPresenter.handleAddCity(newCityName, persistence::Coordinate{lat, lon});
-        logger->debug("Add city {}", newCityName);
+        logger.debug("Add city {}", newCityName);
         newCityName.clear();
         newCityLatitude.clear();
         newCityLongitude.clear();
@@ -285,7 +287,7 @@ void DefaultInfoWidget::displayCity(const std::string& name, const persistence::
         }
 
         if (ImGui::Button("Remove")) {
-            this->logger->debug("Delete city {}", name);
+            this->logger.debug("Delete city {}", name);
             infoPresenter.handleRemoveCity(name);
         }
 

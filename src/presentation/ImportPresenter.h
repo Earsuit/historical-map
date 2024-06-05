@@ -4,13 +4,12 @@
 #include "src/model/CacheModel.h"
 #include "src/model/ImportModel.h"
 #include "src/util/Error.h"
+#include "src/logger/ModuleLogger.h"
 
 #include "tl/expected.hpp"
-#include "spdlog/spdlog.h"
 
 #include <string>
 #include <vector>
-#include <memory>
 #include <future>
 #include <atomic>
 
@@ -27,7 +26,7 @@ public:
     void handleCancelImport() { stopImport = true; }
 
 private:
-    std::shared_ptr<spdlog::logger> logger;
+    logger::ModuleLogger logger;
     model::CacheModel& cacheModel;
     model::ImportModel importModel;
     std::string source;

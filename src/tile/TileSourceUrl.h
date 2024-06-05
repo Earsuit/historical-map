@@ -2,12 +2,10 @@
 #define SRC_TILE_TILE_SOURCE_URL_H
 
 #include "TileSource.h"
-
-#include "spdlog/spdlog.h"
+#include "src/logger/ModuleLogger.h"
 
 #include <string>
 #include <list>
-#include <memory>
 #include <future>
 #include <cstddef>
 
@@ -25,7 +23,7 @@ public:
 private:
     std::string url;
 
-    std::shared_ptr<spdlog::logger> logger;
+    logger::ModuleLogger logger;
     const std::string makeUrl(const Coordinate& coord);
 };
 

@@ -1,8 +1,11 @@
 #include "src/presentation/HistoricalInfoPresenter.h"
+#include "src/logger/LoggerManager.h"
 
 namespace presentation {
+constexpr auto LOGGER_NAME = "HistoricalInfoPresenter";
+
 HistoricalInfoPresenter::HistoricalInfoPresenter(const std::string& source):
-    logger{spdlog::get(logger::LOGGER_NAME)},
+    logger{logger::LoggerManager::getInstance().getLogger(LOGGER_NAME)},
     databaseModel{model::DatabaseModel::getInstance()},
     cacheModel{model::CacheModel::getInstance()},
     source{source}
@@ -44,7 +47,7 @@ HistoricalInfoPresenter::~HistoricalInfoPresenter()
 void HistoricalInfoPresenter::handleAddCountry(const std::string& name)
 {
     if (!cacheModel.addCountry(source, databaseModel.getYear(),name)) {
-        logger->error("Add country {} fail for source", name, source);
+        logger.error("Add country {} fail for source", name, source);
     }
 }
 
@@ -52,28 +55,28 @@ void HistoricalInfoPresenter::handleExtendContour(const std::string& name,
                                                   const persistence::Coordinate& coordinate)
 {
     if (!cacheModel.extendContour(source, databaseModel.getYear(), name, coordinate)) {
-        logger->error("Extend country {} contour fail for source", name, source);
+        logger.error("Extend country {} contour fail for source", name, source);
     }
 }
 
 void HistoricalInfoPresenter::handleAddCity(const std::string& name, const persistence::Coordinate& coordinate)
 {
     if (!this->cacheModel.addCity(source, this->databaseModel.getYear(), persistence::City{name, coordinate})) {
-        logger->error("Add city {} fail for source {}", name, source);
+        logger.error("Add city {} fail for source {}", name, source);
     }
 }
 
 void HistoricalInfoPresenter::handleRemoveCountry(const std::string& name)
 {
     if (!cacheModel.removeCountry(source, databaseModel.getYear(), name)) {
-        logger->error("Remove country {} fail for source {}", name, source);
+        logger.error("Remove country {} fail for source {}", name, source);
     }
 }
 
 void HistoricalInfoPresenter::handleRemoveCity(const std::string& name)
 {
     if (!cacheModel.removeCity(source, databaseModel.getYear(), name)) {
-        logger->error("Remove city {} fail for source {}", name, source);
+        logger.error("Remove city {} fail for source {}", name, source);
     }
 }
 
@@ -89,7 +92,7 @@ std::string HistoricalInfoPresenter::handleGetNote() const noexcept
 void HistoricalInfoPresenter::handleUpdateNote(const std::string& text)
 {
     if (!cacheModel.addNote(source, databaseModel.getYear(), text)) {
-        logger->error("Update note fail for source {}", source);
+        logger.error("Update note fail for source {}", source);
     }
 }
 
@@ -116,14 +119,14 @@ std::list<persistence::Coordinate> HistoricalInfoPresenter::handleRequestContour
 void HistoricalInfoPresenter::handleUpdateContour(const std::string& name, int idx, const persistence::Coordinate& coordinate)
 {
     if (!cacheModel.updateContour(source, databaseModel.getYear(), name, idx, coordinate)) {
-        logger->error("Update country {} contour fail for source {}", name, source);
+        logger.error("Update country {} contour fail for source {}", name, source);
     }
 }
 
 void HistoricalInfoPresenter::handleDeleteFromContour(const std::string& name, int idx)
 {
     if (!cacheModel.delectFromContour(source, databaseModel.getYear(), name, idx)) {
-        logger->error("Delect idx {} from country {} contour fail for source {}", idx, name, source);
+        logger.error("Delect idx {} from country {} contour fail for source {}", idx, name, source);
     }
 }
 
@@ -140,7 +143,7 @@ std::optional<persistence::Coordinate> HistoricalInfoPresenter::handleRequestCit
 void HistoricalInfoPresenter::handleUpdateCityCoordinate(const std::string& name, const persistence::Coordinate& coord)
 {   
     if (!cacheModel.updateCityCoord(source, databaseModel.getYear(), name, coord)) {
-        logger->error("Update city {} coordinate fail for source {}", name, source);
+        logger.error("Update city {} coordinate fail for source {}", name, source);
     }
 }
 
@@ -162,7 +165,7 @@ bool HistoricalInfoPresenter::varifySignal(const std::string& source, int year) 
 void HistoricalInfoPresenter::onCountryUpdate(const std::string& source, int year)
 {
     if (varifySignal(source, year)) {
-        logger->debug("HistoricalInfoPresenter onCountryUpdate for source {} at year {}", source, year);
+        logger.debug("HistoricalInfoPresenter onCountryUpdate for source {} at year {}", source, year);
         setCountriesUpdated();
     }
 }
@@ -170,7 +173,7 @@ void HistoricalInfoPresenter::onCountryUpdate(const std::string& source, int yea
 void HistoricalInfoPresenter::onCityUpdate(const std::string& source, int year)
 {
     if (varifySignal(source, year)) {
-        logger->debug("HistoricalInfoPresenter onCityUpdate for source {} at year {}", source, year);
+        logger.debug("HistoricalInfoPresenter onCityUpdate for source {} at year {}", source, year);
         setCityUpdated();
     }
 }
@@ -178,7 +181,7 @@ void HistoricalInfoPresenter::onCityUpdate(const std::string& source, int year)
 void HistoricalInfoPresenter::onNoteUpdate(const std::string& source, int year)
 {
     if (varifySignal(source, year)) {
-        logger->debug("HistoricalInfoPresenter onNoteUpdate for source {} at year {}", source, year);
+        logger.debug("HistoricalInfoPresenter onNoteUpdate for source {} at year {}", source, year);
         setNoteUpdated();
     }
 }
@@ -186,7 +189,7 @@ void HistoricalInfoPresenter::onNoteUpdate(const std::string& source, int year)
 void HistoricalInfoPresenter::onModificationChange(const std::string& source, int year, bool isModified)
 {
     if (varifySignal(source, year)) {
-        logger->debug("HistoricalInfoPresenter onModificationChange {} for source {} at year {}", isModified, source, year);
+        logger.debug("HistoricalInfoPresenter onModificationChange {} for source {} at year {}", isModified, source, year);
         setModificationState(isModified);
     }
 }

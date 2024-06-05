@@ -3,14 +3,12 @@
 
 #include "src/persistence/Data.h"
 #include "src/persistence/Database.h"
-#include "src/logger/Util.h"
+#include "src/logger/ModuleLogger.h"
 #include "src/util/Signal.h"
 
 #include "sqlpp11/sqlite3/sqlite3.h"
 #include "sqlpp11/sqlite3/connection_config.h"
-#include "spdlog/spdlog.h"
 
-#include <memory>
 #include <mutex>
 #include <atomic>
 
@@ -42,7 +40,7 @@ private:
     constexpr static int QIN_DYNASTY = -221;
     constexpr static auto DATABASE_NAME = "HistoricalMapDB";
 
-    std::shared_ptr<spdlog::logger> logger;
+    logger::ModuleLogger logger;
     persistence::Database<sqlpp::sqlite3::connection, sqlpp::sqlite3::connection_config> database;
     std::mutex lock;
     std::atomic_int currentYear;

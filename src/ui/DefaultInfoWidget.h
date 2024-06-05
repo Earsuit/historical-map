@@ -5,13 +5,10 @@
 #include "src/presentation/DatabaseSaverPresenter.h"
 #include "src/presentation/DatabaseYearPresenter.h"
 #include "src/presentation/Util.h"
-#include "src/logger/Util.h"
+#include "src/logger/ModuleLogger.h"
 #include "src/ui/IInfoWidget.h"
 
-#include "spdlog/spdlog.h"
-
 #include <string>
-#include <memory>
 #include <map>
 #include <atomic>
 
@@ -31,7 +28,7 @@ public:
     void setUnsavedState(bool isUnsaved) noexcept { this->isUnsaved = isUnsaved; }
 
 private:
-    std::shared_ptr<spdlog::logger> logger;
+    logger::ModuleLogger logger;
     presentation::HistoricalInfoPresenter infoPresenter;
     presentation::DatabaseSaverPresenter databaseSaverPresenter;
     presentation::DatabaseYearPresenter yearPresenter;

@@ -1,5 +1,6 @@
 #include "src/ui/MapWidget.h"
 #include "src/ui/Util.h"
+#include "src/logger/LoggerManager.h"
 
 #include "external/imgui/imgui.h"
 #include "external/imgui/misc/cpp/imgui_stdlib.h"
@@ -51,6 +52,7 @@ constexpr float ZOOM_RATE = 0.1;
 constexpr float ZOOM_SPEED = 1;
 constexpr float EQUAL_ZOOM_CORRECTION = 0.5;
 constexpr float ZOOM_FACOTR = EQUAL_ZOOM_CORRECTION * ZOOM_SPEED;
+constexpr auto LOGGER_NAME = "MapWidget";
 
 bool operator==(const ImVec2& lhs, const ImVec2& rhs)
 {
@@ -77,7 +79,7 @@ void manualZoomAxis(float zoomRate)
 }
 
 MapWidget::MapWidget(const std::string& source): 
-    logger{spdlog::get(logger::LOGGER_NAME)},
+    logger{logger::LoggerManager::getInstance().getLogger(LOGGER_NAME)},
     presenter{*this, source},
     source{source},
     plotName{"##" + source}
@@ -222,8 +224,8 @@ void MapWidget::renderMap()
             mousePos = std::nullopt;
         }
 
-        logger->trace("Plot limit X [{}, {}], Y [{}, {}]", plotRect.X.Min, plotRect.X.Max, plotRect.Y.Min, plotRect.Y.Max);
-        logger->trace("Plot size x={}, y={} pixels", plotSize.x, plotSize.y);
+        logger.trace("Plot limit X [{}, {}], Y [{}, {}]", plotRect.X.Min, plotRect.X.Max, plotRect.Y.Min, plotRect.Y.Max);
+        logger.trace("Plot size x={}, y={} pixels", plotSize.x, plotSize.y);
 
         presenter.handleRenderTiles();
         renderCountries();

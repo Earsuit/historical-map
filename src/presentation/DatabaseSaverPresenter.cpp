@@ -1,10 +1,12 @@
 #include "src/presentation/DatabaseSaverPresenter.h"
 #include "src/presentation/Util.h"
-#include "src/logger/Util.h"
+#include "src/logger/LoggerManager.h"
 
 namespace presentation {
+constexpr auto LOGGER_NAME = "DatabaseSaverPresenter";
+
 DatabaseSaverPresenter::DatabaseSaverPresenter(const std::string& source):
-    logger{spdlog::get(logger::LOGGER_NAME)},
+    logger{logger::LoggerManager::getInstance().getLogger(LOGGER_NAME)},
     databaseModel{model::DatabaseModel::getInstance()},
     cacheModel{model::CacheModel::getInstance()},
     source{source}
@@ -15,7 +17,7 @@ DatabaseSaverPresenter::DatabaseSaverPresenter(const std::string& source):
 bool DatabaseSaverPresenter::handleSaveSameForRange(int startYear, int endYear)
 {
     if (startYear > endYear) {
-        logger->error("Start year must less than end year");
+        logger.error("Start year must less than end year");
         return false;
     }
     
@@ -43,7 +45,7 @@ bool DatabaseSaverPresenter::handleSaveSameForRange(int startYear, int endYear)
             saveComplete = true;
         })) {
         saveComplete = true;
-        logger->error("Enqueue save same historical for range info modification to database task fail.");
+        logger.error("Enqueue save same historical for range info modification to database task fail.");
     }
 
     return true;
@@ -70,7 +72,7 @@ void DatabaseSaverPresenter::handleSaveAll()
             saveComplete = true;
         })) {
         saveComplete = true;
-        logger->error("Enqueue save all historical modificcation info modification to database task fail.");
+        logger.error("Enqueue save all historical modificcation info modification to database task fail.");
     }
 }
 

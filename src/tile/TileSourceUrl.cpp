@@ -1,5 +1,5 @@
 #include "TileSourceUrl.h"
-#include "src/logger/Util.h"
+#include "src/logger/LoggerManager.h"
 
 #include <future>
 #include <vector>
@@ -17,6 +17,7 @@ constexpr std::string_view Z_MATCHER = "{Z}";
 constexpr std::string_view X_MATCHER = "{X}";
 constexpr std::string_view Y_MATCHER = "{Y}";
 constexpr auto MATCHER_LEN = 3;
+constexpr auto LOGGER_NAME = "TileSourceUrl";
 
 namespace {
 size_t curlCallback(char *ptr, size_t size, size_t nmemb, void *userdata)
@@ -30,10 +31,9 @@ size_t curlCallback(char *ptr, size_t size, size_t nmemb, void *userdata)
     return nmemb;
 }
 
-std::vector<std::byte> requestData(const std::string& url)
+std::vector<std::byte> requestData(const std::string& url, logger::ModuleLogger& logger)
 {
     std::vector<std::byte> data;
-    auto logger = spdlog::get(logger::LOGGER_NAME);
 
     const auto curl = curl_easy_init();
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
@@ -47,24 +47,24 @@ std::vector<std::byte> requestData(const std::string& url)
     curl_easy_cleanup(curl);
 
     if (res == CURLE_OK) {
-        logger->debug("CURL get success for url {}", url);
+        logger.debug("CURL get success for url {}", url);
         return data;
     } else {
-        logger->error("CURL get fail for url {}, error code {}", url, static_cast<int>(res));
+        logger.error("CURL get fail for url {}, error code {}", url, static_cast<int>(res));
         return {};
     }
 }
 }
 
 TileSourceUrl::TileSourceUrl(const std::string& url):
-    logger{spdlog::get(logger::LOGGER_NAME)}
+    logger{logger::LoggerManager::getInstance().getLogger(LOGGER_NAME)}
 {
     setUrl(url);
 }
 
 std::vector<std::byte> TileSourceUrl::request(const Coordinate& coord)
 {
-    return requestData(makeUrl(coord));
+    return requestData(makeUrl(coord), logger);
 }
 
 // tile server url format specified by https://www.trailnotes.org/FetchMap/TileServeSource.html
@@ -73,13 +73,13 @@ bool TileSourceUrl::setUrl(const std::string& url)
     if (url.find(Z_MATCHER) != std::string::npos &&
         url.find(X_MATCHER) != std::string::npos &&
         url.find(Y_MATCHER) != std::string::npos) {
-        logger->info("Set url {} success", url);
+        logger.info("Set url {} success", url);
 
         this->url = url;
 
         return true;
     } else {
-        logger->error("Set url {} fail", url);
+        logger.error("Set url {} fail", url);
         this->url = "";
         return false;
     }
@@ -109,7 +109,7 @@ const std::string TileSourceUrl::makeUrl(const Coordinate& coord)
         }
     }
     
-    logger->debug("From z={}, x={}, y={} make url {}", coord.z, coord.x, coord.y ,realUrl);
+    logger.debug("From z={}, x={}, y={} make url {}", coord.z, coord.x, coord.y ,realUrl);
 
     return realUrl;
 }

@@ -4,11 +4,9 @@
 #include "src/model/CacheModel.h"
 #include "src/model/DatabaseModel.h"
 #include "src/util/Signal.h"
-
-#include "spdlog/spdlog.h"
+#include "src/logger/ModuleLogger.h"
 
 #include <string>
-#include <memory>
 #include <future>
 #include <atomic>
 
@@ -39,7 +37,7 @@ public:
     util::signal::Signal<void()> setRefreshSelectAll;
 
 private:
-    std::shared_ptr<spdlog::logger> logger;
+    logger::ModuleLogger logger;
     model::DatabaseModel& databaseModel;
     model::CacheModel& cacheModel;
     std::string fromSource;

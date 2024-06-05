@@ -1,5 +1,6 @@
 #include "src/ui/LogWidget.h"
 #include "src/logger/Util.h"
+#include "src/logger/GuiSink.h"
 
 #include "external/imgui/imgui.h"
 #include "external/imgui/misc/cpp/imgui_stdlib.h"
@@ -15,14 +16,11 @@ constexpr float Y_BOTTOM = 1.0;
 constexpr const char* LOG_LEVEL[] = {"TRACE", "DEBUG", "INFO", "WARN", "ERROR", "CRITICAL", "OFF"};
 constexpr int LEVEL_COMBO_WIDTH = 100;
 constexpr auto TRANSPARENT = IM_COL32(0, 0, 0, 0);
+constexpr auto ERROR_COLLOR = ImVec4(1.0f, 0.4f, 0.4f, 1.0f);
 
-LogWidget::LogWidget() :
-    sink{std::make_shared<logger::StringSink>()},
-    logger{std::make_shared<spdlog::logger>(logger::LOGGER_NAME, sink)}
+LogWidget::LogWidget():
+    loggerManager{logger::LoggerManager::getInstance({std::make_shared<logger::GuiSink>(*this)})}
 {
-    spdlog::initialize_logger(logger);
-    logger->set_pattern("[%D %T %z] [%l] %v");
-    logger->set_level(spdlog::level::level_enum{logLevel});
 }
 
 void LogWidget::paint()
@@ -35,7 +33,7 @@ void LogWidget::paint()
         ImGui::SameLine();
         ImGui::SetNextItemWidth(LEVEL_COMBO_WIDTH);
         if (ImGui::Combo("##Level", &logLevel, LOG_LEVEL, IM_ARRAYSIZE(LOG_LEVEL))) {
-            logger->set_level(spdlog::level::level_enum{logLevel});
+            loggerManager.setLevel(spdlog::level::level_enum{logLevel});
         }
         ImGui::SameLine();
 
@@ -60,7 +58,6 @@ void LogWidget::paint()
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ITEM_SPACING);
 
             if (clear) {
-                logger->flush();
                 start = end = 0;
             } else {
                 updateLogs();
@@ -68,7 +65,15 @@ void LogWidget::paint()
                 ImGui::PushStyleColor(ImGuiCol_FrameBg, TRANSPARENT);  // Transparent background
                 ImGui::PushItemWidth(-FLT_MIN);
                 for (auto i = start; i != end; i++) {
-                    ImGui::InputText(("##" + std::to_string(i)).c_str(), &logs[i], ImGuiInputTextFlags_ReadOnly);
+                    if (logs[i].color) {
+                        ImGui::PushStyleColor(ImGuiCol_Text, logs[i].color.value());
+                    }
+                    
+                    ImGui::InputText(("##" + std::to_string(i)).c_str(), &logs[i].msg, ImGuiInputTextFlags_ReadOnly);
+
+                    if (logs[i].color) {
+                        ImGui::PopStyleColor();
+                    }
                 }
                 ImGui::PopItemWidth();
                 ImGui::PopStyleColor(1);
@@ -89,25 +94,39 @@ void LogWidget::paint()
 
 void LogWidget::updateLogs()
 {
-    for (auto&& newLog : sink->dumpLogs()) {
+    Log log;
+
+    while (queue.try_dequeue(log)) {
         if (filterEnable) {
             try {
-                if (std::regex_search(newLog, std::regex{filter})) {
-                    logs[end++] = newLog;
+                if (std::regex_search(log.msg, std::regex{filter})) {
+                    logs[end++] = std::move(log);
                 }
             }
             catch (const std::regex_error& e) {
                 filterEnable = false;
-                logs[end++] = "Invalid regex string: " + std::string(e.what());
+                logs[end++] = Log{"Invalid regex string: " + std::string(e.what()), ERROR_COLLOR};
             }
         } else {
-            logs[end++] = newLog;
+            logs[end++] = std::move(log);
         }
 
         if (end == start) {
             start++;
         }
     }
+    
+}
+
+void LogWidget::log(const std::string& log, spdlog::level::level_enum lvl)
+{
+    std::optional<ImVec4> color;
+
+    if (lvl == spdlog::level::level_enum::err) {
+        color = ERROR_COLLOR;
+    }
+
+    queue.enqueue({log, color});
 }
 
 }

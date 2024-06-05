@@ -5,9 +5,7 @@
 #include "src/model/DatabaseModel.h"
 #include "src/util/Signal.h"
 #include "src/util/Worker.h"
-#include "src/logger/Util.h"
-
-#include "spdlog/spdlog.h"
+#include "src/logger/ModuleLogger.h"
 
 #include <string>
 #include <optional>
@@ -43,7 +41,7 @@ public:
     util::signal::Signal<void(bool)> setModificationState;
 
 private:
-    std::shared_ptr<spdlog::logger> logger;
+    logger::ModuleLogger logger;
     model::DatabaseModel& databaseModel;
     model::CacheModel& cacheModel;
     std::string source;

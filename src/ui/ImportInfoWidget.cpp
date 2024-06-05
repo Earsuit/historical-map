@@ -1,7 +1,7 @@
 #include "src/ui/ImportInfoWidget.h"
 #include "src/ui/Util.h"
 #include "src/presentation/Util.h"
-#include "src/logger/Util.h"
+#include "src/logger/LoggerManager.h"
 #include "src/util/Signal.h"
 
 #include "imgui.h"
@@ -15,9 +15,10 @@ constexpr auto IMPORT_COMPLETE_BUTTON = "Complete";
 constexpr auto IMPORT_FAIL_POPUP_NAME = "Import fail";
 constexpr auto DONE_BUTTON = "Done";
 constexpr auto WRITE_TO_DATABASE_PROGRESS_POPUP = "Write to database";
+constexpr auto LOGGER_NAME = "ImportInfoWidget";
 
 ImportInfoWidget::ImportInfoWidget():
-    logger{spdlog::get(logger::LOGGER_NAME)}, 
+    logger{logger::LoggerManager::getInstance().getLogger(LOGGER_NAME)}, 
     databaseInfoPresenter{model::PERMENANT_SOURCE},
     importInfoPresenter{presentation::IMPORT_SOURCE},
     infoSelectorPresenter{presentation::IMPORT_SOURCE, SELECTION},
@@ -145,7 +146,7 @@ void ImportInfoWidget::doImport()
     if (ifd::FileDialog::getInstance().isDone(FILE_SELECT_POPUP_NAME)) {
         if (ifd::FileDialog::getInstance().hasResult()) {
             const std::string file = ifd::FileDialog::getInstance().getResult().u8string();
-            logger->debug("Open file {}", file);
+            logger.debug("Open file {}", file);
             importPresenter.handleDoImport(file);
             openErrorPopup = false;
             ImGui::OpenPopup(IMPORT_PROGRESS_POPUP_NAME);

@@ -1,6 +1,6 @@
 #include "src/presentation/ImportPresenter.h"
 #include "src/presentation/Util.h"
-#include "src/logger/Util.h"
+#include "src/logger/LoggerManager.h"
 
 #include <chrono>
 #include <limits>
@@ -10,9 +10,10 @@ namespace presentation {
 using namespace std::chrono_literals;
 
 constexpr int PERIOD_INDEX = 1;
+constexpr auto LOGGER_NAME = "ImportPresenter";
 
 ImportPresenter::ImportPresenter(const std::string& source):
-    logger{spdlog::get(logger::LOGGER_NAME)}, 
+    logger{logger::LoggerManager::getInstance().getLogger(LOGGER_NAME)}, 
     cacheModel{model::CacheModel::getInstance()},
     source{source}
 {

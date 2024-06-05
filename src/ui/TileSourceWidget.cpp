@@ -1,6 +1,6 @@
 #include "src/ui/TileSourceWidget.h"
 #include "src/presentation/TileSourceUrlPresenter.h"
-#include "src/logger/Util.h"
+#include "src/logger/LoggerManager.h"
 
 #include "external/imgui/imgui.h"
 #include "external/imgui/misc/cpp/imgui_stdlib.h"
@@ -8,9 +8,10 @@
 namespace ui {
 constexpr auto TRANSPARENT = IM_COL32(0, 0, 0, 0);
 const auto TILE_SERVER_LOOKUP = "For different tile server url, please check https://www.trailnotes.org/FetchMap/TileServeSource.html";
+constexpr auto LOGGER_NAME = "TileSourceWidget";
 
 TileSourceWidget::TileSourceWidget():
-    logger{spdlog::get(logger::LOGGER_NAME)},
+    logger{logger::LoggerManager::getInstance().getLogger(LOGGER_NAME)},
     showConfigWidget{[this](){this->showTileSourceUrlConfig();}}
 {
     widgetPresenter.handleSetTileEngine(widgetPresenter.handleGetTileEngineList().front());
@@ -33,7 +34,7 @@ void TileSourceWidget::paint()
     
     if (ImGui::Combo("Tile Data Processor", &tileEngineIdx, engineListString.c_str())) {
         if (auto ret = widgetPresenter.handleSetTileEngine(engineList[tileEngineIdx]); !ret) {
-            logger->error("Failed to set tile engine, error {}", ret.error().msg);
+            logger.error("Failed to set tile engine, error {}", ret.error().msg);
         }
     }
 

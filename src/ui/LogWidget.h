@@ -1,14 +1,16 @@
 #ifndef SRC_UI_LOG_WIDGET_H
 #define SRC_UI_LOG_WIDGET_H
 
-#include "src/logger/StringSink.h"
+#include "src/logger/LoggerManager.h"
+#include "src/logger/LogWidgetInterface.h"
 #include "src/logger/Util.h"
 
-#include "spdlog/spdlog.h"
+#include "imgui.h"
+#include "concurrentqueue.h"
 
 #include <array>
 #include <string>
-#include <memory>
+#include <optional>
 
 namespace ui {
 
@@ -17,16 +19,23 @@ constexpr uint8_t BIT_NUM = 9;
 constexpr int MAX_SIZE = (1 << BIT_NUM);
 constexpr auto LOG_WIDGET_NAME = "Log";
 
-class LogWidget {
+class LogWidget : public logger::LogWidgetInterface {
 public:
     LogWidget();
     void paint();
 
+    void log(const std::string& log, spdlog::level::level_enum lvl) override;
+
 private:
-    std::shared_ptr<logger::StringSink> sink;
-    std::shared_ptr<spdlog::logger> logger;
+    struct Log {
+        std::string msg;
+        std::optional<ImVec4> color;
+    };
+
     int logLevel = spdlog::level::info;
-    std::array<std::string, MAX_SIZE> logs;
+    logger::LoggerManager& loggerManager;
+    moodycamel::ConcurrentQueue<Log> queue;
+    std::array<Log, MAX_SIZE> logs;
     logger::Index<uint16_t, BIT_NUM> start{0};
     logger::Index<uint16_t, BIT_NUM> end{0};
     std::string filter;

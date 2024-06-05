@@ -5,8 +5,7 @@
 #include "src/tile/TileLoader.h"
 #include "src/model/Util.h"
 #include "src/util/Error.h"
-
-#include "spdlog/spdlog.h"
+#include "src/logger/ModuleLogger.h"
 
 #include <string>
 #include <set>
@@ -32,7 +31,7 @@ public:
 private:
     TileModel();
 
-    std::shared_ptr<spdlog::logger> logger;
+    logger::ModuleLogger logger;
     std::set<std::string> supportedSourceType;
     tile::TileLoader& tileLoader;
     int zoom;

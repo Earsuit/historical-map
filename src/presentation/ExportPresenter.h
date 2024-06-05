@@ -3,10 +3,8 @@
 
 #include "src/model/ExportModel.h"
 #include "src/model/CacheModel.h"
+#include "src/logger/ModuleLogger.h"
 
-#include "spdlog/spdlog.h"
-
-#include <memory>
 #include <string>
 #include <vector>
 #include <future>
@@ -24,7 +22,7 @@ public:
     float handleRequestExportProgress() const noexcept;
 
 private:
-    std::shared_ptr<spdlog::logger> logger;
+    logger::ModuleLogger logger;
     model::CacheModel& dynamicModel;
     model::ExportModel exportModel;
     std::string source;

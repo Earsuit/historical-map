@@ -1,13 +1,15 @@
 #include "src/presentation/ExportPresenter.h"
-#include "src/logger/Util.h"
+#include "src/logger/LoggerManager.h"
 
 #include <chrono>
 
 namespace presentation {
 using namespace std::chrono_literals;
 
+constexpr auto LOGGER_NAME = "ExportPresenter";
+
 ExportPresenter::ExportPresenter(const std::string& source):
-    logger{spdlog::get(logger::LOGGER_NAME)}, 
+    logger{logger::LoggerManager::getInstance().getLogger(LOGGER_NAME)}, 
     dynamicModel{model::CacheModel::getInstance()},
     source{source}
 {

@@ -3,15 +3,12 @@
 
 #include "src/persistence/Data.h"
 #include "src/persistence/HistoricalCache.h"
-#include "src/logger/Util.h"
+#include "src/logger/ModuleLogger.h"
 #include "src/util/Signal.h"
-
-#include "spdlog/spdlog.h"
 
 #include <optional>
 #include <string>
 #include <vector>
-#include <memory>
 #include <map>
 #include <atomic>
 #include <type_traits>
@@ -70,7 +67,7 @@ public:
     {
         std::lock_guard lk(cacheLock);
         if (cache.contains(source)) {
-            logger->debug("Upsert CacheModel cache for source {} at year {}", source, info.year);
+            logger.debug("Upsert CacheModel cache for source {} at year {}", source, info.year);
 
             for (const auto& city : info.cities) {
                 if (cityToYear[source].contains(city.name)) {
@@ -89,7 +86,7 @@ public:
             return true;
         }
 
-        logger->error("Failed to upsert CacheModel cache for source {} at year {}, please add source first.", source, info.year);
+        logger.error("Failed to upsert CacheModel cache for source {} at year {}, please add source first.", source, info.year);
         return false;
     }
 
@@ -105,7 +102,7 @@ public:
 private:
     CacheModel();
 
-    std::shared_ptr<spdlog::logger> logger;
+    mutable logger::ModuleLogger logger;
     std::optional<persistence::Coordinate> hovered;
     mutable std::mutex hoveredLock;
     mutable std::recursive_mutex cacheLock;

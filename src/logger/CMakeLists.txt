@@ -1,6 +1,9 @@
 SET(LOGGER_SRC
-    StringSink.cpp
-    StringSink.h
+    GuiSink.cpp
+    GuiSink.h
+    LoggerManager.h
+    LoggerManager.cpp
+    LogWidgetInterface.h
     Util.h
 )
 

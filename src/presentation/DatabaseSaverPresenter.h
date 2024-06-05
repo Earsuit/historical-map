@@ -3,14 +3,13 @@
 
 #include "src/model/CacheModel.h"
 #include "src/model/DatabaseModel.h"
+#include "src/logger/ModuleLogger.h"
 
-#include "spdlog/spdlog.h"
 #include "blockingconcurrentqueue.h"
 
 #include <atomic>
 #include <string>
 #include <thread>
-#include <atomic>
 
 namespace presentation {
 class DatabaseSaverPresenter {
@@ -24,7 +23,7 @@ public:
     float getProgress() const noexcept;
 
 private:
-    std::shared_ptr<spdlog::logger> logger;
+    logger::ModuleLogger logger;
     model::DatabaseModel& databaseModel;
     model::CacheModel& cacheModel;
     std::string source;

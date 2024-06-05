@@ -2,11 +2,9 @@
 #define SRC_UI_TILE_SOURCE_WIDGET_H
 
 #include "src/presentation/TileSourceWidgetPresenter.h"
-
-#include "spdlog/spdlog.h"
+#include "src/logger/ModuleLogger.h"
 
 #include <string>
-#include <memory>
 #include <functional>
 
 namespace ui {
@@ -19,7 +17,7 @@ public:
     void paint();
 
 private:
-    std::shared_ptr<spdlog::logger> logger;
+    logger::ModuleLogger logger;
     presentation::TileSourceWidgetPresenter widgetPresenter;
     int sourceIdx = 0;
     int tileEngineIdx = 0;
