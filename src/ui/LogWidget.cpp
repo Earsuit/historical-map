@@ -1,5 +1,4 @@
 #include "src/ui/LogWidget.h"
-#include "src/logger/Util.h"
 #include "src/logger/GuiSink.h"
 
 #include "external/imgui/imgui.h"

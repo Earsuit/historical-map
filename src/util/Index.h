@@ -1,14 +1,11 @@
-#ifndef SRC_LOGGER_UTIL
-#define SRC_LOGGER_UTIL
+#ifndef SRC_UTIL_INDEX_H
+#define SRC_UTIL_INDEX_H
 
 #include <cstdint>
 #include <type_traits>
 #include <climits>
 
-namespace logger {
-
-constexpr auto LOGGER_NAME = "Historical Map";
-
+namespace util {
 template<typename Y, uint8_t BIT_NUM>
 requires(std::is_unsigned_v<Y> && sizeof(Y) * CHAR_BIT > BIT_NUM)
 struct Index {
@@ -68,4 +65,4 @@ struct Index {
 
 }
 
-#endif /* SRC_LOGGER_UTIL */
+#endif

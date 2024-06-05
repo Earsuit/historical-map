@@ -3,7 +3,7 @@
 
 #include "src/logger/LoggerManager.h"
 #include "src/logger/LogWidgetInterface.h"
-#include "src/logger/Util.h"
+#include "src/util/Index.h"
 
 #include "imgui.h"
 #include "concurrentqueue.h"
@@ -36,8 +36,8 @@ private:
     logger::LoggerManager& loggerManager;
     moodycamel::ConcurrentQueue<Log> queue;
     std::array<Log, MAX_SIZE> logs;
-    logger::Index<uint16_t, BIT_NUM> start{0};
-    logger::Index<uint16_t, BIT_NUM> end{0};
+    util::Index<uint16_t, BIT_NUM> start{0};
+    util::Index<uint16_t, BIT_NUM> end{0};
     std::string filter;
     bool filterEnable = false;
 
