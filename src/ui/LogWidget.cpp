@@ -121,7 +121,7 @@ void LogWidget::log(const std::string& log, spdlog::level::level_enum lvl)
 {
     std::optional<ImVec4> color;
 
-    if (lvl == spdlog::level::level_enum::err) {
+    if (lvl >= spdlog::level::level_enum::err) {
         color = ERROR_COLLOR;
     }
 
