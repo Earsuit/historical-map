@@ -354,7 +354,7 @@ void MapWidget::renderButtons()
         zoomIn = true;
     }
     ImGui::SameLine();
-    if (ImGui::Button("-")) {
+    if (ImGui::Button(u8"–")) {
         zoomOut = true;
     }
     ImGui::PopButtonRepeat();
