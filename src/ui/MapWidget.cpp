@@ -19,7 +19,7 @@ constexpr auto AXIS_FLAGS = ImPlotAxisFlags_NoLabel | ImPlotAxisFlags_NoGridLine
                             ImPlotAxisFlags_NoInitialFit | ImPlotAxisFlags_NoMenus |
                             ImPlotAxisFlags_NoMenus | ImPlotAxisFlags_NoHighlight;
 
-constexpr ImVec4 OVERLAY_BACKGROUND_COLOR = {0.0f, 0.0f, 0.0f, 0.35f};
+constexpr ImVec4 OVERLAY_BACKGROUND_COLOR = {0.65f, 0.65f, 0.65f, 0.35f};
 constexpr ImVec4 TRANSPARENT = {0.0f, 0.0f, 0.0f, 0.0f};
 constexpr float OVERLAY_PAD = 10.0f;
 
