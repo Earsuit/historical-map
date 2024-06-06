@@ -42,6 +42,7 @@ private:
     void buildDockSpace();
     void buildMapDockSpace();
     void setStyle();
+    void loadDefaultFonts();
 };
 
 }

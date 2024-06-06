@@ -16,6 +16,8 @@
 #include <stdexcept>
 #include <string>
 
+#include "fonts/LXGWNeoXiHei.ttf.h"
+
 namespace ui {
 
 constexpr int WINDOW_WIDTH = 1080 * 1.5;
@@ -97,6 +99,8 @@ HistoricalMap::HistoricalMap():
 
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glslVersion);
+
+    loadDefaultFonts();
 
     ifd::FileDialog::getInstance().createTexture = [](const uint8_t* data, int w, int h, ifd::Format fmt) -> void* {
 		GLuint tex;
@@ -325,4 +329,9 @@ void HistoricalMap::setStyle()
     colors[ImGuiCol_TextSelectedBg] = ImVec4(1.00f, 0.99f, 0.54f, 0.43f);
 }
 
+void HistoricalMap::loadDefaultFonts()
+{
+    ImGuiIO& io = ImGui::GetIO();
+    io.Fonts->AddFontFromMemoryCompressedBase85TTF(LXGWNeoXiHei_compressed_data_base85, 13.0f, nullptr, io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
+}
 }

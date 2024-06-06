@@ -117,7 +117,7 @@ std::string MapWidgetPresenter::handleGetOverlayText() const
          << bbox.west
          << ", east "
          << bbox.east
-         << ", \n\t\t\tnorth "
+         << ", \n\t\t\t\t\t north "
          << bbox.north
          << ", south "
          << bbox.south;
