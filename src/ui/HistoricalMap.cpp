@@ -296,7 +296,7 @@ void HistoricalMap::setStyle()
     colors[ImGuiCol_PopupBg] = colors[ImGuiCol_WindowBg];
     colors[ImGuiCol_Border] = ImVec4(0.50f, 0.50f, 0.50f, 0.60f);
     colors[ImGuiCol_BorderShadow] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
-    colors[ImGuiCol_FrameBg] = ImVec4(0.62f, 0.70f, 0.72f, 0.56f);
+    colors[ImGuiCol_FrameBg] = ImVec4(0.84f, 0.9f, 0.96f, 0.96f);
     colors[ImGuiCol_FrameBgHovered] = ImVec4(0.95f, 0.33f, 0.14f, 0.47f);
     colors[ImGuiCol_FrameBgActive] = ImVec4(0.97f, 0.31f, 0.13f, 0.81f);
     colors[ImGuiCol_TitleBg] = colors[ImGuiCol_MenuBarBg];
