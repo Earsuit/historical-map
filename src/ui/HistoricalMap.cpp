@@ -19,7 +19,6 @@
 #include "fonts/LXGWNeoXiHei.ttf.h"
 
 namespace ui {
-
 constexpr int WINDOW_WIDTH = 1080 * 1.5;
 constexpr int WINDOW_HEIGHT = 1080;
 constexpr float MAIN_DOCKSPACE_HORIZONTAL_RATIO = 3.6f/5.0f;
@@ -37,6 +36,9 @@ constexpr int MAX_MAP_WIDGET_NUM = 2;
 constexpr ImVec2 DOCKSPACE_DEFAULT_ARG = ImVec2{0.0f, 0.0f};
 constexpr float ROUNDING = 3;
 constexpr auto LOGGER_NAME = "HistoricalMap";
+constexpr uint16_t BASIC_LATIN_CODE_POINT = 0x0020;
+constexpr uint16_t MAX_U16_CODE_POINT = 0xFFFF;
+constexpr uint16_t CODE_POINT_END = 0;
 
 namespace {
 static void glfwErrorCallback(int error, const char* description)
@@ -332,6 +334,12 @@ void HistoricalMap::setStyle()
 void HistoricalMap::loadDefaultFonts()
 {
     ImGuiIO& io = ImGui::GetIO();
-    io.Fonts->AddFontFromMemoryCompressedBase85TTF(LXGWNeoXiHei_compressed_data_base85, 13.0f, nullptr, io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
+    ImVector<ImWchar> ranges;
+    ImFontGlyphRangesBuilder builder;
+    const ImWchar range[] = {BASIC_LATIN_CODE_POINT, MAX_U16_CODE_POINT, CODE_POINT_END};
+    builder.AddRanges(range);
+    builder.BuildRanges(&ranges);
+    io.Fonts->AddFontFromMemoryCompressedBase85TTF(LXGWNeoXiHei_compressed_data_base85, 13.0f, nullptr, ranges.Data);
+    io.Fonts->Build();
 }
 }
