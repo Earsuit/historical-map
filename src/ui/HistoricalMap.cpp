@@ -5,6 +5,7 @@
 #include "src/ui/ExportInfoWidget.h"
 #include "src/ui/ImportInfoWidget.h"
 #include "src/ui/MapWidgetNoninteractive.h"
+#include "src/util/ExecuteablePath.h"
 
 #include "external/imgui/imgui.h"
 #include "external/imgui/imgui_internal.h"
@@ -15,8 +16,6 @@
 
 #include <stdexcept>
 #include <string>
-
-#include "fonts/LXGWNeoXiHei.ttf.h"
 
 namespace ui {
 constexpr int WINDOW_WIDTH = 1080 * 1.5;
@@ -39,6 +38,7 @@ constexpr auto LOGGER_NAME = "HistoricalMap";
 constexpr uint16_t BASIC_LATIN_CODE_POINT = 0x0020;
 constexpr uint16_t MAX_U16_CODE_POINT = 0xFFFF;
 constexpr uint16_t CODE_POINT_END = 0;
+constexpr auto FONT_NAME = "LXGWNeoXiHei.ttf";
 
 namespace {
 static void glfwErrorCallback(int error, const char* description)
@@ -333,13 +333,14 @@ void HistoricalMap::setStyle()
 
 void HistoricalMap::loadDefaultFonts()
 {
+    const auto font = util::getExecutablePath().remove_filename() / FONT_NAME;
     ImGuiIO& io = ImGui::GetIO();
     ImVector<ImWchar> ranges;
     ImFontGlyphRangesBuilder builder;
     const ImWchar range[] = {BASIC_LATIN_CODE_POINT, MAX_U16_CODE_POINT, CODE_POINT_END};
     builder.AddRanges(range);
     builder.BuildRanges(&ranges);
-    io.Fonts->AddFontFromMemoryCompressedBase85TTF(LXGWNeoXiHei_compressed_data_base85, 13.0f, nullptr, ranges.Data);
+    io.Fonts->AddFontFromFileTTF(font.string().c_str(), 13.0f, nullptr, ranges.Data);
     io.Fonts->Build();
 }
 }

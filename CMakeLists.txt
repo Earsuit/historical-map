@@ -117,3 +117,7 @@ endif()
 
 add_subdirectory(src)
 add_subdirectory(test)
+
+add_custom_command(TARGET HistoricalMap POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/fonts/LXGWNeoXiHei.ttf  ${CMAKE_BINARY_DIR}/LXGWNeoXiHei.ttf
+)
