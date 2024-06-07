@@ -39,6 +39,7 @@ constexpr uint16_t BASIC_LATIN_CODE_POINT = 0x0020;
 constexpr uint16_t MAX_U16_CODE_POINT = 0xFFFF;
 constexpr uint16_t CODE_POINT_END = 0;
 constexpr auto FONT_NAME = "LXGWNeoXiHei.ttf";
+constexpr auto INI_FILE_NAME = "imgui.ini";
 
 namespace {
 static void glfwErrorCallback(int error, const char* description)
@@ -67,7 +68,8 @@ HistoricalMap::HistoricalMap():
     logger{logger::LoggerManager::getInstance().getLogger(LOGGER_NAME)},
     infoWidget{std::make_unique<DefaultInfoWidget>()},
     tileSourceWidget{},
-    presenter{*this}
+    presenter{*this},
+    executableLocation{util::getExecutablePath().remove_filename()}
 {   
     mapWidgets.emplace_back(std::make_unique<MapWidget>(presenter.handleGetDefaultMapWidgetSouceName()));
 
@@ -152,6 +154,8 @@ void HistoricalMap::start()
     auto& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     io.ConfigDockingWithShift = true;
+    iniFilePath = (executableLocation / INI_FILE_NAME).string();
+    io.IniFilename = iniFilePath.c_str();
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
@@ -333,7 +337,7 @@ void HistoricalMap::setStyle()
 
 void HistoricalMap::loadDefaultFonts()
 {
-    const auto font = util::getExecutablePath().remove_filename() / FONT_NAME;
+    const auto font = executableLocation / FONT_NAME;
     ImGuiIO& io = ImGui::GetIO();
     ImVector<ImWchar> ranges;
     ImFontGlyphRangesBuilder builder;

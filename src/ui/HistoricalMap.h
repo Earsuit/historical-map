@@ -12,6 +12,7 @@
 #include "src/presentation/MainViewPresenter.h"
 #include "src/logger/ModuleLogger.h"
 
+#include <filesystem>
 #include <memory>
 #include <vector>
 
@@ -38,6 +39,8 @@ private:
     presentation::MainViewPresenter presenter;
     int previousDockedMapWidget = 0;
     ImGuiID down, left;
+    std::string iniFilePath;
+    std::filesystem::path executableLocation;
 
     void buildDockSpace();
     void buildMapDockSpace();

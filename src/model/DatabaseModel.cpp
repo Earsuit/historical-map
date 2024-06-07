@@ -1,5 +1,6 @@
 #include "src/model/DatabaseModel.h"
 #include "src/logger/LoggerManager.h"
+#include "src/util/ExecuteablePath.h"
 
 namespace model {
 constexpr int MIN_YEAR = -3000;
@@ -9,7 +10,9 @@ constexpr auto LOGGER_NAME = "DatabaseModel";
 
 DatabaseModel::DatabaseModel():
     logger{logger::LoggerManager::getInstance().getLogger(LOGGER_NAME)},
-    database{std::make_shared<sqlpp::sqlite3::connection_config>(DATABASE_NAME, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE)},
+    database{std::make_shared<sqlpp::sqlite3::connection_config>(
+        util::getExecutablePath().remove_filename()/DATABASE_NAME, 
+        SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE)},
     currentYear{QIN_DYNASTY}
 {
 }
