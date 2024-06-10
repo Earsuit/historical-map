@@ -11,6 +11,9 @@ if (APPLE)
 # add std::result_of back to c++20 for mapbox/variant, 
 # but it still works on Linux with g++11 with C++20?
 add_definitions(-DGL_SILENCE_DEPRECATION -D_LIBCPP_ENABLE_CXX20_REMOVED_TYPE_TRAITS)
+elseif(MSVC)
+# silence compile warning from spdlog
+add_definitions(-D_SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS)
 endif()
 
 find_package(OpenGL REQUIRED)
@@ -18,6 +21,7 @@ find_package(GLEW REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(Threads REQUIRED)
 find_package(CURL REQUIRED)
+find_package(SQLite3 REQUIRED)
 
 if (UNIX)
     find_package(PkgConfig REQUIRED)
@@ -28,7 +32,10 @@ if (LINUX)
 endif()
 
 if (MSVC)
-    add_compile_options(/Zc:char8_t-)
+    # set no char8_t (back to C++17)
+    # enable utf-8 support
+    # disable program warning from mapbox point.hpp: warning c4068 unknown pragma 'gcc'
+    add_compile_options(/Zc:char8_t- /utf-8 -wd4068)
 else()
     # -ftemplate-depth for the DEFAULT_FILE_ICON and DEFAULT_FOLDER_ICON
     add_compile_options(-fno-char8_t -ftemplate-depth=2048)
@@ -111,13 +118,20 @@ if (APPLE)
 # which includes glfw and glew
 target_link_libraries(HistoricalMap PRIVATE glfw GLEW::GLEW libui libpresentation  -Wl,-force_load libpersistence liblogger)
 target_link_libraries(HistoricalMap PRIVATE "-framework CoreFoundation" "-framework CoreGraphics" "-framework ImageIO" "-framework AppKit")
-else()
+elseif(LINUX)
 target_link_libraries(HistoricalMap PRIVATE libui libpresentation -Wl,--whole-archive libpersistence -Wl,--no-whole-archive liblogger)
+elseif(MSVC)
+target_link_libraries(HistoricalMap PRIVATE libui libpresentation liblogger libpersistence)
+set_property(TARGET HistoricalMap APPEND_STRING PROPERTY LINK_FLAGS " /WHOLEARCHIVE:libpersistence")
 endif()
 
 add_subdirectory(src)
 add_subdirectory(test)
 
 add_custom_command(TARGET HistoricalMap POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/fonts/LXGWNeoXiHei.ttf  ${CMAKE_BINARY_DIR}/LXGWNeoXiHei.ttf
+    COMMAND 
+    ${CMAKE_COMMAND} 
+    -E copy_if_different 
+    ${CMAKE_SOURCE_DIR}/fonts/LXGWNeoXiHei.ttf  
+    $<TARGET_FILE_DIR:HistoricalMap>    # use TARGET_FILE_DIR to ensure the font is copied to the directory with the executable, such as build/Debug
 )

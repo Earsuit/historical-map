@@ -10,6 +10,9 @@
 #if defined(__APPLE__)
 #include <OpenGL/gl.h>
 #else
+    #ifdef _WIN32
+        #include "src/util/Windows.h"   // otherwise will get compilation errors on win
+    #endif
 #include <GL/gl.h>
 #endif
 

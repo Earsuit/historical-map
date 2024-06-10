@@ -5,6 +5,10 @@
 #include "external/imgui/imgui.h"
 #include "external/imgui/misc/cpp/imgui_stdlib.h"
 
+#ifdef _WIN32
+    #undef  TRANSPARENT // there is a marco defined somewhere
+#endif
+
 namespace ui {
 constexpr auto TRANSPARENT = IM_COL32(0, 0, 0, 0);
 const auto TILE_SERVER_LOOKUP = "For different tile server url, please check https://www.trailnotes.org/FetchMap/TileServeSource.html";

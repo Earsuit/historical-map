@@ -39,7 +39,8 @@ void Tile::glLoad()
 
 void* Tile::getTexture()
 {
-    return reinterpret_cast<void*>(id);
+    // we will have warning C4312 on Win when dealing with 32-bit integers and 64-bit pointers
+    return reinterpret_cast<void*>(static_cast<uintptr_t>(id));
 }
 
 bool Tile::operator==(const Tile& other) const noexcept

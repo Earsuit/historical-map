@@ -11,7 +11,7 @@ constexpr auto LOGGER_NAME = "DatabaseModel";
 DatabaseModel::DatabaseModel():
     logger{logger::LoggerManager::getInstance().getLogger(LOGGER_NAME)},
     database{std::make_shared<sqlpp::sqlite3::connection_config>(
-        util::getExecutablePath().remove_filename()/DATABASE_NAME, 
+        (util::getExecutablePath().remove_filename()/DATABASE_NAME).string(), 
         SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE)},
     currentYear{QIN_DYNASTY}
 {

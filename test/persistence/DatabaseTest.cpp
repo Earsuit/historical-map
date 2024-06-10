@@ -32,7 +32,9 @@ TEST_F(DatabaseTest, InsertEmpty)
 
     database.upsert(data);
 
-    EXPECT_EQ(database.load(1900), data);
+    auto t = database.load(1900);
+
+    EXPECT_EQ(t, data);
 }
 
 TEST_F(DatabaseTest, RemoveEmpty)

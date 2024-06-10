@@ -127,7 +127,8 @@ HistoricalMap::HistoricalMap():
 		glGenerateMipmap(GL_TEXTURE_2D);
 		glBindTexture(GL_TEXTURE_2D, 0);
 
-		return reinterpret_cast<void*>(tex);
+        // we will have warning C4312 on Win when dealing with 32-bit integers and 64-bit pointers
+		return reinterpret_cast<void*>(static_cast<uintptr_t>(tex));
 	};
 
     ifd::FileDialog::getInstance().deleteTexture = [](void* tex) {

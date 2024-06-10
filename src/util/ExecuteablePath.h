@@ -5,7 +5,7 @@
 #include <limits>
 
 #ifdef _WIN32
-#include <windows.h>
+#include "src/util/Windows.h"
 #elif defined(__linux__)
 #include <unistd.h>
 #elif defined(__APPLE__)

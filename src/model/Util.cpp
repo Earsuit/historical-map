@@ -1,5 +1,9 @@
 #include "src/model/Util.h"
 
+#ifdef _WIN32
+    #define _USE_MATH_DEFINES   // otherwise we will get undefined symbols from cmath on win
+#endif
+
 #include <cmath>
 #include <algorithm>
 

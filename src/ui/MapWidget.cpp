@@ -5,12 +5,28 @@
 #include "external/imgui/imgui.h"
 #include "external/imgui/misc/cpp/imgui_stdlib.h"
 #include "external/implot/implot_internal.h"
+
+#if defined(_MSC_VER) && _MSC_VER >= 1920
+// C++20 or later compatibility: define std::result_of using std::invoke_result
+// we have compiler flag for this for clang
+namespace std {
+template<typename>
+struct result_of;
+
+template<typename F, typename... Args>
+struct result_of<F(Args...)> : std::invoke_result<F, Args...> {};
+}
+#endif
 #include "mapbox/polylabel.hpp"
 
 #include <cmath>
 #include <algorithm>
 #include <functional>
 #include <limits>
+
+#ifdef _WIN32
+    #undef  TRANSPARENT // there is a marco defined somewhere
+#endif
 
 namespace ui {
 
@@ -19,8 +35,8 @@ constexpr auto AXIS_FLAGS = ImPlotAxisFlags_NoLabel | ImPlotAxisFlags_NoGridLine
                             ImPlotAxisFlags_NoInitialFit | ImPlotAxisFlags_NoMenus |
                             ImPlotAxisFlags_NoMenus | ImPlotAxisFlags_NoHighlight;
 
-constexpr ImVec4 OVERLAY_BACKGROUND_COLOR = {0.65f, 0.65f, 0.65f, 0.35f};
-constexpr ImVec4 TRANSPARENT = {0.0f, 0.0f, 0.0f, 0.0f};
+constexpr const ImVec4 OVERLAY_BACKGROUND_COLOR = {0.65f, 0.65f, 0.65f, 0.35f};
+constexpr const ImVec4 TRANSPARENT = {0.0f, 0.0f, 0.0f, 0.0f};
 constexpr float OVERLAY_PAD = 10.0f;
 
 constexpr float POINT_SIZE = 2.0f;

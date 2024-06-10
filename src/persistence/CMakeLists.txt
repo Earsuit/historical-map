@@ -40,5 +40,6 @@ set(PERSISTENCE_SRC
 )
 
 add_library(libpersistence STATIC ${PERSISTENCE_SRC})
-target_link_libraries(libpersistence PRIVATE sqlpp11::sqlite3 Threads::Threads)
+# we will not use sql in this libray but libraries linked to it
+target_link_libraries(libpersistence PRIVATE Threads::Threads INTERFACE SQLite::SQLite3 sqlpp11::sqlite3)
 add_dependencies(libpersistence command_header table_header)

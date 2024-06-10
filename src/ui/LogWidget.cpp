@@ -6,6 +6,10 @@
 
 #include <regex>
 
+#ifdef _WIN32
+    #undef  TRANSPARENT // there is a marco defined somewhere
+#endif
+
 namespace ui {
 
 constexpr ImVec2 WINDOW_SIZE{800, 200};
