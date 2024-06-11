@@ -61,7 +61,9 @@ private:
     {
         bool operator()(const ItType& lhs, const ItType& rhs) const
         {
-            return std::distance(lhs, rhs);
+            // the original compare logic is wrong,
+            // we have to follow strict weak ordering
+            return &(*lhs) < &(*rhs);
         }
     };
 

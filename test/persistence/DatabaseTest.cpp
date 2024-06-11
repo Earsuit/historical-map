@@ -10,8 +10,8 @@ namespace {
 using namespace sqlpp::sqlite3;
 
 // https://www.sqlite.org/inmemorydb.html
-// share the same in memory database from two connections
-constexpr auto DATABASE_NAME = "file:memdb1?mode=memory&cache=shared";
+// in memory database from two connections
+constexpr auto DATABASE_NAME = "file:memdb1?mode=memory";
 
 class DatabaseTest : public ::testing::Test {
 public:
@@ -19,6 +19,19 @@ public:
         database{config},
         monitor{config}
     {
+    }
+
+    ~DatabaseTest()
+    {
+        // clear the in-memory to remove the cache in Windows
+        monitor.execute("DELETE FROM yearCountries");
+        monitor.execute("DELETE FROM yearCities");
+        monitor.execute("DELETE FROM cities");
+        monitor.execute("DELETE FROM yearNotes");
+        monitor.execute("DELETE FROM notes");
+        monitor.execute("DELETE FROM years");
+        monitor.execute("DELETE FROM countries");
+        monitor.execute("DELETE FROM borders");
     }
 
     std::shared_ptr<connection_config> config = std::make_shared<connection_config>(DATABASE_NAME, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,  "", true);
@@ -32,9 +45,7 @@ TEST_F(DatabaseTest, InsertEmpty)
 
     database.upsert(data);
 
-    auto t = database.load(1900);
-
-    EXPECT_EQ(t, data);
+    EXPECT_EQ(database.load(1900), data);
 }
 
 TEST_F(DatabaseTest, RemoveEmpty)
