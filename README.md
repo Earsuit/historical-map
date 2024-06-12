@@ -35,3 +35,19 @@ clang (>16) from Homebrew or MacPort.
 2. `cmake ..` or `cmake -DGTEST_ENABLE=ON ..` if you want to enable test
 3. `make -j`
 4. `ctest` if you want to run test
+
+## Compile on Windows
+
+According to [Compiler support for C++20](https://en.cppreference.com/w/cpp/compiler_support/20), 
+MSVC >= 19.28 is required to support Parenthesized initialization of aggregates.
+
+### Setup envirnment
+
+The program depends on  `glew`, `glfw3`, `sqlite3` and `curl`, which can be installed by vcpkg.
+
+### Compile
+
+1. `mkdir build && cd build`
+2. `cmake -B . -S .. -DCMAKE_TOOLCHAIN_FILE=[path to vcpkg]\scripts\buildsystems\vcpkg.cmake` or add `-DGTEST_ENABLE=ON` if you want to enable test
+3. `cmake --build . -j`
+4. `ctest` if you want to run test
