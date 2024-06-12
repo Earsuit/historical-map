@@ -11,7 +11,7 @@ using namespace sqlpp::sqlite3;
 
 // https://www.sqlite.org/inmemorydb.html
 // in memory database from two connections
-constexpr auto DATABASE_NAME = "file:memdb1?mode=memory";
+constexpr auto DATABASE_NAME = "file:memdb1?mode=memory&cache=shared";
 
 class DatabaseTest : public ::testing::Test {
 public:

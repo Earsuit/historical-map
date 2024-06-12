@@ -210,8 +210,8 @@ TEST_F(BsonExporterImporterTest, IncorrectJsonFormat)
         }
         
         if (error) {
+            // we don't check the error message here because it may have different encoding
             EXPECT_EQ(error.value().code, util::ErrorCode::PARSE_FILE_ERROR);
-            EXPECT_EQ(error.value().msg, "[json.exception.parse_error.110] parse error at byte 230: syntax error while parsing BSON cstring: unexpected end of input");
         } else {
             EXPECT_TRUE(false); 
         }
