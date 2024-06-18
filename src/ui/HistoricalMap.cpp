@@ -16,6 +16,7 @@
 
 #include <stdexcept>
 #include <string>
+#include <libintl.h>
 
 namespace ui {
 constexpr int WINDOW_WIDTH = 1080 * 1.5;
@@ -83,7 +84,7 @@ HistoricalMap::HistoricalMap():
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 
     // Create window with graphics context
-    window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Historical Map", NULL, NULL);
+    window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, gettext("Historical Map"), NULL, NULL);
     if (window == NULL) {
         throw std::runtime_error("Failed to create window.");
     }
@@ -158,6 +159,8 @@ void HistoricalMap::start()
     iniFilePath = (executableLocation / INI_FILE_NAME).string();
     io.IniFilename = iniFilePath.c_str();
 
+    const auto languages = presenter.handleGetLanguages();
+
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
 
@@ -174,18 +177,28 @@ void HistoricalMap::start()
         buildDockSpace();
 
         if (ImGui::BeginMainMenuBar()) {
-            if (ImGui::BeginMenu("File")) {
-                if (ImGui::MenuItem("Import")) {
+            if (ImGui::BeginMenu(gettext("File"))) {
+                if (ImGui::MenuItem(gettext("Import"))) {
                     if (dynamic_cast<DefaultInfoWidget*>(infoWidget.get()) != nullptr) {
                         presenter.handleClickImport();
                         infoWidget = std::make_unique<ImportInfoWidget>();
                     }
                 }
 
-                if (ImGui::MenuItem("Export")) {
+                if (ImGui::MenuItem(gettext("Export"))) {
                     if (dynamic_cast<DefaultInfoWidget*>(infoWidget.get()) != nullptr) {
                         presenter.handleClickExport();
                         infoWidget = std::make_unique<ExportInfoWidget>();
+                    }
+                }
+
+                ImGui::EndMenu();
+            }
+
+            if (ImGui::BeginMenu(gettext("Language"))) {
+                for (const auto& language : languages) {
+                    if (ImGui::MenuItem(language.c_str())) {
+                        presenter.handleSetLanguage(language);
                     }
                 }
 
@@ -283,8 +296,8 @@ void HistoricalMap::buildDockSpace()
 
 		// we now dock our windows into the docking node we made above
         ImGui::DockBuilderDockWindow(MAP_WIDGETS_DOCKSPACE_WINDOW_NAME, dockspace);
-		ImGui::DockBuilderDockWindow(LOG_WIDGET_NAME, down);
-		ImGui::DockBuilderDockWindow(TILE_SOURCE_WIDGET_NAME, down);
+		ImGui::DockBuilderDockWindow(gettext(LOG_WIDGET_NAME), down);
+		ImGui::DockBuilderDockWindow(gettext(TILE_SOURCE_WIDGET_NAME), down);
         ImGui::DockBuilderDockWindow(INFO_WIDGET_NAME, right);
 		ImGui::DockBuilderFinish(dockspace);
     }

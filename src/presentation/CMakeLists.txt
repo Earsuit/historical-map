@@ -26,4 +26,6 @@ SET(PRESENTATION_SRC
 )
 
 add_library(libpresentation STATIC ${PRESENTATION_SRC})
-target_link_libraries(libpresentation PRIVATE libtile libmodel liblogger)
+target_link_libraries(libpresentation PRIVATE libtile libmodel liblogger Intl::Intl)
+
+generatePoFile("presentation" ${CMAKE_CURRENT_SOURCE_DIR} "${PRESENTATION_SRC}")

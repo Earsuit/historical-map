@@ -7,6 +7,8 @@
 #include "imgui.h"
 #include "ImFileDialog.h"
 
+#include <libintl.h>
+
 namespace ui {
 const auto SELECTION = "Selected";
 constexpr auto FILE_SELECT_POPUP_NAME = "Select file";
@@ -59,7 +61,7 @@ ImportInfoWidget::ImportInfoWidget():
                           this,
                           &ImportInfoWidget::setRefreshAll);
 
-    ifd::FileDialog::getInstance().open(FILE_SELECT_POPUP_NAME, FILE_SELECT_POPUP_NAME, fileExtensionFormat());
+    ifd::FileDialog::getInstance().open(gettext(FILE_SELECT_POPUP_NAME), FILE_SELECT_POPUP_NAME, fileExtensionFormat());
 }
 
 ImportInfoWidget::~ImportInfoWidget()
@@ -105,7 +107,7 @@ void ImportInfoWidget::setRefreshAll(int year) noexcept
 void ImportInfoWidget::displayYearControlSection()
 {
     int year = currentYear;
-    if (ImGui::SliderInt("##", &year, yearPresenter.handleGetMinYear(), yearPresenter.handleGetMaxYear(), "Year %d", ImGuiSliderFlags_AlwaysClamp)) {
+    if (ImGui::SliderInt("##", &year, yearPresenter.handleGetMinYear(), yearPresenter.handleGetMaxYear(), gettext("Year %d"), ImGuiSliderFlags_AlwaysClamp)) {
         yearPresenter.handleSetYear(year);
     }
     
@@ -121,7 +123,7 @@ void ImportInfoWidget::displayYearControlSection()
     ImGui::PopButtonRepeat();
 
     ImGui::SameLine();
-    helpMarker("Ctrl + click to maually set the year");
+    helpMarker(gettext("Ctrl + click to maually set the year"));
 }
 
 std::string ImportInfoWidget::fileExtensionFormat() const
@@ -157,12 +159,12 @@ void ImportInfoWidget::doImport()
     }
 
     if (ImGui::BeginPopupModal(IMPORT_PROGRESS_POPUP_NAME, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::Text("Imported: ");
+        ImGui::Text(gettext("Imported: "));
         ImGui::SameLine();
 
         if (ImGui::BeginListBox("##")) {
             for (const auto year : importPresenter.handleGetImportedYears()) {
-                ImGui::Text("Year %d", year);
+                ImGui::Text(gettext("Year %d"), year);
             }
             
             ImGui::EndListBox();
@@ -180,7 +182,7 @@ void ImportInfoWidget::doImport()
             }
         }
 
-        centeredEnableableButton(IMPORT_COMPLETE_BUTTON,
+        centeredEnableableButton(gettext(IMPORT_COMPLETE_BUTTON),
                                  this->importComplete,
                                  [](){});
 
@@ -196,7 +198,7 @@ void ImportInfoWidget::doImport()
         ImGui::Text("%s", errorMsg.c_str());
 
         alignForWidth(ImGui::CalcTextSize(DONE_BUTTON).x);
-        if (ImGui::Button(DONE_BUTTON)) {
+        if (ImGui::Button(gettext(DONE_BUTTON))) {
             ImGui::CloseCurrentPopup();
             isComplete = true;
         }
@@ -218,18 +220,18 @@ void ImportInfoWidget::paint()
             updateNoteResources();
             updateSelectAll();
 
-            if (ImGui::Button("Confirm")) {
+            if (ImGui::Button(gettext("Confirm"))) {
                 databaseSaverPresenter.handleSaveAll();
                 ImGui::OpenPopup(WRITE_TO_DATABASE_PROGRESS_POPUP);
             }
             ImGui::SameLine();
-            if (ImGui::Button("Cancel")) {
+            if (ImGui::Button(gettext("Cancel"))) {
                 isComplete = true;
             }
 
             displaySaveToDatabasePopup();
 
-            if (ImGui::Checkbox("Select all", &selectAll)) {
+            if (ImGui::Checkbox(gettext("Select all"), &selectAll)) {
                 if (selectAll) {
                     infoSelectorPresenter.handleSelectAll();
                 } else {
@@ -237,22 +239,22 @@ void ImportInfoWidget::paint()
                 }
             }
 
-            if (ImGui::TreeNode("Imported")) {
-                ImGui::SeparatorText("Countries");
+            if (ImGui::TreeNode(gettext("Imported"))) {
+                ImGui::SeparatorText(gettext("Countries"));
                 for (const auto& [country, contour] : importedCountries) {
                     selectCountry(country);
                     ImGui::SameLine();
                     displayCountry(country, contour);
                 }
 
-                ImGui::SeparatorText("Cities");
+                ImGui::SeparatorText(gettext("Cities"));
                 for (const auto& [city, coord] : importedCities) {
                     selectCity(city);
                     ImGui::SameLine();
                     displayCity(city, coord);
                 }
 
-                ImGui::SeparatorText("Note");
+                ImGui::SeparatorText(gettext("Note"));
                 selectNote(importedNote);
                 displayNote(importedNote);
 
@@ -260,18 +262,18 @@ void ImportInfoWidget::paint()
                 ImGui::Spacing();
             }
 
-            if (ImGui::TreeNode("Database")) {
-                ImGui::SeparatorText("Countries");
+            if (ImGui::TreeNode(gettext("Database"))) {
+                ImGui::SeparatorText(gettext("Countries"));
                 for (const auto& [country, contour] : databaseCountries) {
                     displayCountry(country, contour);
                 }
 
-                ImGui::SeparatorText("Cities");
+                ImGui::SeparatorText(gettext("Cities"));
                 for (const auto& [city, coord] : databaseCities) {
                     displayCity(city, coord);
                 }
 
-                ImGui::SeparatorText("Note");
+                ImGui::SeparatorText(gettext("Note"));
                 displayNote(databaseNote);
 
                 ImGui::TreePop();
@@ -362,12 +364,12 @@ void ImportInfoWidget::displayCoordinate(const std::string& uniqueId,
     auto latitude = coord.latitude;
     auto longitude = coord.longitude;
     ImGui::PushID(uniqueId.c_str());
-    textFloatWithLabelOnLeft("latitude", latitude);
+    textFloatWithLabelOnLeft(gettext("latitude"), latitude);
     if (ImGui::IsItemHovered()) {
         databaseInfoPresenter.setHoveredCoord(coord);
     }
     ImGui::SameLine();
-    textFloatWithLabelOnLeft("longitude", longitude);
+    textFloatWithLabelOnLeft(gettext("longitude"), longitude);
     if (ImGui::IsItemHovered()) {
         databaseInfoPresenter.setHoveredCoord(coord);
     }
@@ -376,9 +378,9 @@ void ImportInfoWidget::displayCoordinate(const std::string& uniqueId,
 
 void ImportInfoWidget::displaySaveToDatabasePopup()
 {
-    if (ImGui::BeginPopupModal(WRITE_TO_DATABASE_PROGRESS_POPUP)) {
+    if (ImGui::BeginPopupModal(gettext(WRITE_TO_DATABASE_PROGRESS_POPUP))) {
         simpleProgressDisplayer(databaseSaverPresenter.getProgress(),
-                                DONE_BUTTON,
+                                gettext(DONE_BUTTON),
                                 databaseSaverPresenter.isSaveComplete(),
                                 [this](){
                                     this->isComplete = true;

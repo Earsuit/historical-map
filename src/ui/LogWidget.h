@@ -13,11 +13,12 @@
 #include <optional>
 
 namespace ui {
+#define __(x) x     // gettext translation registration for constexpr
 
 constexpr uint8_t BIT_NUM = 9;
 // The real logs we can store is 2^n -1 due to start == end is treat as empty
 constexpr int MAX_SIZE = (1 << BIT_NUM);
-constexpr auto LOG_WIDGET_NAME = "Log";
+constexpr auto LOG_WIDGET_NAME = __("Log###Log");
 
 class LogWidget : public logger::LogWidgetInterface {
 public:

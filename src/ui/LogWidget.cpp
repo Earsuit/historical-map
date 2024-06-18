@@ -5,6 +5,7 @@
 #include "external/imgui/misc/cpp/imgui_stdlib.h"
 
 #include <regex>
+#include <libintl.h>
 
 #ifdef _WIN32
     #undef  TRANSPARENT // there is a marco defined somewhere
@@ -29,10 +30,10 @@ LogWidget::LogWidget():
 void LogWidget::paint()
 {
     ImGui::SetNextWindowSize(WINDOW_SIZE, ImGuiCond_FirstUseEver);
-    if (ImGui::Begin(LOG_WIDGET_NAME)) {
-        bool clear = ImGui::Button("Clear");
+    if (ImGui::Begin(gettext(LOG_WIDGET_NAME))) {
+        bool clear = ImGui::Button(gettext("Clear"));
         ImGui::SameLine();
-        bool copy = ImGui::Button("Copy");
+        bool copy = ImGui::Button(gettext("Copy"));
         ImGui::SameLine();
         ImGui::SetNextItemWidth(LEVEL_COMBO_WIDTH);
         if (ImGui::Combo("##Level", &logLevel, LOG_LEVEL, IM_ARRAYSIZE(LOG_LEVEL))) {
@@ -43,13 +44,13 @@ void LogWidget::paint()
         if (filterEnable) {
             ImGui::BeginDisabled();
         }
-        ImGui::InputText("Filter", &filter);
+        ImGui::InputText(gettext("Filter"), &filter);
         if (filterEnable) {
             ImGui::EndDisabled();
         }
 
         ImGui::SameLine();
-        ImGui::Checkbox("Set", &filterEnable);
+        ImGui::Checkbox(gettext("Set"), &filterEnable);
 
         ImGui::Separator();
 
@@ -108,7 +109,7 @@ void LogWidget::updateLogs()
             }
             catch (const std::regex_error& e) {
                 filterEnable = false;
-                logs[end++] = Log{"Invalid regex string: " + std::string(e.what()), ERROR_COLLOR};
+                logs[end++] = Log{gettext("Invalid regex string: ") + std::string(e.what()), ERROR_COLLOR};
             }
         } else {
             logs[end++] = std::move(log);

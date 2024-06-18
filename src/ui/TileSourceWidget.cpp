@@ -5,13 +5,15 @@
 #include "external/imgui/imgui.h"
 #include "external/imgui/misc/cpp/imgui_stdlib.h"
 
+#include <libintl.h>
+
 #ifdef _WIN32
     #undef  TRANSPARENT // there is a marco defined somewhere
 #endif
 
 namespace ui {
 constexpr auto TRANSPARENT = IM_COL32(0, 0, 0, 0);
-const auto TILE_SERVER_LOOKUP = "For different tile server url, please check https://www.trailnotes.org/FetchMap/TileServeSource.html";
+const auto TILE_SERVER_LOOKUP = __("For different tile server url, please check https://www.trailnotes.org/FetchMap/TileServeSource.html");
 constexpr auto LOGGER_NAME = "TileSourceWidget";
 
 TileSourceWidget::TileSourceWidget():
@@ -32,17 +34,17 @@ TileSourceWidget::TileSourceWidget():
 
 void TileSourceWidget::paint()
 {
-    ImGui::Begin(TILE_SOURCE_WIDGET_NAME);
+    ImGui::Begin(gettext(TILE_SOURCE_WIDGET_NAME));
 
-    ImGui::Combo("Source", &sourceIdx, sourceList.c_str());
+    ImGui::Combo(gettext("Source"), &sourceIdx, sourceList.c_str());
     
-    if (ImGui::Combo("Tile Data Processor", &tileEngineIdx, engineListString.c_str())) {
+    if (ImGui::Combo(gettext("Tile Data Processor"), &tileEngineIdx, engineListString.c_str())) {
         if (auto ret = widgetPresenter.handleSetTileEngine(engineList[tileEngineIdx]); !ret) {
-            logger.error("Failed to set tile engine, error {}", ret.error().msg);
+            logger.error("{} {}", gettext("Failed to set tile engine, error"), ret.error().msg);
         }
     }
 
-    ImGui::SeparatorText("Configuration");
+    ImGui::SeparatorText(gettext("Configuration"));
 
     showConfigWidget[sourceIdx]();
 
@@ -57,11 +59,11 @@ void TileSourceWidget::showTileSourceUrlConfig()
         presenter.handleSetUrl(url);
     }
     ImGui::SameLine();
-    if (ImGui::Button("Set")) {
+    if (ImGui::Button(gettext("Set"))) {
         presenter.handleSetTileSource();
     }
     ImGui::PushStyleColor(ImGuiCol_FrameBg, TRANSPARENT);  // Transparent background
-    ImGui::InputText("##text", (char*)TILE_SERVER_LOOKUP, strlen(TILE_SERVER_LOOKUP) + 1, ImGuiInputTextFlags_ReadOnly);
+    ImGui::InputText("##text", gettext(TILE_SERVER_LOOKUP), strlen(gettext(TILE_SERVER_LOOKUP)) + 1, ImGuiInputTextFlags_ReadOnly);
     ImGui::PopStyleColor(1);
 }
 }

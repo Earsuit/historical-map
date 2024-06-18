@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <sstream>
 #include <iomanip>
+#include <libintl.h>
 
 namespace presentation {
 constexpr int BBOX_ZOOM_LEVEL = 0;
@@ -105,21 +106,21 @@ std::string MapWidgetPresenter::handleGetOverlayText() const
 
     text << std::fixed << std::setprecision(TEXT_DECIMAL_PRECISION);
 
-    text << "Cursor at: ";
+    text << gettext("Cursor at: ");
     if (auto mouse = view.getMousePos(); mouse) {
-        text << "lon " 
+        text << gettext("lon ")
              << x2Longitude(mouse->x)
-             << ", lat " 
+             << gettext(", lat ")
              << y2Latitude(mouse->y);
     }
     text << "\n"
-         << "View range: west "
+         << gettext("View range: west ")
          << bbox.west
-         << ", east "
+         << gettext(", east ")
          << bbox.east
-         << ", \n\t\t\t\t\t north "
+         << gettext(", \n\t\t\t\t\t north ")
          << bbox.north
-         << ", south "
+         << gettext(", south ")
          << bbox.south;
 
     return text.str();

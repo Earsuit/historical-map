@@ -7,7 +7,7 @@
 #include <memory>
 
 namespace presentation {
-const auto IMPORT_SOURCE = "Import";
+const auto IMPORT_SOURCE = "Imported";
 
 struct Color {
     float red;

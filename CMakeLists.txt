@@ -6,6 +6,12 @@ set(CMAKE_CXX_STANDARD 20 ON CACHE INTERNAL "")
 set(CMAKE_CXX_STANDARD_REQUIRED ON ON CACHE INTERNAL "")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
 
+set(LOCALE "zh_CN.UTF-8")
+set(LOCALE_DIR "${CMAKE_SOURCE_DIR}/locale")
+set(SINGLE_PO_FILE "${CMAKE_BINARY_DIR}/HistoricalInfo.po")
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+
 if (APPLE)
 # suppress the warning of OpenGL API deprecated since MacOS 10.14
 # add std::result_of back to c++20 for mapbox/variant, 
@@ -22,6 +28,10 @@ find_package(glfw3 REQUIRED)
 find_package(Threads REQUIRED)
 find_package(CURL REQUIRED)
 find_package(SQLite3 REQUIRED)
+find_package(Intl REQUIRED)
+find_package(Gettext REQUIRED)
+
+include(generatePoFile)
 
 if (UNIX)
     find_package(PkgConfig REQUIRED)
@@ -91,6 +101,7 @@ include_directories(external/magic_enum/include)
 include_directories(${CMAKE_BINARY_DIR}) # For generated headers
 include_directories(${sqlpp11_SOURCE_DIR}/include)
 include_directories(${date_SOURCE_DIR}/include) # dependency of sqlpp11
+include_directories(${Intl_INCLUDE_DIRS})
 
 SET(IMGUI_SRC 
     ${CMAKE_SOURCE_DIR}/external/imgui/imgui.cpp
@@ -135,3 +146,30 @@ add_custom_command(TARGET HistoricalMap POST_BUILD
     ${CMAKE_SOURCE_DIR}/fonts/LXGWNeoXiHei.ttf  
     $<TARGET_FILE_DIR:HistoricalMap>    # use TARGET_FILE_DIR to ensure the font is copied to the directory with the executable, such as build/Debug
 )
+
+
+set(TRANS_DIR $<TARGET_FILE_DIR:HistoricalMap>/locale/zh_CN/LC_MESSAGES/)
+add_custom_command(
+    TARGET HistoricalMap POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${TRANS_DIR}
+    COMMENT "Creating directory: ${TRANS_DIR}"
+)
+
+# combine po files to one single file
+add_custom_command(
+    OUTPUT PO_DUMMY
+    COMMAND msgcat -o ${SINGLE_PO_FILE} ${LOCALE_DIR}/${LOCALE}/*.po
+    COMMENT "Merging all po files into a single one"
+)
+add_custom_target(HistoricalInfo_po DEPENDS PO_DUMMY)
+
+# translation po -> mo file
+# It is up to the programmer to decide whether to update the mo file
+# because translation is a manual work
+add_custom_command(
+    OUTPUT DUMMY
+    COMMAND msgfmt -o ${TRANS_DIR}/HistoricalInfo.mo ${SINGLE_PO_FILE}
+    COMMENT "Compile the po file"
+    DEPENDS HistoricalInfo_po
+)
+add_custom_target(translation DEPENDS DUMMY)

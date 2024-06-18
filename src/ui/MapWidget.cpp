@@ -23,6 +23,7 @@ struct result_of<F(Args...)> : std::invoke_result<F, Args...> {};
 #include <algorithm>
 #include <functional>
 #include <limits>
+#include <libintl.h>
 
 #ifdef _WIN32
     #undef  TRANSPARENT // there is a marco defined somewhere
@@ -264,11 +265,11 @@ void MapWidget::renderRightClickMenu()
             presenter.handleRequestCitiesFromDatabase();
         }
 
-        if (ImGui::MenuItem("Add new country")) {
+        if (ImGui::MenuItem(gettext("Add new country"))) {
             openAddNewCountryPopup = true;
         }
         
-        if (ImGui::BeginMenu("Add to exist country")) {
+        if (ImGui::BeginMenu(gettext("Add to exist country"))) {
             const auto countries = presenter.handleRequestCountryList();
             for (const auto& country : countries) {
                 if (ImGui::MenuItem(country.c_str())) {
@@ -279,11 +280,11 @@ void MapWidget::renderRightClickMenu()
             ImGui::EndMenu();
         }
 
-        if (ImGui::MenuItem("Add new city")) {
+        if (ImGui::MenuItem(gettext("Add new city"))) {
             openAddNewCityPopup = true;
         }
 
-        if (ImGui::BeginMenu("Add city from database")) {
+        if (ImGui::BeginMenu(gettext("Add city from database"))) {
             std::scoped_lock lk{lock};
             for (const auto& city : databaseCities) {
                 if (ImGui::MenuItem(city.c_str())) {
@@ -307,7 +308,7 @@ void MapWidget::renderRightClickMenu()
 
     if (ImGui::BeginPopup(ADD_NEW_COUNTRY_POPUP_NAME)) {
         ImGui::InputTextWithHint("##", "Country Name", &newCountryName);
-        if (ImGui::Button("Add") & !newCountryName.empty()) {
+        if (ImGui::Button(gettext("Add")) & !newCountryName.empty()) {
             if (presenter.handleAddCountry(newCountryName, 
                                            model::Vec2{static_cast<float>(rightClickMenuPos.x), static_cast<float>(rightClickMenuPos.y)})) {
                 newCountryName.clear();
@@ -319,7 +320,7 @@ void MapWidget::renderRightClickMenu()
 
     if (ImGui::BeginPopup(ADD_NEW_CITY_POPUP_NAME)) {
         ImGui::InputTextWithHint("##", "City Name", &newCityName);
-        if (ImGui::Button("Add") & !newCityName.empty()) {
+        if (ImGui::Button(gettext("Add")) & !newCityName.empty()) {
             if (presenter.handleAddCity(newCityName, 
                                         model::Vec2{static_cast<float>(rightClickMenuPos.x), static_cast<float>(rightClickMenuPos.y)})) {
                 newCountryName.clear();
@@ -346,7 +347,7 @@ void MapWidget::renderOverlay()
                       ImVec2(0, 0), 
                       ImGuiChildFlags_AlwaysUseWindowPadding | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_AlwaysAutoResize, 
                       ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove);
-    ImGui::Text("%s", source.c_str());
+    ImGui::Text("%s", gettext(source.c_str()));
     ImGui::Text("%s", presenter.handleGetOverlayText().c_str());
     ImGui::PopStyleColor(1);
     ImGui::EndChild();
@@ -375,7 +376,7 @@ void MapWidget::renderButtons()
     }
     ImGui::PopButtonRepeat();
     ImGui::SameLine();
-    if (ImGui::Button("reset")) {
+    if (ImGui::Button(gettext("reset"))) {
         resetZoom = true;
     }
 

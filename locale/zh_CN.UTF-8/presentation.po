@@ -1,0 +1,44 @@
+# Chinese translations for PACKAGE package
+# PACKAGE 软件包的简体中文翻译.
+# Copyright (C) 2024 THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# Automatically generated, 2024.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Cursor at: "
+msgstr "鼠标坐标："
+
+msgid "lon "
+msgstr "经度"
+
+msgid ", lat "
+msgstr "，纬度"
+
+msgid "View range: west "
+msgstr "视野范围：西"
+
+msgid ", east "
+msgstr "，东"
+
+msgid ""
+", \n"
+"\t\t\t\t\t north "
+msgstr ""
+", \n"
+"\t\t\t\t  北"
+
+msgid ", south "
+msgstr "，南"
+
+msgid "Start year must less than end year"
+msgstr "起始年代必须小于终止年代"

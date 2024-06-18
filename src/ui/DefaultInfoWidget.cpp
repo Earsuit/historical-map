@@ -6,6 +6,8 @@
 #include "external/imgui/imgui.h"
 #include "external/imgui/misc/cpp/imgui_stdlib.h"
 
+#include <libintl.h>
+
 namespace ui {
 constexpr int NAME_INPUT_WIDTH = 100;
 constexpr auto POPUP_WINDOW_NAME = "Save to years";
@@ -62,7 +64,7 @@ DefaultInfoWidget::~DefaultInfoWidget()
 
 void DefaultInfoWidget::displayYearControlSection()
 {
-    std::string yearLabel = "Year %d";
+    std::string yearLabel = gettext("Year %d");
     if (isUnsaved) {
         yearLabel += " *";
     }
@@ -84,7 +86,7 @@ void DefaultInfoWidget::displayYearControlSection()
     ImGui::PopButtonRepeat();
 
     ImGui::SameLine();
-    helpMarker("Ctrl + click to maually set the year");
+    helpMarker(gettext("Ctrl + click to maually set the year"));
 }
 
 void DefaultInfoWidget::setOnYearChange(int year) noexcept
@@ -102,7 +104,7 @@ void DefaultInfoWidget::paint()
     if (ImGui::Begin(INFO_WIDGET_NAME, nullptr,  ImGuiWindowFlags_NoTitleBar)) {
         displayYearControlSection();
 
-        if (ImGui::Button("Refresh")) {
+        if (ImGui::Button(gettext("Refresh"))) {
             logger.debug("Refresh data of year {} from database.", currentYear);
             
             infoPresenter.handleClearHistoricalInfo();
@@ -115,13 +117,13 @@ void DefaultInfoWidget::paint()
         updateNoteResources();
         updateNewInfoEntry();
 
-        if (ImGui::Button("Save current year")) {
+        if (ImGui::Button(gettext("Save current year"))) {
             databaseSaverPresenter.handleSaveSameForRange(currentYear, currentYear);
             ImGui::OpenPopup(PROGRESS_POPUP_WINDOW_NAME);
         }
 
         ImGui::SameLine();
-        if (ImGui::Button("Save to years")) {
+        if (ImGui::Button(gettext("Save to years"))) {
             startYear = endYear = currentYear;
             ImGui::OpenPopup(POPUP_WINDOW_NAME);
         }
@@ -131,13 +133,13 @@ void DefaultInfoWidget::paint()
 
         infoPresenter.clearHoveredCoord();
 
-        ImGui::SeparatorText("Countries");
+        ImGui::SeparatorText(gettext("Countries"));
         displayCountryInfos();
 
-        ImGui::SeparatorText("Cities");
+        ImGui::SeparatorText(gettext("Cities"));
         displayCityInfos();
 
-        ImGui::SeparatorText("Note");
+        ImGui::SeparatorText(gettext("Note"));
         displayNote();
 
         ImGui::End();
@@ -154,7 +156,7 @@ void DefaultInfoWidget::displayCountryInfos()
     ImGui::InputTextWithHint("##Country name", "Country name", &countryName);
     ImGui::PopItemWidth();
     ImGui::SameLine();
-    if (ImGui::Button("Add country") && !countryName.empty()) {
+    if (ImGui::Button(gettext("Add country")) && !countryName.empty()) {
         logger.debug("Add country button pressed to add country {} at year {}", countryName, currentYear);
         infoPresenter.handleAddCountry(countryName);
         countryName.clear();
@@ -173,7 +175,7 @@ void DefaultInfoWidget::displayCountry(const std::string& name, const std::vecto
             }
 
             ImGui::SameLine();
-            if (ImGui::Button(("Delete##" + std::to_string(idx) + name).c_str())) {
+            if (ImGui::Button((gettext("Delete##") + std::to_string(idx) + name).c_str())) {
                 infoPresenter.handleDeleteFromContour(name, idx);
             }
             idx++;
@@ -187,13 +189,13 @@ void DefaultInfoWidget::displayCountry(const std::string& name, const std::vecto
 
         ImGui::PushItemWidth(COORDINATE_INPUT_WIDTH);
         // input filed for new coordinate
-        ImGui::InputText("Latitude", &latitude);
+        ImGui::InputText(gettext("latitude"), &latitude);
         ImGui::SameLine();
-        ImGui::InputText("Longitude", &longitude);
+        ImGui::InputText(gettext("longitude"), &longitude);
         ImGui::PopItemWidth();
         ImGui::SameLine();
 
-        if (ImGui::Button("Add") && !latitude.empty() && !longitude.empty()) {
+        if (ImGui::Button(gettext("Add")) && !latitude.empty() && !longitude.empty()) {
             float lat, lon;
             try {
                 lat = std::stod(latitude);
@@ -210,7 +212,7 @@ void DefaultInfoWidget::displayCountry(const std::string& name, const std::vecto
             longitude.clear();
         }
 
-        if (ImGui::Button("Delete country")) {
+        if (ImGui::Button(gettext("Delete country"))) {
             this->logger.debug("Delete country {}", name);
             infoPresenter.handleRemoveCountry(name);
         }
@@ -228,12 +230,12 @@ persistence::Coordinate DefaultInfoWidget::displayCoordinate(const std::string& 
     auto latitude = coord.latitude;
     auto longitude = coord.longitude;
     ImGui::PushID(uniqueId.c_str());
-    inputFloatWithLabelOnLeft("latitude", latitude);
+    inputFloatWithLabelOnLeft(gettext("latitude"), latitude);
     if (ImGui::IsItemHovered()) {
         infoPresenter.setHoveredCoord(coord);
     }
     ImGui::SameLine();
-    inputFloatWithLabelOnLeft("longitude", longitude);
+    inputFloatWithLabelOnLeft(gettext("longitude"), longitude);
     if (ImGui::IsItemHovered()) {
         infoPresenter.setHoveredCoord(coord);
     }
@@ -249,16 +251,16 @@ void DefaultInfoWidget::displayCityInfos()
     }
 
     ImGui::PushItemWidth(NAME_INPUT_WIDTH);
-    ImGui::InputTextWithHint("##City name", "City name", &newCityName);
+    ImGui::InputTextWithHint("##City name", gettext("City name"), &newCityName);
     ImGui::PopItemWidth();
 
     ImGui::SameLine();
     ImGui::PushItemWidth(COORDINATE_INPUT_WIDTH);
-    ImGui::InputTextWithHint("##CityLatitude" ,"Lat", &newCityLatitude);
+    ImGui::InputTextWithHint("##CityLatitude" , gettext("lat"), &newCityLatitude);
     ImGui::SameLine();
-    ImGui::InputTextWithHint("##CityLongitude", "Lon", &newCityLongitude);
+    ImGui::InputTextWithHint("##CityLongitude", gettext("lon"), &newCityLongitude);
     ImGui::PopItemWidth();
-    if (ImGui::Button("Add city") && !newCityName.empty() && !newCityLongitude.empty() && !newCityLatitude.empty()) {
+    if (ImGui::Button(gettext("Add city")) && !newCityName.empty() && !newCityLongitude.empty() && !newCityLatitude.empty()) {
         float lat, lon;
         try {
             lat = std::stod(newCityLatitude);
@@ -286,7 +288,7 @@ void DefaultInfoWidget::displayCity(const std::string& name, const persistence::
             infoPresenter.handleUpdateCityCoordinate(name, newCoordinate);
         }
 
-        if (ImGui::Button("Remove")) {
+        if (ImGui::Button(gettext("Remove"))) {
             this->logger.debug("Delete city {}", name);
             infoPresenter.handleRemoveCity(name);
         }
@@ -298,7 +300,7 @@ void DefaultInfoWidget::displayCity(const std::string& name, const persistence::
 
 void DefaultInfoWidget::displayNote()
 {
-    if (ImGui::Button("Clear")) {
+    if (ImGui::Button(gettext("Clear"))) {
         infoPresenter.handleUpdateNote("");
     }
 
@@ -311,11 +313,11 @@ void DefaultInfoWidget::savePopupWindow()
 {
     bool openSavePopup = false;
     if (ImGui::BeginPopup(POPUP_WINDOW_NAME)) {
-        ImGui::SeparatorText(POPUP_WINDOW_NAME);
-        ImGui::InputInt("Start", &startYear);
-        ImGui::InputInt("End", &endYear);
+        ImGui::SeparatorText(gettext(POPUP_WINDOW_NAME));
+        ImGui::InputInt(gettext("Start"), &startYear);
+        ImGui::InputInt(gettext("End"), &endYear);
         
-        if (ImGui::Button("Save")) {
+        if (ImGui::Button(gettext("Save"))) {
             if (databaseSaverPresenter.handleSaveSameForRange(startYear, endYear)) {
                 ImGui::CloseCurrentPopup();
                 openSavePopup = true;
@@ -335,7 +337,7 @@ void DefaultInfoWidget::saveProgressPopUp()
 {
     if (ImGui::BeginPopupModal(PROGRESS_POPUP_WINDOW_NAME)) {
         simpleProgressDisplayer(databaseSaverPresenter.getProgress(),
-                                "Done",
+                                gettext("Done"),
                                 databaseSaverPresenter.isSaveComplete(),
                                 [](){});
         ImGui::EndPopup();

@@ -8,7 +8,9 @@
 #include <functional>
 
 namespace ui {
-constexpr auto TILE_SOURCE_WIDGET_NAME = "Tile source";
+#define __(x) x     // gettext translation registration for constexpr
+
+constexpr auto TILE_SOURCE_WIDGET_NAME = __("Tile source###TileSource");
 
 class TileSourceWidget {
 public:

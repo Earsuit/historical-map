@@ -2,6 +2,8 @@
 #include "src/presentation/Util.h"
 #include "src/logger/LoggerManager.h"
 
+#include <libintl.h>
+
 namespace presentation {
 constexpr auto LOGGER_NAME = "DatabaseSaverPresenter";
 
@@ -17,7 +19,7 @@ DatabaseSaverPresenter::DatabaseSaverPresenter(const std::string& source):
 bool DatabaseSaverPresenter::handleSaveSameForRange(int startYear, int endYear)
 {
     if (startYear > endYear) {
-        logger.error("Start year must less than end year");
+        logger.error("{}", gettext("Start year must less than end year"));
         return false;
     }
     

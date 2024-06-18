@@ -7,6 +7,8 @@
 #include "ImFileDialog.h"
 #include "external/imgui/imgui.h"
 
+#include <libintl.h>
+
 namespace ui {
 const auto TO_SOURCE = "Export";
 constexpr auto SELECT_FORMAT_POPUP_NAME = "Select format";
@@ -81,7 +83,7 @@ void ExportInfoWidget::setRefreshAll(int year) noexcept
 void ExportInfoWidget::displayYearControlSection()
 {
     int year = currentYear;
-    if (ImGui::SliderInt("##", &year, yearPresenter.handleGetMinYear(), yearPresenter.handleGetMaxYear(), "Year %d", ImGuiSliderFlags_AlwaysClamp)) {
+    if (ImGui::SliderInt("##", &year, yearPresenter.handleGetMinYear(), yearPresenter.handleGetMaxYear(), gettext("Year %d"), ImGuiSliderFlags_AlwaysClamp)) {
         yearPresenter.handleSetYear(year);
     }
     
@@ -97,7 +99,7 @@ void ExportInfoWidget::displayYearControlSection()
     ImGui::PopButtonRepeat();
 
     ImGui::SameLine();
-    helpMarker("Ctrl + click to maually set the year");
+    helpMarker(gettext("Ctrl + click to maually set the year"));
 }
 
 void ExportInfoWidget::displayCoordinate(const std::string& uniqueId, const persistence::Coordinate& coord)
@@ -107,12 +109,12 @@ void ExportInfoWidget::displayCoordinate(const std::string& uniqueId, const pers
     auto latitude = coord.latitude;
     auto longitude = coord.longitude;
     ImGui::PushID(uniqueId.c_str());
-    textFloatWithLabelOnLeft("latitude", latitude);
+    textFloatWithLabelOnLeft(gettext("latitude"), latitude);
     if (ImGui::IsItemHovered()) {
         infoPresenter.setHoveredCoord(coord);
     }
     ImGui::SameLine();
-    textFloatWithLabelOnLeft("longitude", longitude);
+    textFloatWithLabelOnLeft(gettext("longitude"), longitude);
     if (ImGui::IsItemHovered()) {
         infoPresenter.setHoveredCoord(coord);
     }
@@ -164,7 +166,7 @@ void ExportInfoWidget::displayCity(const std::string& name, const persistence::C
 void ExportInfoWidget::displayNote()
 {
     if (!note.empty()) {
-        ImGui::SeparatorText("Note");
+        ImGui::SeparatorText(gettext("Note"));
 
         bool select = selectAll || infoSelectorPresenter.handleCheckIsNoteSelected();
         if (ImGui::Checkbox("##note", &select)) {
@@ -189,17 +191,17 @@ void ExportInfoWidget::paint()
         updateNoteResources();
         updateSelectAll();
 
-        if (ImGui::Button("Export as")) {
+        if (ImGui::Button(gettext("Export as"))) {
             ImGui::OpenPopup(SELECT_FORMAT_POPUP_NAME);
         }
         ImGui::SameLine();
-        if (ImGui::Button("Cancel")) {
+        if (ImGui::Button(gettext("Cancel"))) {
             isComplete = true;
         }
 
         displayExportPopup();
 
-        if (ImGui::Checkbox("Select all", &selectAll)) {
+        if (ImGui::Checkbox(gettext("Select all"), &selectAll)) {
             if (selectAll) {
                 infoSelectorPresenter.handleSelectAll();
             } else {
@@ -212,16 +214,16 @@ void ExportInfoWidget::paint()
             endYear = currentYear;
         }
         ImGui::SameLine();
-        helpMarker("Right click to select all for multiple years");
+        helpMarker(gettext("Right click to select all for multiple years"));
 
         displaySelectAllForMultipleYearsPopup();
 
-        ImGui::SeparatorText("Countries");
+        ImGui::SeparatorText(gettext("Countries"));
         for (const auto& [country, contour] : countries) {
             displayCountry(country, contour);
         }
 
-        ImGui::SeparatorText("Cities");
+        ImGui::SeparatorText(gettext("Cities"));
         for (const auto& [city, coord] : cities) {
             displayCity(city, coord);
         }
@@ -239,7 +241,7 @@ void ExportInfoWidget::displayExportPopup()
             if(ImGui::Selectable(format.c_str())) {
                 if (const auto ret = exportPresenter.handleSetFormat(format); ret) {
                     ImGui::CloseCurrentPopup();
-                    ifd::FileDialog::getInstance().save(SAVE_DIALOG_KEY, "Export historical info", "*." + format + " {." + format +"}");
+                    ifd::FileDialog::getInstance().save(SAVE_DIALOG_KEY, gettext("Export historical info"), "*." + format + " {." + format +"}");
                 } else {
                     logger.error("Not supported export format {}", format);
                 }
@@ -260,7 +262,7 @@ void ExportInfoWidget::displayExportPopup()
         ifd::FileDialog::getInstance().close();
     }
     
-    if (ImGui::BeginPopupModal(EXPORT_PROGRESS_POPUP_NAME, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+    if (ImGui::BeginPopupModal(gettext(EXPORT_PROGRESS_POPUP_NAME), nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
         if (!exportComplete) {
             if (auto ret = exportPresenter.handleCheckExportComplete(); ret) {
                 exportComplete = ret.value();
@@ -274,7 +276,7 @@ void ExportInfoWidget::displayExportPopup()
 
         if (!openFailPopup) {
             simpleProgressDisplayer(exportPresenter.handleRequestExportProgress(),
-                                    DONE_BUTTON_LABEL,
+                                    gettext(DONE_BUTTON_LABEL),
                                     exportComplete,
                                     [this](){
                                         this->isComplete = true;
@@ -290,8 +292,8 @@ void ExportInfoWidget::displayExportPopup()
         openFailPopup = false;
     }
 
-    if (ImGui::BeginPopupModal(EXPORT_FAIL_POPUP_NAME, &exportFailPopup, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::Text("Failed to export: %s", errorMsg.c_str());
+    if (ImGui::BeginPopupModal(gettext(EXPORT_FAIL_POPUP_NAME), &exportFailPopup, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::Text(gettext("Failed to export: %s"), errorMsg.c_str());
         ImGui::EndPopup();
     }
 }
@@ -299,11 +301,11 @@ void ExportInfoWidget::displayExportPopup()
 void ExportInfoWidget::displaySelectAllForMultipleYearsPopup()
 {
     if (ImGui::BeginPopup(SELECT_MULTIPLE_YEAR_POPUP_NAME)) {
-        ImGui::InputInt("Start", &startYear);
-        ImGui::InputInt("End", &endYear);
-        helpMarker(SELECT_MULTI_YEAR_YEAR_CONSTRAINTS);
+        ImGui::InputInt(gettext("Start"), &startYear);
+        ImGui::InputInt(gettext("End"), &endYear);
+        helpMarker(gettext(SELECT_MULTI_YEAR_YEAR_CONSTRAINTS));
 
-        if (ImGui::Button("Select")) {
+        if (ImGui::Button(gettext("Select"))) {
             if (startYear < endYear) {
                 infoSelectorPresenter.handleSelectAllForMultipleYears(startYear, endYear);
                 processMultiYearSelection = true;
@@ -321,13 +323,13 @@ void ExportInfoWidget::displaySelectAllForMultipleYearsPopup()
         }
     }
 
-    if (ImGui::BeginPopupModal(PROCESS_MULTI_YEAR_SELECTION_POPUP_NAME, &processMultiYearSelection, ImGuiWindowFlags_AlwaysAutoResize)) {
+    if (ImGui::BeginPopupModal(gettext(PROCESS_MULTI_YEAR_SELECTION_POPUP_NAME), &processMultiYearSelection, ImGuiWindowFlags_AlwaysAutoResize)) {
         if (!processMultiYearSelectionComplete) {
             processMultiYearSelectionComplete = infoSelectorPresenter.handleCheckSelectAllForMultipleYearsComplete();
         }
         
         simpleProgressDisplayer(infoSelectorPresenter.handleGetSelectAllForMultipleYearsProgress(),
-                                DONE_BUTTON_LABEL,
+                                gettext(DONE_BUTTON_LABEL),
                                 processMultiYearSelectionComplete,
                                 [](){});
 
