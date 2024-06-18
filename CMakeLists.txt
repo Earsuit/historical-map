@@ -31,7 +31,8 @@ find_package(SQLite3 REQUIRED)
 find_package(Intl REQUIRED)
 find_package(Gettext REQUIRED)
 
-include(generatePoFile)
+include(GeneratePoFile)
+include(PotFileToPoFile)
 
 if (UNIX)
     find_package(PkgConfig REQUIRED)

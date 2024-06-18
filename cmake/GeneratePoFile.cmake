@@ -38,13 +38,23 @@ function(generatePoFile MODULE_NAME SOURCE_DIR SOURCES)
     add_custom_target(${MODULE_NAME}_po ALL DEPENDS PO_DUMMY)
 
     # remove data so that only content change will trigger git tracking
+if (APPLE)
     add_custom_command(
         OUTPUT REMOVE_DATE
-        COMMAND sed -i '' '/POT-Creation-Date:/d' ${PO_FILE}
+        COMMAND sed -i '' '/POT-Creation-Date:/d' ${PO_FILE}    # macos needs an extra ''
         COMMAND sed -i '' '/PO-Revision-Date:/d' ${PO_FILE}
         DEPENDS ${MODULE_NAME}_po
         COMMENT "Remove DATE from ${PO_FILE}"
     )
+else()
+    add_custom_command(
+        OUTPUT REMOVE_DATE
+        COMMAND sed -i '/POT-Creation-Date:/d' ${PO_FILE}
+        COMMAND sed -i '/PO-Revision-Date:/d' ${PO_FILE}
+        DEPENDS ${MODULE_NAME}_po
+        COMMENT "Remove DATE from ${PO_FILE}"
+    )
+endif()
     add_custom_target(REMOVE_DATE_${MODULE_NAME} ALL DEPENDS REMOVE_DATE)
 
     # remove pot file
