@@ -16,6 +16,18 @@ constexpr auto DOMAIN_PATH = "locale";
 constexpr auto CODE_SET = "UTF-8";
 constexpr auto LOGGER_NAME = "MainViewPresenter";
 constexpr auto FOLLOW_SYSTEM = "SYSTEM";
+constexpr bool OVERWRITE = true;
+
+void setLocale(const char* locale)
+{
+#ifdef __linux__
+    setlocale (LC_ALL, locale);
+#elif defined(__APPLE__)
+    setenv("LC_ALL", locale, OVERWRITE);
+#else
+    setlocale (LC_ALL, locale);
+#endif
+}
 
 MainViewPresenter::MainViewPresenter(MainViewInterface& view):
     view{view},
@@ -61,10 +73,10 @@ void MainViewPresenter::clearCache()
 void MainViewPresenter::handleSetLanguage(const std::string& language)
 {
     if (language == ENGLISH) {
-        setenv("LC_ALL", ENGLISH_LOCALE, 1);
+        setLocale(ENGLISH_LOCALE);
         logger.debug("Set locale {}, current LC_ALL {}", ENGLISH_LOCALE, getenv("LC_ALL"));
     } else if (language == CHINESE) {
-        setenv("LC_ALL", CHINESE_LOCALE, 1);
+        setLocale(CHINESE_LOCALE);
         logger.debug("Set locale {}, current LC_ALL {}", CHINESE_LOCALE, getenv("LC_ALL"));
     } else {
         logger.debug("Follow system locale");
