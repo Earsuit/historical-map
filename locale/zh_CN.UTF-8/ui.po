@@ -34,7 +34,7 @@ msgid "Add new country"
 msgstr "添加新国家"
 
 msgid "Add to exist country"
-msgstr ""
+msgstr "添加至已存在国家"
 
 msgid "Add new city"
 msgstr "添加新城市"
@@ -113,6 +113,9 @@ msgstr "城市"
 msgid "Note"
 msgstr "注释"
 
+msgid "Country name"
+msgstr "国家名"
+
 msgid "Add country"
 msgstr "添加国家"
 
@@ -129,7 +132,7 @@ msgid "Delete country"
 msgstr "删除国家"
 
 msgid "City name"
-msgstr "城市名字"
+msgstr "城市名"
 
 msgid "lat"
 msgstr "纬度"

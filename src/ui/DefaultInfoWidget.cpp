@@ -153,7 +153,7 @@ void DefaultInfoWidget::displayCountryInfos()
     }
 
     ImGui::PushItemWidth(NAME_INPUT_WIDTH);
-    ImGui::InputTextWithHint("##Country name", "Country name", &countryName);
+    ImGui::InputTextWithHint("##Country name", gettext("Country name"), &countryName);
     ImGui::PopItemWidth();
     ImGui::SameLine();
     if (ImGui::Button(gettext("Add country")) && !countryName.empty()) {
