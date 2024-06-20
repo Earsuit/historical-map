@@ -38,6 +38,8 @@ constexpr auto AXIS_FLAGS = ImPlotAxisFlags_NoLabel | ImPlotAxisFlags_NoGridLine
 
 constexpr const ImVec4 OVERLAY_BACKGROUND_COLOR = {0.65f, 0.65f, 0.65f, 0.35f};
 constexpr const ImVec4 TRANSPARENT = {0.0f, 0.0f, 0.0f, 0.0f};
+constexpr const ImVec4 RIGHT_CLICK_MARKER_COLOR = {1.0f, 0.0f, 0.0f, 1.0f};
+constexpr const float RIGHT_CLICK_POINT_SIZE = 5.0f;
 constexpr float OVERLAY_PAD = 10.0f;
 
 constexpr float POINT_SIZE = 2.0f;
@@ -248,6 +250,11 @@ void MapWidget::renderMap()
         renderCountries();
         renderCities();
 
+        if (drawRightClickPoint) {
+            ImPlot::SetNextMarkerStyle(ImPlotMarker_Cross, RIGHT_CLICK_POINT_SIZE, RIGHT_CLICK_MARKER_COLOR);
+            ImPlot::PlotScatter("##RightClickMarker", &rightClickMenuPos.x, &rightClickMenuPos.y, 1);
+        }
+
         ImPlot::EndPlot();
     }
 
@@ -263,6 +270,7 @@ void MapWidget::renderRightClickMenu()
         if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && mousePos) {
             rightClickMenuPos = *mousePos;
             presenter.handleRequestCitiesFromDatabase();
+            drawRightClickPoint = true;
         }
 
         if (ImGui::MenuItem(gettext("Add new country"))) {
@@ -275,6 +283,7 @@ void MapWidget::renderRightClickMenu()
                 if (ImGui::MenuItem(country.c_str())) {
                     presenter.handleExtendContour(country, 
                                                   model::Vec2{static_cast<float>(rightClickMenuPos.x), static_cast<float>(rightClickMenuPos.y)});
+                    drawRightClickPoint = false;
                 }
             }
             ImGui::EndMenu();
@@ -289,6 +298,7 @@ void MapWidget::renderRightClickMenu()
             for (const auto& city : databaseCities) {
                 if (ImGui::MenuItem(city.c_str())) {
                     presenter.handleAddCityFromDatabase(city);
+                    drawRightClickPoint = false;
                     break;
                 }
             }
@@ -296,6 +306,8 @@ void MapWidget::renderRightClickMenu()
         }
 
         ImGui::EndPopup();
+    } else {
+        drawRightClickPoint = false;
     }
 
     if (openAddNewCountryPopup) {
@@ -307,8 +319,10 @@ void MapWidget::renderRightClickMenu()
     }
 
     if (ImGui::BeginPopup(ADD_NEW_COUNTRY_POPUP_NAME)) {
+        drawRightClickPoint = true;
         ImGui::InputTextWithHint("##", "Country Name", &newCountryName);
         if (ImGui::Button(gettext("Add")) & !newCountryName.empty()) {
+            drawRightClickPoint = false;
             if (presenter.handleAddCountry(newCountryName, 
                                            model::Vec2{static_cast<float>(rightClickMenuPos.x), static_cast<float>(rightClickMenuPos.y)})) {
                 newCountryName.clear();
@@ -319,8 +333,10 @@ void MapWidget::renderRightClickMenu()
     }
 
     if (ImGui::BeginPopup(ADD_NEW_CITY_POPUP_NAME)) {
+        drawRightClickPoint = true;
         ImGui::InputTextWithHint("##", "City Name", &newCityName);
         if (ImGui::Button(gettext("Add")) & !newCityName.empty()) {
+            drawRightClickPoint = false;
             if (presenter.handleAddCity(newCityName, 
                                         model::Vec2{static_cast<float>(rightClickMenuPos.x), static_cast<float>(rightClickMenuPos.y)})) {
                 newCountryName.clear();

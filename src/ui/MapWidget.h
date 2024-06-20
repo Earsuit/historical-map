@@ -66,6 +66,7 @@ private:
     bool zoomIn = false;
     bool zoomOut = false;
     bool resetZoom = false;
+    bool drawRightClickPoint = false;
 
     void renderMap();
     void renderOverlay();
