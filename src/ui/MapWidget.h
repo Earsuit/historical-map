@@ -81,7 +81,6 @@ private:
     void onDatabaseCityListUpdate(std::vector<std::string>&& cities); 
 
     virtual void renderRightClickMenu();
-    virtual void prepareRenderPoint();
     virtual bool renderPoint(ImVec2& coordinate, float size, const ImVec4& color);
 };
 }

@@ -4,21 +4,12 @@
 #include "external/implot/implot.h"
 
 namespace ui {
-void MapWidgetNoninteractive::prepareRenderPoint()
-{
-    dragPointId = 0;
-}
+constexpr int POINT_NUMER = 1;
 
 bool MapWidgetNoninteractive::renderPoint(ImVec2& coordinate, float size, const ImVec4& color)
 {
-    double x = coordinate.x;
-    double y = coordinate.y;
-    ImPlot::DragPoint(dragPointId++, 
-                      &x, 
-                      &y, 
-                      color, 
-                      size, 
-                      ImPlotDragToolFlags_NoInputs);
+    ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle, size, color);
+    ImPlot::PlotScatter("##", &coordinate.x, &coordinate.y, POINT_NUMER);
 
     return false;
 }

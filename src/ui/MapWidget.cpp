@@ -36,10 +36,11 @@ constexpr auto AXIS_FLAGS = ImPlotAxisFlags_NoLabel | ImPlotAxisFlags_NoGridLine
                             ImPlotAxisFlags_NoInitialFit | ImPlotAxisFlags_NoMenus |
                             ImPlotAxisFlags_NoMenus | ImPlotAxisFlags_NoHighlight;
 
-constexpr const ImVec4 OVERLAY_BACKGROUND_COLOR = {0.65f, 0.65f, 0.65f, 0.35f};
-constexpr const ImVec4 TRANSPARENT = {0.0f, 0.0f, 0.0f, 0.0f};
-constexpr const ImVec4 RIGHT_CLICK_MARKER_COLOR = {1.0f, 0.0f, 0.0f, 1.0f};
-constexpr const float RIGHT_CLICK_POINT_SIZE = 5.0f;
+constexpr ImVec4 OVERLAY_BACKGROUND_COLOR = {0.65f, 0.65f, 0.65f, 0.35f};
+constexpr ImVec4 TRANSPARENT = {0.0f, 0.0f, 0.0f, 0.0f};
+constexpr ImVec4 RIGHT_CLICK_MARKER_COLOR = {1.0f, 0.0f, 0.0f, 1.0f};
+constexpr float RIGHT_CLICK_MARKER_SIZE = 5.0f;
+constexpr int RIGHT_CLICK_MARKER_NUM = 1;
 constexpr float OVERLAY_PAD = 10.0f;
 
 constexpr float POINT_SIZE = 2.0f;
@@ -139,22 +140,16 @@ void MapWidget::paint()
     ImGui::Begin(getName().c_str());
     ImGui::PopStyleVar(2);
 
-    prepareRenderPoint();
-
     updatCountries();
     updateCities();
 
+    dragPointId = 0;
     renderMap();
     renderRightClickMenu();
     renderButtons();
     renderOverlay();
 
     ImGui::End();
-}
-
-void MapWidget::prepareRenderPoint()
-{
-    dragPointId = 0;
 }
 
 bool MapWidget::renderPoint(ImVec2& coordinate, float size, const ImVec4& color)
@@ -251,8 +246,8 @@ void MapWidget::renderMap()
         renderCities();
 
         if (drawRightClickPoint) {
-            ImPlot::SetNextMarkerStyle(ImPlotMarker_Cross, RIGHT_CLICK_POINT_SIZE, RIGHT_CLICK_MARKER_COLOR);
-            ImPlot::PlotScatter("##RightClickMarker", &rightClickMenuPos.x, &rightClickMenuPos.y, 1);
+            ImPlot::SetNextMarkerStyle(ImPlotMarker_Cross, RIGHT_CLICK_MARKER_SIZE, RIGHT_CLICK_MARKER_COLOR);
+            ImPlot::PlotScatter("##RightClickMarker", &rightClickMenuPos.x, &rightClickMenuPos.y, RIGHT_CLICK_MARKER_NUM);
         }
 
         ImPlot::EndPlot();
