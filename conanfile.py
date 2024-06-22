@@ -1,5 +1,6 @@
 from conan import ConanFile
 from conan.tools.cmake import cmake_layout
+from conan.tools.system.package_manager import Apt
 
 class HistoricalMap(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
@@ -18,3 +19,6 @@ class HistoricalMap(ConanFile):
     def build_requirements(self):
         self.tool_requires("gettext/0.21")
         self.test_requires("gtest/1.14.0")
+
+    def system_requirements(self):
+        Apt(self).install(["libglu1-mesa-dev"], update=True, check=True) # for GL/glu.h on Ubuntu

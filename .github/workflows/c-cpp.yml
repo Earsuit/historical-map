@@ -12,19 +12,27 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: true
-    - name: "install dependencies"
-      run: sudo apt-get install libgl1-mesa-dev libglew-dev libglfw3-dev libcurl4-openssl-dev libgtk-3-dev -y
-    - name: "create build dir"
-      run: mkdir build
+    - name: install Conan
+      id: conan
+      uses: turtlebrowser/get-conan@main
+      with:
+        version: 2.4.1
+    - name: Conan version
+      run: echo "${{ steps.conan.outputs.version }}"
+    - name: Create default Conan profile
+      run: conan profile detect --force
+    - name: Conan install dependencies
+      run: conan install . --build=missing -s build_type=Release -s:a=compiler.cppstd=gnu20 -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=True
     - name: "run cmake"
-      run:
-        cmake .. -DGTEST_ENABLE=ON
-      working-directory:
-        build/
+      run: cmake --preset conan-release
     - name: "run make" 
-      run: make -j
+      run: cmake --build . -j
       working-directory:
-        build/
+        build/Release
+    - name: generation translation mo file
+      run: cmake --build . -j --target translation
+      working-directory:
+        build/Release
     - name: "Upload artifact"
       uses: actions/upload-artifact@v4
       with:
@@ -32,7 +40,7 @@ jobs:
         path: build/
 
   build-macos:
-    runs-on: macos-latest
+    runs-on: macos-13 # macos 14 conan install fail
 
     steps:
     - uses: actions/checkout@v4
@@ -40,22 +48,33 @@ jobs:
         submodules: true
     - name: "install brew"
       run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    - name: "install dependencies"
-      run: brew install llvm@17 glew glfw cmake
+    - name: "install compiler"
+      run: brew install llvm@17
     - name: "set env var"
       run: |
-        echo "CC=/opt/homebrew/opt/llvm@17/bin/clang" >> "$GITHUB_ENV"
-        echo "CXX=/opt/homebrew/opt/llvm@17/bin/clang++" >> "$GITHUB_ENV"
-    - name: "create build dir"
-      run: mkdir build
-    - name: "run cmake"
-      run: cmake .. -DGTEST_ENABLE=ON
+        echo "CC=$(brew --prefix llvm@17)/bin/clang" >> "$GITHUB_ENV"
+        echo "CXX=$(brew --prefix llvm@17)/bin/clang++" >> "$GITHUB_ENV"
+    - name: install Conan
+      id: conan
+      uses: turtlebrowser/get-conan@main
+      with:
+        version: 2.4.1
+    - name: Conan version
+      run: echo "${{ steps.conan.outputs.version }}"
+    - name: Create default Conan profile
+      run: conan profile detect --force
+    - name: Conan install dependencies
+      run: conan install . --build=missing -s build_type=Release -s:a=compiler.cppstd=gnu20
+    - name: run cmake
+      run: cmake --preset conan-release
+    - name: run make
+      run: cmake --build . -j
       working-directory:
-        build/
-    - name: "run make" 
-      run: make -j
+        build/Release
+    - name: generation translation mo file
+      run: cmake --build . -j --target translation
       working-directory:
-        build/
+        build/Release
     - name: "Upload artifact"
       uses: actions/upload-artifact@v4
       with:
@@ -70,21 +89,25 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: true
-    - name: install vcpkg
-      run: | 
-        git clone https://github.com/microsoft/vcpkg
-        .\vcpkg\bootstrap-vcpkg.bat
-    - name: install dependencies
-      run: .\vcpkg\vcpkg.exe install glew glfw3 sqlite3 curl
-    - name: create build dir
-      run: mkdir build
+    - name: install Conan
+      id: conan
+      uses: turtlebrowser/get-conan@main
+      with:
+        version: 2.4.1
+    - name: Conan version
+      run: echo "${{ steps.conan.outputs.version }}"
+    - name: Create default Conan profile
+      run: conan profile detect --force
+    - name: Conan install dependencies
+      run: conan install . --build=missing -s build_type=Release -s:a=compiler.cppstd=20
     - name: run cmake
-      run:
-        cmake -B . -S .. -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}\vcpkg\scripts\buildsystems\vcpkg.cmake -DGTEST_ENABLE=ON
+      run: cmake --preset conan-default
+    - name: run make
+      run: cmake --build . -j --config Release
       working-directory:
         build/
-    - name: run make
-      run: cmake --build . -j
+    - name: generation translation mo file
+      run: cmake --build . -j --config Release --target translation
       working-directory:
         build/
     - name: "Upload artifact"
@@ -110,7 +133,7 @@ jobs:
         chmod -R a+x test/*
         ctest --output-on-failure
       working-directory:
-        build/
+        build/Release
 
   test-macos:
     needs: build-macos
@@ -129,7 +152,7 @@ jobs:
         chmod -R a+x test/*
         ctest --output-on-failure
       working-directory:
-        build/
+        build/Release
 
   test-win:
     needs: build-win
