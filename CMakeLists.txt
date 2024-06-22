@@ -34,30 +34,11 @@ find_package(GTest REQUIRED)
 include(GoogleTest)
 enable_testing()
 
-find_program(GETTEXT_XGETTEXT_EXECUTABLE xgettext)
-if(NOT GETTEXT_XGETTEXT_EXECUTABLE)
-    message(FATAL_ERROR "xgettext not found!")
-endif()
-
-find_program(GETTEXT_MSGMERGE_EXECUTABLE msgmerge)
-if(NOT GETTEXT_MSGMERGE_EXECUTABLE)
-    message(FATAL_ERROR "msgmerge not found!")
-endif()
-
-find_program(GETTEXT_MSGFMT_EXECUTABLE msgfmt)
-if(NOT GETTEXT_MSGFMT_EXECUTABLE)
-    message(FATAL_ERROR "msgfmt not found!")
-endif()
-
-find_program(GETTEXT_MSGINIT_EXECUTABLE msginit)
-if(NOT GETTEXT_MSGINIT_EXECUTABLE)
-    message(FATAL_ERROR "msginit not found!")
-endif()
-
-find_program(GETTEXT_MSGCAT_EXECUTABLE msgcat)
-if(NOT GETTEXT_MSGCAT_EXECUTABLE)
-    message(FATAL_ERROR "msgcat not found!")
-endif()
+find_program(GETTEXT_XGETTEXT_EXECUTABLE xgettext REQUIRED)
+find_program(GETTEXT_MSGMERGE_EXECUTABLE msgmerge REQUIRED)
+find_program(GETTEXT_MSGFMT_EXECUTABLE msgfmt REQUIRED)
+find_program(GETTEXT_MSGINIT_EXECUTABLE msginit REQUIRED)
+find_program(GETTEXT_MSGCAT_EXECUTABLE msgcat REQUIRED)
 
 include(GeneratePoFile)
 
