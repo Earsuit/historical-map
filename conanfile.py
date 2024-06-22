@@ -17,3 +17,4 @@ class HistoricalMap(ConanFile):
 
     def build_requirements(self):
         self.tool_requires("gettext/0.21")
+        self.test_requires("gtest/1.14.0")

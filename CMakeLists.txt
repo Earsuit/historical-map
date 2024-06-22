@@ -30,6 +30,9 @@ find_package(CURL REQUIRED)
 find_package(SQLite3 REQUIRED)
 find_package(Intl REQUIRED)
 find_package(Gettext REQUIRED)
+find_package(GTest REQUIRED)
+include(GoogleTest)
+enable_testing()
 
 find_program(GETTEXT_XGETTEXT_EXECUTABLE xgettext)
 if(NOT GETTEXT_XGETTEXT_EXECUTABLE)
@@ -95,19 +98,6 @@ FetchContent_Declare(sqlpp11
 )
 set(BUILD_SQLITE3_CONNECTOR ON)
 FetchContent_MakeAvailable(sqlpp11)
-
-# gtest
-if (GTEST_ENABLE)
-cmake_policy(SET CMP0135 NEW)
-FetchContent_Declare(
-  googletest
-  URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
-)
-FetchContent_MakeAvailable(googletest)
-enable_testing()
-include(GoogleTest)
-include_directories(${googletest_SOURCE_DIR}/googletest/include)
-endif()
 
 include_directories(${CMAKE_SOURCE_DIR})
 include_directories(external/imgui)
