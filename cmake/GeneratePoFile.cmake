@@ -58,7 +58,7 @@ else()
     # WINDOWS
     add_custom_command(
         OUTPUT REMOVE_DATE
-        COMMAND powershell -File ${CMAKE_SOURCE_DIR}/script/processPoFile.ps1 -poFile ${PO_FILE}
+        COMMAND pwsh -File ${CMAKE_SOURCE_DIR}/script/processPoFile.ps1 -poFile ${PO_FILE}
         DEPENDS ${MODULE_NAME}_po
         COMMENT "Remove DATE from ${PO_FILE}"
     )
