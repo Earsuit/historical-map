@@ -23,7 +23,7 @@ add_definitions(-D_SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS)
 endif()
 
 find_package(OpenGL REQUIRED)
-find_package(GLEW REQUIRED)
+find_package(GLEW REQUIRED MODULE)  # have to use module mode then the GLEW_INCLUDE_DIRS can be set 
 find_package(glfw3 REQUIRED)
 find_package(Threads REQUIRED)
 find_package(CURL REQUIRED)
@@ -31,8 +31,32 @@ find_package(SQLite3 REQUIRED)
 find_package(Intl REQUIRED)
 find_package(Gettext REQUIRED)
 
+find_program(GETTEXT_XGETTEXT_EXECUTABLE xgettext)
+if(NOT GETTEXT_XGETTEXT_EXECUTABLE)
+    message(FATAL_ERROR "xgettext not found!")
+endif()
+
+find_program(GETTEXT_MSGMERGE_EXECUTABLE msgmerge)
+if(NOT GETTEXT_MSGMERGE_EXECUTABLE)
+    message(FATAL_ERROR "msgmerge not found!")
+endif()
+
+find_program(GETTEXT_MSGFMT_EXECUTABLE msgfmt)
+if(NOT GETTEXT_MSGFMT_EXECUTABLE)
+    message(FATAL_ERROR "msgfmt not found!")
+endif()
+
+find_program(GETTEXT_MSGINIT_EXECUTABLE msginit)
+if(NOT GETTEXT_MSGINIT_EXECUTABLE)
+    message(FATAL_ERROR "msginit not found!")
+endif()
+
+find_program(GETTEXT_MSGCAT_EXECUTABLE msgcat)
+if(NOT GETTEXT_MSGCAT_EXECUTABLE)
+    message(FATAL_ERROR "msgcat not found!")
+endif()
+
 include(GeneratePoFile)
-include(PotFileToPoFile)
 
 if (UNIX)
     find_package(PkgConfig REQUIRED)
@@ -157,9 +181,10 @@ add_custom_command(
 )
 
 # combine po files to one single file
+file(GLOB ALL_PO_FILES "${LOCALE_DIR}/${LOCALE}/*")
 add_custom_command(
     OUTPUT PO_DUMMY
-    COMMAND msgcat -o ${SINGLE_PO_FILE} ${LOCALE_DIR}/${LOCALE}/*.po
+    COMMAND ${GETTEXT_MSGCAT_EXECUTABLE} -o ${SINGLE_PO_FILE} ${ALL_PO_FILES}
     COMMENT "Merging all po files into a single one"
 )
 add_custom_target(HistoricalInfo_po DEPENDS PO_DUMMY)
@@ -169,7 +194,7 @@ add_custom_target(HistoricalInfo_po DEPENDS PO_DUMMY)
 # because translation is a manual work
 add_custom_command(
     OUTPUT DUMMY
-    COMMAND msgfmt -o ${TRANS_DIR}/HistoricalInfo.mo ${SINGLE_PO_FILE}
+    COMMAND ${GETTEXT_MSGFMT_EXECUTABLE} ${SINGLE_PO_FILE} -o ${TRANS_DIR}/HistoricalInfo.mo 
     COMMENT "Compile the po file"
     DEPENDS HistoricalInfo_po
 )

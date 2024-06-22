@@ -15,3 +15,4 @@ SET(TILE_SRC
 
 add_library(libtile STATIC ${TILE_SRC})
 target_link_libraries(libtile PRIVATE CURL::libcurl liblogger)
+target_include_directories(libtile PRIVATE ${CURL_INCLUDE_DIRS})

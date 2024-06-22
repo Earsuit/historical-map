@@ -17,3 +17,4 @@ add_library(libmodel STATIC ${MODEL_SRC})
 # libpersistence have to be made as public because the presenter needs the header of sqlite3.h
 # this is only a problem on Windows compilation
 target_link_libraries(libmodel PRIVATE libtile liblogger PUBLIC libpersistence)
+target_include_directories(libmodel PUBLIC ${SQLite3_INCLUDE_DIRS})

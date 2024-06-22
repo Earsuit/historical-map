@@ -18,7 +18,7 @@ function(generatePoFile MODULE_NAME SOURCE_DIR SOURCES)
     # Construct the xgettext command
     add_custom_command(
         OUTPUT POT_DUMMY
-        COMMAND xgettext -k__ -o ${POT_FILE} --from-code=UTF-8 ${FULL_PATH} --no-location
+        COMMAND ${GETTEXT_XGETTEXT_EXECUTABLE} -k__ -o ${POT_FILE} --from-code=UTF-8 ${FULL_PATH} --no-location
         DEPENDS ${FULL_PATH}
         COMMENT "Generating ${POT_FILE} from ${FULL_PATH}"
     )
@@ -46,11 +46,19 @@ if (APPLE)
         DEPENDS ${MODULE_NAME}_po
         COMMENT "Remove DATE from ${PO_FILE}"
     )
-else()
+elseif(LINUX)
     add_custom_command(
         OUTPUT REMOVE_DATE
         COMMAND sed -i '/POT-Creation-Date:/d' ${PO_FILE}
         COMMAND sed -i '/PO-Revision-Date:/d' ${PO_FILE}
+        DEPENDS ${MODULE_NAME}_po
+        COMMENT "Remove DATE from ${PO_FILE}"
+    )
+else()
+    # WINDOWS
+    add_custom_command(
+        OUTPUT REMOVE_DATE
+        COMMAND powershell -File ${CMAKE_SOURCE_DIR}/script/processPoFile.ps1 -poFile ${PO_FILE}
         DEPENDS ${MODULE_NAME}_po
         COMMENT "Remove DATE from ${PO_FILE}"
     )
