@@ -15,6 +15,7 @@ class HistoricalMap(ConanFile):
         self.requires("sqlite3/3.46.0")
         self.requires("libcurl/8.8.0")
         self.requires("libgettext/0.21")
+        self.requires("sqlpp11/0.64", headers=True, libs=False, run=True)
 
     def build_requirements(self):
         self.tool_requires("gettext/0.21")

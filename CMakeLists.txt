@@ -33,6 +33,8 @@ find_package(Gettext REQUIRED)
 find_package(GTest REQUIRED)
 include(GoogleTest)
 enable_testing()
+find_package(Sqlpp11 REQUIRED)
+set(BUILD_SQLITE3_CONNECTOR ON)
 
 find_program(GETTEXT_XGETTEXT_EXECUTABLE xgettext REQUIRED)
 find_program(GETTEXT_MSGMERGE_EXECUTABLE msgmerge REQUIRED)
@@ -71,14 +73,6 @@ else()
 endif()
 
 include(FetchContent)
-
-# sqlpp11
-FetchContent_Declare(sqlpp11
-    GIT_REPOSITORY  https://github.com/rbock/sqlpp11
-    GIT_TAG         0.64
-)
-set(BUILD_SQLITE3_CONNECTOR ON)
-FetchContent_MakeAvailable(sqlpp11)
 
 include_directories(${CMAKE_SOURCE_DIR})
 include_directories(external/imgui)

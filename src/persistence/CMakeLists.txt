@@ -1,4 +1,4 @@
-set(DDL_TO_TABLE_SCRIPT ${sqlpp11_SOURCE_DIR}/scripts/sqlite2cpp.py)
+set(DDL_TO_TABLE_SCRIPT ${sqlpp11_BIN_DIRS_RELEASE}/sqlite2cpp.py)
 set(TABLE_HEADER ${CMAKE_CURRENT_BINARY_DIR}/Table)
 set(SQL_FILE ${CMAKE_CURRENT_SOURCE_DIR}/Table.sql)
 set(DDL_TO_SQL_COMMAND_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/Ddl2SqlCommands.py)
@@ -41,6 +41,6 @@ set(PERSISTENCE_SRC
 
 add_library(libpersistence STATIC ${PERSISTENCE_SRC})
 # we will not use sql in this libray but libraries linked to it
-target_link_libraries(libpersistence PRIVATE Threads::Threads INTERFACE SQLite::SQLite3 sqlpp11::sqlite3)
+target_link_libraries(libpersistence PRIVATE Threads::Threads INTERFACE SQLite::SQLite3 sqlpp11::sqlpp11)
 target_include_directories(libpersistence INTERFACE ${SQLite3_INCLUDE_DIRS})
 add_dependencies(libpersistence command_header table_header)
