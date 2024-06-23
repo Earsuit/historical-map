@@ -1,20 +1,32 @@
 # Historical map
 
+## Install Conan
+
+The [Conan 2](https://conan.io/) is used to setup the dependencies.
+
+`pip install conan`
+
 ## Compile on Linux
 
 According to [Compiler support for C++20](https://en.cppreference.com/w/cpp/compiler_support/20),
-GCC > 10 is required to use Parenthesized initialization of aggregates .
+GCC > 10 is required to use Parenthesized initialization of aggregates.
 
 ### Setup envirnment
 
-`sudo apt-get install libgl1-mesa-dev libglew-dev libglfw3-dev libcurl4-openssl-dev libgtk-3-dev -y`
+Config the profile if you don't have:
+
+`conan profile detect --force` 
+
+and set the C++ standard to 20 by modifying `settings.compiler.cppstd=gnu20`.
 
 ### Compile
 
-1. `mkdir build && cd build`
-2. `cmake ..` or `cmake -DGTEST_ENABLE=ON ..` if you want to enable test
-3. `make -j`
-4. `ctest` if you want to run test
+1. `conan install . --build=missing -s build_type=Release -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=True`
+2. `cmake --preset conan-release`
+3. `cd build/Release`
+4. `cmake --build . -j`
+5. Compile translation: `cmake --build . -j --target translation`
+6. `ctest` if you want to run test
 
 ## Compile on MacOS
 
@@ -26,15 +38,16 @@ clang (>16) from Homebrew or MacPort.
 1. Download clang from Homebrew: `brew install llvm` 
 2. Add Homebrew clang to your path: `export PATH="/opt/homebrew/opt/llvm/bin:$PATH"`
 3. Set `CC` and `CXX` to the Homebrew clang: `export CC=/opt/homebrew/opt/llvm/bin/clang && export CXX=/opt/homebrew/opt/llvm/bin/clang++`
-4. Install dependencies from brew: `brew install glew glfw cmake`
-5. Pull dependencies for git submodules: `git submodule init && git submodule update`
+4. Config the profile if you don't have: `conan profile detect --force`  and set the C++ standard to 20 by modifying `settings.compiler.cppstd=gnu20`.
 
 ### Compile
 
-1. `mkdir build && cd build`
-2. `cmake ..` or `cmake -DGTEST_ENABLE=ON ..` if you want to enable test
-3. `make -j`
-4. `ctest` if you want to run test
+1. `conan install . --build=missing -s build_type=Release`
+2. `cmake --preset conan-release`
+3. `cd build/Release`
+4. `cmake --build . -j`
+5. Compile translation: `cmake --build . -j --target translation`
+6. `ctest` if you want to run test
 
 ## Compile on Windows
 
@@ -43,11 +56,13 @@ MSVC >= 19.28 is required to support Parenthesized initialization of aggregates.
 
 ### Setup envirnment
 
-The program depends on  `glew`, `glfw3`, `sqlite3` and `curl`, which can be installed by vcpkg.
+Config the profile if you don't have: `conan profile detect --force`  and set the C++ standard to 20 by modifying `settings.compiler.cppstd=20`.
 
 ### Compile
 
-1. `mkdir build && cd build`
-2. `cmake -B . -S .. -DCMAKE_TOOLCHAIN_FILE=[path to vcpkg]\scripts\buildsystems\vcpkg.cmake` or add `-DGTEST_ENABLE=ON` if you want to enable test
-3. `cmake --build . -j`
-4. `ctest` if you want to run test
+1. `conan install . --build=missing -s build_type=Release`
+2. `cmake --preset conan-default`
+3. `cd build/`
+4. `cmake --build . -j --config Release`
+5. `cmake --build . -j --config Release --target translation`
+6. `ctest` if you want to run test
