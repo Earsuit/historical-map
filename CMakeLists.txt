@@ -130,6 +130,7 @@ target_link_libraries(HistoricalMap PRIVATE libui libpresentation -Wl,--whole-ar
 elseif(MSVC)
 target_link_libraries(HistoricalMap PRIVATE libui libpresentation liblogger libpersistence)
 set_property(TARGET HistoricalMap APPEND_STRING PROPERTY LINK_FLAGS " /WHOLEARCHIVE:libpersistence")
+set_target_properties(HistoricalMap PROPERTIES WIN32_EXECUTABLE YES)
 endif()
 
 add_subdirectory(src)
