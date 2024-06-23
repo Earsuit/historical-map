@@ -19,7 +19,14 @@ jobs:
         version: 2.4.1
     - name: Conan version
       run: echo "${{ steps.conan.outputs.version }}"
+    - name: Cache Conan Dependencies
+      id: cache-conan
+      uses: actions/cache@v4
+      with:
+        path: ~/.conan2
+        key: ${{ runner.os }}-${{ hashFiles('conanfile.py') }}
     - name: Create default Conan profile
+      if: steps.cache-conan.outputs.cache-hit != 'true'
       run: conan profile detect --force
     - name: Conan install dependencies
       run: conan install . --build=missing -s build_type=Release -s:a=compiler.cppstd=gnu20 -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=True
@@ -61,7 +68,14 @@ jobs:
         version: 2.4.1
     - name: Conan version
       run: echo "${{ steps.conan.outputs.version }}"
+    - name: Cache Conan Dependencies
+      id: cache-conan
+      uses: actions/cache@v4
+      with:
+        path: ~/.conan2
+        key: ${{ runner.os }}-${{ hashFiles('conanfile.py') }}
     - name: Create default Conan profile
+      if: steps.cache-conan.outputs.cache-hit != 'true'
       run: conan profile detect --force
     - name: Conan install dependencies
       run: conan install . --build=missing -s build_type=Release -s:a=compiler.cppstd=gnu20
@@ -96,7 +110,14 @@ jobs:
         version: 2.4.1
     - name: Conan version
       run: echo "${{ steps.conan.outputs.version }}"
+    - name: Cache Conan Dependencies
+      id: cache-conan
+      uses: actions/cache@v4
+      with:
+        path: ~/.conan2
+        key: ${{ runner.os }}-${{ hashFiles('conanfile.py') }}
     - name: Create default Conan profile
+      if: steps.cache-conan.outputs.cache-hit != 'true'
       run: conan profile detect --force
     - name: Conan install dependencies
       run: conan install . --build=missing -s build_type=Release -s:a=compiler.cppstd=20
