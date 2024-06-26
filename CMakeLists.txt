@@ -43,6 +43,10 @@ find_program(GETTEXT_MSGINIT_EXECUTABLE msginit REQUIRED)
 find_program(GETTEXT_MSGCAT_EXECUTABLE msgcat REQUIRED)
 
 include(GeneratePoFile)
+include(TagVersion)
+createTagVersion()
+
+set(EXECUTABLE_NAME "HistoricalMap")
 
 if (UNIX)
     find_package(PkgConfig REQUIRED)
@@ -112,19 +116,33 @@ SET(IM_FILE_DIALOG_SRC
     ${CMAKE_SOURCE_DIR}/external/imFileDialog/ImFileDialog.cpp
 )
 
-add_executable(HistoricalMap main.cpp)
-
 if (APPLE)
-# On macos we have to specify glfw GLEW::GLEW when compiling main.cpp because it includes HistoricalMap.h
-# which includes glfw and glew
-target_link_libraries(HistoricalMap PRIVATE glfw GLEW::GLEW libui libpresentation  -Wl,-force_load libpersistence liblogger)
-target_link_libraries(HistoricalMap PRIVATE "-framework CoreFoundation" "-framework CoreGraphics" "-framework ImageIO" "-framework AppKit")
+    add_executable(HistoricalMap MACOSX_BUNDLE main.cpp)
+    # set_target_properties(HistoricalMap PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin")
+    # On macos we have to specify glfw GLEW::GLEW when compiling main.cpp because it includes HistoricalMap.h
+    # which includes glfw and glew
+    target_link_libraries(HistoricalMap PRIVATE glfw GLEW::GLEW libui libpresentation  -Wl,-force_load libpersistence liblogger)
+    target_link_libraries(HistoricalMap PRIVATE "-framework CoreFoundation" "-framework CoreGraphics" "-framework ImageIO" "-framework AppKit")
+    
+    set_target_properties(HistoricalMap PROPERTIES
+        OUTPUT_NAME ${EXECUTABLE_NAME}
+        MACOSX_BUNDLE TRUE
+        MACOSX_RPATH TRUE
+        MACOSX_BUNDLE_BUNDLE_NAME ${EXECUTABLE_NAME}
+        MACOSX_BUNDLE_BUNDLE_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}.${VERSION_TWEAK}
+        MACOSX_BUNDLE_SHORT_VERSION_STRING ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
+        MACOSX_BUNDLE_GUI_IDENTIFIER Earsuit.${EXECUTABLE_NAME}
+        MACOSX_FRAMEWORK_IDENTIFIER Earsuit.${EXECUTABLE_NAME}
+        XCODE_ATTRIBUTE_ENABLE_HARDENED_RUNTIME TRUE
+        XCODE_ATTRIBUTE_EXECUTABLE_NAME ${EXECUTABLE_NAME}
+    )
 elseif(LINUX)
-target_link_libraries(HistoricalMap PRIVATE libui libpresentation -Wl,--whole-archive libpersistence -Wl,--no-whole-archive liblogger)
+    add_executable(HistoricalMap main.cpp)
+    target_link_libraries(HistoricalMap PRIVATE libui libpresentation -Wl,--whole-archive libpersistence -Wl,--no-whole-archive liblogger)
 elseif(MSVC)
-target_link_libraries(HistoricalMap PRIVATE libui libpresentation liblogger libpersistence)
-set_property(TARGET HistoricalMap APPEND_STRING PROPERTY LINK_FLAGS " /WHOLEARCHIVE:libpersistence")
-set_target_properties(HistoricalMap PROPERTIES WIN32_EXECUTABLE YES)
+    add_executable(HistoricalMap WIN32_EXECUTABLE main.cpp)
+    target_link_libraries(HistoricalMap PRIVATE libui libpresentation liblogger libpersistence)
+    set_property(TARGET HistoricalMap APPEND_STRING PROPERTY LINK_FLAGS " /WHOLEARCHIVE:libpersistence")
 endif()
 
 add_subdirectory(src)
