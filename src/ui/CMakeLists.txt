@@ -27,5 +27,3 @@ target_include_directories(libui PUBLIC ${GLEW_INCLUDE_DIRS} ${glfw3_INCLUDE_DIR
 if (LINUX)
     target_link_libraries(libui PRIVATE PkgConfig::GIO2)
 endif()
-
-generatePoFile("ui" ${CMAKE_CURRENT_SOURCE_DIR} "${UI_SRC}")

@@ -9,6 +9,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
 set(LOCALE "zh_CN.UTF-8")
 set(LOCALE_DIR "${CMAKE_SOURCE_DIR}/locale")
 set(SINGLE_PO_FILE "${CMAKE_BINARY_DIR}/HistoricalInfo.po")
+set(POT_FILE "${LOCALE_DIR}/translation.pot")
+set(PO_FILE "${LOCALE_DIR}/${LOCALE}/translation.po")
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
@@ -40,7 +42,6 @@ find_program(GETTEXT_XGETTEXT_EXECUTABLE xgettext REQUIRED)
 find_program(GETTEXT_MSGMERGE_EXECUTABLE msgmerge REQUIRED)
 find_program(GETTEXT_MSGFMT_EXECUTABLE msgfmt REQUIRED)
 find_program(GETTEXT_MSGINIT_EXECUTABLE msginit REQUIRED)
-find_program(GETTEXT_MSGCAT_EXECUTABLE msgcat REQUIRED)
 
 include(GeneratePoFile)
 include(TagVersion)
@@ -148,6 +149,9 @@ endif()
 add_subdirectory(src)
 add_subdirectory(test)
 
+file(GLOB_RECURSE SOURCES "${CMAKE_SOURCE_DIR}/src/*")
+generatePoFile("${SOURCES}")
+
 add_custom_command(TARGET HistoricalMap POST_BUILD
     COMMAND 
     ${CMAKE_COMMAND} 
@@ -156,7 +160,6 @@ add_custom_command(TARGET HistoricalMap POST_BUILD
     $<TARGET_FILE_DIR:HistoricalMap>    # use TARGET_FILE_DIR to ensure the font is copied to the directory with the executable, such as build/Debug
 )
 
-
 set(TRANS_DIR $<TARGET_FILE_DIR:HistoricalMap>/locale/zh_CN/LC_MESSAGES/)
 add_custom_command(
     TARGET HistoricalMap POST_BUILD
@@ -164,22 +167,12 @@ add_custom_command(
     COMMENT "Creating directory: ${TRANS_DIR}"
 )
 
-# combine po files to one single file
-file(GLOB ALL_PO_FILES "${LOCALE_DIR}/${LOCALE}/*")
-add_custom_command(
-    OUTPUT PO_DUMMY
-    COMMAND ${GETTEXT_MSGCAT_EXECUTABLE} -o ${SINGLE_PO_FILE} ${ALL_PO_FILES}
-    COMMENT "Merging all po files into a single one"
-)
-add_custom_target(HistoricalInfo_po DEPENDS PO_DUMMY)
-
 # translation po -> mo file
 # It is up to the programmer to decide whether to update the mo file
 # because translation is a manual work
 add_custom_command(
     OUTPUT DUMMY
-    COMMAND ${GETTEXT_MSGFMT_EXECUTABLE} ${SINGLE_PO_FILE} -o ${TRANS_DIR}/HistoricalInfo.mo 
+    COMMAND ${GETTEXT_MSGFMT_EXECUTABLE} ${PO_FILE} -o ${TRANS_DIR}/HistoricalInfo.mo 
     COMMENT "Compile the po file"
-    DEPENDS HistoricalInfo_po
 )
 add_custom_target(translation DEPENDS DUMMY)

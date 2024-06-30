@@ -28,5 +28,3 @@ SET(PRESENTATION_SRC
 add_library(libpresentation STATIC ${PRESENTATION_SRC})
 target_link_libraries(libpresentation PRIVATE libtile libmodel liblogger Intl::Intl)
 target_include_directories(libpresentation PUBLIC ${SQLite3_INCLUDE_DIRS})
-
-generatePoFile("presentation" ${CMAKE_CURRENT_SOURCE_DIR} "${PRESENTATION_SRC}")

@@ -1,5 +1,4 @@
-# Chinese translations for PACKAGE package
-# PACKAGE 软件包的简体中文翻译.
+# Chinese translations for PACKAGE package.
 # Copyright (C) 2024 THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # Automatically generated, 2024.
@@ -15,78 +14,33 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-msgid "Historical Map"
-msgstr "历史地图"
+msgid "Start year must less than end year"
+msgstr "起始年代必须小于终止年代"
 
-msgid "File"
-msgstr "文件"
+msgid "Cursor at: "
+msgstr "鼠标坐标："
 
-msgid "Import"
-msgstr "导入"
+msgid "lon "
+msgstr "经度"
 
-msgid "Export"
-msgstr "导出"
+msgid ", lat "
+msgstr "，纬度"
 
-msgid "Language"
-msgstr "语言"
+msgid "View range: west "
+msgstr "视野范围：西"
 
-msgid "Add new country"
-msgstr "添加新国家"
-
-msgid "Add to exist country"
-msgstr "添加至已存在国家"
-
-msgid "Add new city"
-msgstr "添加新城市"
-
-msgid "Add city from database"
-msgstr "从数据库中添加已有城市"
-
-msgid "Add"
-msgstr "添加"
-
-msgid "reset"
-msgstr "重置"
+msgid ", east "
+msgstr "，东"
 
 msgid ""
-"For different tile server url, please check https://www.trailnotes.org/"
-"FetchMap/TileServeSource.html"
+", \n"
+"\t\t\t\t\t north "
 msgstr ""
-"请查阅https://www.trailnotes.org/FetchMap/TileServeSource.html网站选择其他地"
-"图源"
+", \n"
+"\t\t\t\t  北"
 
-msgid "Source"
-msgstr "源"
-
-msgid "Tile Data Processor"
-msgstr "地图瓦片处理器"
-
-msgid "Failed to set tile engine, error"
-msgstr "设置瓦片引擎失败，错误"
-
-msgid "Configuration"
-msgstr "配置"
-
-msgid "Set"
-msgstr "启用"
-
-msgid "Tile source###TileSource"
-msgstr "地图源###TileSource"
-
-msgid "Clear"
-msgstr "清除"
-
-msgid "Copy"
-msgstr "复制"
-
-msgid "Filter"
-msgstr "过滤器"
-
-msgid "Invalid regex string: "
-msgstr "非法正则表达式："
-
-msgid "Log###Log"
-msgstr "日志###Log"
+msgid ", south "
+msgstr "，南"
 
 #, c-format
 msgid "Year %d"
@@ -128,6 +82,9 @@ msgstr "纬度"
 msgid "longitude"
 msgstr "经度"
 
+msgid "Add"
+msgstr "添加"
+
 msgid "Delete country"
 msgstr "删除国家"
 
@@ -145,6 +102,9 @@ msgstr "添加城市"
 
 msgid "Remove"
 msgstr "移除"
+
+msgid "Clear"
+msgstr "清除"
 
 msgid "Start"
 msgstr "起始"
@@ -180,6 +140,21 @@ msgstr "导出失败：%s"
 msgid "Select"
 msgstr "选择"
 
+msgid "Historical Map"
+msgstr "历史地图"
+
+msgid "File"
+msgstr "文件"
+
+msgid "Import"
+msgstr "导入"
+
+msgid "Export"
+msgstr "导出"
+
+msgid "Language"
+msgstr "语言"
+
 msgid "Imported: "
 msgstr "已导入："
 
@@ -191,3 +166,55 @@ msgstr "导入的"
 
 msgid "Database"
 msgstr "数据库"
+
+msgid "Copy"
+msgstr "复制"
+
+msgid "Filter"
+msgstr "过滤器"
+
+msgid "Set"
+msgstr "启用"
+
+msgid "Invalid regex string: "
+msgstr "非法正则表达式："
+
+msgid "Log###Log"
+msgstr "日志###Log"
+
+msgid "Add new country"
+msgstr "添加新国家"
+
+msgid "Add to exist country"
+msgstr "添加至已存在国家"
+
+msgid "Add new city"
+msgstr "添加新城市"
+
+msgid "Add city from database"
+msgstr "从数据库中添加已有城市"
+
+msgid "reset"
+msgstr "重置"
+
+msgid ""
+"For different tile server url, please check https://www.trailnotes.org/"
+"FetchMap/TileServeSource.html"
+msgstr ""
+"请查阅https://www.trailnotes.org/FetchMap/TileServeSource.html网站选择其他地"
+"图源"
+
+msgid "Source"
+msgstr "源"
+
+msgid "Tile Data Processor"
+msgstr "地图瓦片处理器"
+
+msgid "Failed to set tile engine, error"
+msgstr "设置瓦片引擎失败，错误"
+
+msgid "Configuration"
+msgstr "配置"
+
+msgid "Tile source###TileSource"
+msgstr "地图源###TileSource"
