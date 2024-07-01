@@ -116,6 +116,7 @@ SET(IMPLOT_SRC
 SET(IM_FILE_DIALOG_SRC
     ${CMAKE_SOURCE_DIR}/external/imFileDialog/ImFileDialog.cpp
 )
+add_compile_definitions(USE_GETTEXT)
 
 if (APPLE)
     add_executable(HistoricalMap MACOSX_BUNDLE main.cpp)
@@ -149,7 +150,7 @@ endif()
 add_subdirectory(src)
 add_subdirectory(test)
 
-file(GLOB_RECURSE SOURCES "${CMAKE_SOURCE_DIR}/src/*")
+file(GLOB_RECURSE SOURCES "${CMAKE_SOURCE_DIR}/src/*" ${IM_FILE_DIALOG_SRC})
 generatePoFile("${SOURCES}")
 
 add_custom_command(TARGET HistoricalMap POST_BUILD

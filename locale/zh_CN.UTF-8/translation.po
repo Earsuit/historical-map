@@ -14,6 +14,76 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
+msgid "All Files (*.*)"
+msgstr "所有文件 (*.*)"
+
+msgid "Name##filename"
+msgstr "名称"
+
+msgid "Date modified##filedate"
+msgstr "修改日期"
+
+msgid "Size##filesize"
+msgstr "大小"
+
+msgid "New file"
+msgstr "新建文件"
+
+msgid "New directory"
+msgstr "新建文件夹"
+
+msgid "Delete"
+msgstr "删除"
+
+msgid "Are you sure?##delete"
+msgstr "确认删除？##delete"
+
+msgid "Enter file name##newfile"
+msgstr "输入文件名##newfile"
+
+msgid "Enter directory name##newdir"
+msgstr "输入文件夹名##newdir"
+
+#, c-format
+msgid "Are you sure you want to delete %s?"
+msgstr "确认删除%s？"
+
+msgid "Yes"
+msgstr "是"
+
+msgid "No"
+msgstr "否"
+
+msgid "OK"
+msgstr "确认"
+
+msgid "Cancel"
+msgstr "取消"
+
+msgid "Search"
+msgstr "搜索"
+
+msgid "File name:"
+msgstr "文件名"
+
+msgid "Filename"
+msgstr "文件"
+
+msgid "Save"
+msgstr "保存"
+
+msgid "Open"
+msgstr "打开"
+
+msgid "Confirmation"
+msgstr "确认"
+
+msgid "File exists, do you want to overwrite it?"
+msgstr "文件已存在，是否覆盖？"
+
+msgid "No!"
+msgstr "否！"
+
 msgid "Start year must less than end year"
 msgstr "起始年代必须小于终止年代"
 
@@ -112,9 +182,6 @@ msgstr "起始"
 msgid "End"
 msgstr "结束"
 
-msgid "Save"
-msgstr "保存"
-
 msgid "Done"
 msgstr "完成"
 
@@ -129,9 +196,6 @@ msgstr "选择中"
 
 msgid "Export as"
 msgstr "导出为"
-
-msgid "Cancel"
-msgstr "取消"
 
 msgid "Select all"
 msgstr "全选"
