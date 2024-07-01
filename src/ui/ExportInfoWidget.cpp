@@ -10,15 +10,17 @@
 #include <libintl.h>
 
 namespace ui {
+#define __(x) x     // gettext translation registration for constexpr
+
 const auto TO_SOURCE = "Export";
 constexpr auto SELECT_FORMAT_POPUP_NAME = "Select format";
 constexpr auto SAVE_DIALOG_KEY = "ExportDialog";
-constexpr auto EXPORT_PROGRESS_POPUP_NAME = "Exporting";
-constexpr auto DONE_BUTTON_LABEL = "Done";
-constexpr auto EXPORT_FAIL_POPUP_NAME = "Error";
+constexpr auto EXPORT_PROGRESS_POPUP_NAME = __("Exporting");
+constexpr auto DONE_BUTTON_LABEL = __("Done");
+constexpr auto EXPORT_FAIL_POPUP_NAME = __("Error");
 constexpr auto SELECT_MULTIPLE_YEAR_POPUP_NAME = "Select multiple years";
-constexpr auto SELECT_MULTI_YEAR_YEAR_CONSTRAINTS = "Start year must be less than end year.";
-constexpr auto PROCESS_MULTI_YEAR_SELECTION_POPUP_NAME = "Selecting";
+constexpr auto SELECT_MULTI_YEAR_YEAR_CONSTRAINTS = __("Start year must less than end year");
+constexpr auto PROCESS_MULTI_YEAR_SELECTION_POPUP_NAME = __("Selecting");
 constexpr auto PROGRESS_BAR_SIZE = ImVec2{400, 0};
 constexpr auto LOGGER_NAME = "ExportInfoWidget";
 

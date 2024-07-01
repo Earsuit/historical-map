@@ -118,6 +118,15 @@ msgstr "保存"
 msgid "Done"
 msgstr "完成"
 
+msgid "Exporting"
+msgstr "导出中"
+
+msgid "Error"
+msgstr "错误"
+
+msgid "Selecting"
+msgstr "选择中"
+
 msgid "Export as"
 msgstr "导出为"
 
@@ -154,6 +163,21 @@ msgstr "导出"
 
 msgid "Language"
 msgstr "语言"
+
+msgid "Select file"
+msgstr "选择文件"
+
+msgid "Loading"
+msgstr "加载中"
+
+msgid "Complete"
+msgstr "完成"
+
+msgid "Import fail"
+msgstr "导入失败"
+
+msgid "Write to database"
+msgstr "写入数据库"
 
 msgid "Imported: "
 msgstr "已导入："

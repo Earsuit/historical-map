@@ -10,13 +10,15 @@
 #include <libintl.h>
 
 namespace ui {
+#define __(x) x     // gettext translation registration for constexpr
+
 const auto SELECTION = "Selected";
-constexpr auto FILE_SELECT_POPUP_NAME = "Select file";
-constexpr auto IMPORT_PROGRESS_POPUP_NAME = "Loading";
-constexpr auto IMPORT_COMPLETE_BUTTON = "Complete";
-constexpr auto IMPORT_FAIL_POPUP_NAME = "Import fail";
-constexpr auto DONE_BUTTON = "Done";
-constexpr auto WRITE_TO_DATABASE_PROGRESS_POPUP = "Write to database";
+constexpr auto FILE_SELECT_POPUP_NAME = __("Select file");
+constexpr auto IMPORT_PROGRESS_POPUP_NAME = __("Loading");
+constexpr auto IMPORT_COMPLETE_BUTTON = __("Complete");
+constexpr auto IMPORT_FAIL_POPUP_NAME = __("Import fail");
+constexpr auto DONE_BUTTON = __("Done");
+constexpr auto WRITE_TO_DATABASE_PROGRESS_POPUP = __("Write to database");
 constexpr auto LOGGER_NAME = "ImportInfoWidget";
 
 ImportInfoWidget::ImportInfoWidget():
@@ -61,7 +63,7 @@ ImportInfoWidget::ImportInfoWidget():
                           this,
                           &ImportInfoWidget::setRefreshAll);
 
-    ifd::FileDialog::getInstance().open(gettext(FILE_SELECT_POPUP_NAME), FILE_SELECT_POPUP_NAME, fileExtensionFormat());
+    ifd::FileDialog::getInstance().open(gettext(FILE_SELECT_POPUP_NAME), gettext(FILE_SELECT_POPUP_NAME), fileExtensionFormat());
 }
 
 ImportInfoWidget::~ImportInfoWidget()
@@ -145,7 +147,7 @@ std::string ImportInfoWidget::fileExtensionFormat() const
 
 void ImportInfoWidget::doImport()
 {
-    if (ifd::FileDialog::getInstance().isDone(FILE_SELECT_POPUP_NAME)) {
+    if (ifd::FileDialog::getInstance().isDone(gettext(FILE_SELECT_POPUP_NAME))) {
         if (ifd::FileDialog::getInstance().hasResult()) {
             const std::string file = ifd::FileDialog::getInstance().getResult().u8string();
             logger.debug("Open file {}", file);
@@ -158,7 +160,7 @@ void ImportInfoWidget::doImport()
         ifd::FileDialog::getInstance().close();
     }
 
-    if (ImGui::BeginPopupModal(IMPORT_PROGRESS_POPUP_NAME, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+    if (ImGui::BeginPopupModal(gettext(IMPORT_PROGRESS_POPUP_NAME), nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::Text(gettext("Imported: "));
         ImGui::SameLine();
 
@@ -193,11 +195,11 @@ void ImportInfoWidget::doImport()
         }
     }
 
-    if (ImGui::BeginPopupModal(IMPORT_FAIL_POPUP_NAME, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+    if (ImGui::BeginPopupModal(gettext(IMPORT_FAIL_POPUP_NAME), nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
         alignForWidth(ImGui::CalcTextSize(errorMsg.c_str()).x);
         ImGui::Text("%s", errorMsg.c_str());
 
-        alignForWidth(ImGui::CalcTextSize(DONE_BUTTON).x);
+        alignForWidth(ImGui::CalcTextSize(gettext(DONE_BUTTON)).x);
         if (ImGui::Button(gettext(DONE_BUTTON))) {
             ImGui::CloseCurrentPopup();
             isComplete = true;
