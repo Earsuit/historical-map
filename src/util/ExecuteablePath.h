@@ -10,6 +10,7 @@
 #include <unistd.h>
 #elif defined(__APPLE__)
 #include <mach-o/dyld.h>
+#include <CoreFoundation/CoreFoundation.h>
 #endif
 
 namespace util {
@@ -34,6 +35,34 @@ inline std::filesystem::path getExecutablePath() {
 #endif
 
     return std::filesystem::path{};
+}
+
+// returns executable path for non-mac os
+inline std::filesystem::path getAppBundlePath()
+{
+#ifdef __APPLE__
+    CFBundleRef mainBundle = CFBundleGetMainBundle();
+    if (mainBundle == NULL) {
+        return "";
+    }
+
+    CFURLRef bundleURL = CFBundleCopyBundleURL(mainBundle);
+    if (bundleURL == NULL) {
+        return "";
+    }
+
+    // Convert the URL to a file system path
+    char path[PATH_MAX];
+    if (!CFURLGetFileSystemRepresentation(bundleURL, true, (UInt8 *)path, PATH_MAX)) {
+        CFRelease(bundleURL);
+        return "";
+    }
+
+    CFRelease(bundleURL);
+    return path;
+#else
+    return getExecutablePath();
+#endif
 }
 }
 

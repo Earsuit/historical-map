@@ -3,6 +3,7 @@
 #include "src/logger/LoggerManager.h"
 #include "src/presentation/Util.h"
 #include "src/util/Signal.h"
+#include "src/util/ExecuteablePath.h"
 
 #include "ImFileDialog.h"
 #include "external/imgui/imgui.h"
@@ -243,7 +244,7 @@ void ExportInfoWidget::displayExportPopup()
             if(ImGui::Selectable(format.c_str())) {
                 if (const auto ret = exportPresenter.handleSetFormat(format); ret) {
                     ImGui::CloseCurrentPopup();
-                    ifd::FileDialog::getInstance().save(SAVE_DIALOG_KEY, gettext("Export historical info"), "*." + format + " {." + format +"}");
+                    ifd::FileDialog::getInstance().save(SAVE_DIALOG_KEY, gettext("Export historical info"), "*." + format + " {." + format +"}", util::getAppBundlePath().parent_path());
                 } else {
                     logger.error("Not supported export format {}", format);
                 }

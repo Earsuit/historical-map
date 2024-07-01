@@ -3,6 +3,7 @@
 #include "src/presentation/Util.h"
 #include "src/logger/LoggerManager.h"
 #include "src/util/Signal.h"
+#include "src/util/ExecuteablePath.h"
 
 #include "imgui.h"
 #include "ImFileDialog.h"
@@ -63,7 +64,7 @@ ImportInfoWidget::ImportInfoWidget():
                           this,
                           &ImportInfoWidget::setRefreshAll);
 
-    ifd::FileDialog::getInstance().open(gettext(FILE_SELECT_POPUP_NAME), gettext(FILE_SELECT_POPUP_NAME), fileExtensionFormat());
+    ifd::FileDialog::getInstance().open(gettext(FILE_SELECT_POPUP_NAME), gettext(FILE_SELECT_POPUP_NAME), fileExtensionFormat(), false, util::getAppBundlePath().parent_path());
 }
 
 ImportInfoWidget::~ImportInfoWidget()
