@@ -3,6 +3,7 @@
 
 #include "src/logger/LoggerManager.h"
 #include "src/logger/LogWidgetInterface.h"
+#include "src/logger/ModuleLogger.h"
 #include "src/util/Index.h"
 
 #include "imgui.h"
@@ -35,6 +36,7 @@ private:
 
     int logLevel = spdlog::level::info;
     logger::LoggerManager& loggerManager;
+    logger::ModuleLogger logger;
     moodycamel::ConcurrentQueue<Log> queue;
     std::array<Log, MAX_SIZE> logs;
     util::Index<uint16_t, BIT_NUM> start{0};
@@ -43,6 +45,7 @@ private:
     bool filterEnable = false;
 
     void updateLogs();
+    void displayLog(uint16_t idx);
 };
 }
 

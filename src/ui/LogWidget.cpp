@@ -23,7 +23,8 @@ constexpr auto TRANSPARENT = IM_COL32(0, 0, 0, 0);
 constexpr auto ERROR_COLLOR = ImVec4(1.0f, 0.4f, 0.4f, 1.0f);
 
 LogWidget::LogWidget():
-    loggerManager{logger::LoggerManager::getInstance({std::make_shared<logger::GuiSink>(*this)})}
+    loggerManager{logger::LoggerManager::getInstance({std::make_shared<logger::GuiSink>(*this)})},
+    logger{logger::LoggerManager::getInstance().getLogger("LogWidget")}
 {
 }
 
@@ -69,14 +70,18 @@ void LogWidget::paint()
                 ImGui::PushStyleColor(ImGuiCol_FrameBg, TRANSPARENT);  // Transparent background
                 ImGui::PushItemWidth(-FLT_MIN);
                 for (auto i = start; i != end; i++) {
-                    if (logs[i].color) {
-                        ImGui::PushStyleColor(ImGuiCol_Text, logs[i].color.value());
-                    }
-                    
-                    ImGui::InputText(("##" + std::to_string(i)).c_str(), &logs[i].msg, ImGuiInputTextFlags_ReadOnly);
-
-                    if (logs[i].color) {
-                        ImGui::PopStyleColor();
+                    if (filterEnable) {
+                        try {
+                            if (std::regex_search(logs[i].msg, std::regex{filter})) {
+                                displayLog(i);
+                            }
+                        }
+                        catch (const std::regex_error& e) {
+                            filterEnable = false;
+                            logger.error("{}", gettext("Invalid regex string: ") + std::string(e.what()));
+                        }
+                    } else {
+                        displayLog(i);
                     }
                 }
                 ImGui::PopItemWidth();
@@ -96,24 +101,27 @@ void LogWidget::paint()
     ImGui::End();
 }
 
+void LogWidget::displayLog(uint16_t idx)
+{
+    ImGui::PushID(idx);
+    if (logs[idx].color) {
+        ImGui::PushStyleColor(ImGuiCol_Text, logs[idx].color.value());
+    }
+    
+    ImGui::InputText("##", &logs[idx].msg, ImGuiInputTextFlags_ReadOnly);
+
+    if (logs[idx].color) {
+        ImGui::PopStyleColor();
+    }
+    ImGui::PopID();
+}
+
 void LogWidget::updateLogs()
 {
     Log log;
 
     while (queue.try_dequeue(log)) {
-        if (filterEnable) {
-            try {
-                if (std::regex_search(log.msg, std::regex{filter})) {
-                    logs[end++] = std::move(log);
-                }
-            }
-            catch (const std::regex_error& e) {
-                filterEnable = false;
-                logs[end++] = Log{gettext("Invalid regex string: ") + std::string(e.what()), ERROR_COLLOR};
-            }
-        } else {
-            logs[end++] = std::move(log);
-        }
+        logs[end++] = std::move(log);
 
         if (end == start) {
             start++;
