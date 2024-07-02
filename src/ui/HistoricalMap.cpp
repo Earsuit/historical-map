@@ -347,6 +347,9 @@ void HistoricalMap::setStyle()
     colors[ImGuiCol_TabUnfocused] = colors[ImGuiCol_Tab];
     colors[ImGuiCol_TabUnfocusedActive] = colors[ImGuiCol_Tab];
     colors[ImGuiCol_TextSelectedBg] = ImVec4(1.00f, 0.99f, 0.54f, 0.43f);
+    colors[ImGuiCol_TableHeaderBg] = ImVec4(0.78f, 0.87f, 0.98f, 1.00f);
+    colors[ImGuiCol_TableBorderStrong] = ImVec4(0.57f, 0.57f, 0.64f, 1.00f);   // Prefer using Alpha=1.0 here
+    colors[ImGuiCol_TableBorderLight] = ImVec4(0.68f, 0.68f, 0.74f, 1.00f);   // Prefer using Alpha=1.0 here
 }
 
 void HistoricalMap::loadDefaultFonts()
