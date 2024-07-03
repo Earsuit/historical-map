@@ -1,10 +1,8 @@
 #ifndef SRC_UI_LOG_WIDGET_H
 #define SRC_UI_LOG_WIDGET_H
 
-#include "src/logger/LoggerManager.h"
-#include "src/logger/LogWidgetInterface.h"
-#include "src/logger/ModuleLogger.h"
-#include "src/util/Index.h"
+#include "src/presentation/LogPresenter.h"
+#include "src/presentation/LogWidgetInterface.h"
 
 #include "imgui.h"
 #include "concurrentqueue.h"
@@ -16,36 +14,22 @@
 namespace ui {
 #define __(x) x     // gettext translation registration for constexpr
 
-constexpr uint8_t BIT_NUM = 9;
-// The real logs we can store is 2^n -1 due to start == end is treat as empty
-constexpr int MAX_SIZE = (1 << BIT_NUM);
 constexpr auto LOG_WIDGET_NAME = __("Log###Log");
 
-class LogWidget : public logger::LogWidgetInterface {
+class LogWidget : public presentation::LogWidgetInterface {
 public:
     LogWidget();
+
     void paint();
 
-    void log(const std::string& log, spdlog::level::level_enum lvl) override;
+    void displayLog(ImVec4 color, const std::string& msg) override;
 
 private:
-    struct Log {
-        std::string msg;
-        std::optional<ImVec4> color;
-    };
-
-    int logLevel = spdlog::level::info;
-    logger::LoggerManager& loggerManager;
-    logger::ModuleLogger logger;
-    moodycamel::ConcurrentQueue<Log> queue;
-    std::array<Log, MAX_SIZE> logs;
-    util::Index<uint16_t, BIT_NUM> start{0};
-    util::Index<uint16_t, BIT_NUM> end{0};
+    presentation::LogPresenter presenter;
+    std::array<std::string, presentation::NUM_LEVLES> levels;
+    int logLevel;
     std::string filter;
-    bool filterEnable = false;
-
-    void updateLogs();
-    void displayLog(uint16_t idx);
+    size_t logId = 0;
 };
 }
 

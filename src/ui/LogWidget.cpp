@@ -1,5 +1,4 @@
 #include "src/ui/LogWidget.h"
-#include "src/logger/GuiSink.h"
 
 #include "external/imgui/imgui.h"
 #include "external/imgui/misc/cpp/imgui_stdlib.h"
@@ -17,31 +16,44 @@ constexpr ImVec2 WINDOW_SIZE{800, 200};
 constexpr ImVec2 INHERIT_PARENT_SIZE{0,0};
 constexpr ImVec2 ITEM_SPACING{0,0};
 constexpr float Y_BOTTOM = 1.0;
-constexpr const char* LOG_LEVEL[] = {"TRACE", "DEBUG", "INFO", "WARN", "ERROR", "CRITICAL", "OFF"};
 constexpr int LEVEL_COMBO_WIDTH = 100;
 constexpr auto TRANSPARENT = IM_COL32(0, 0, 0, 0);
-constexpr auto ERROR_COLLOR = ImVec4(1.0f, 0.4f, 0.4f, 1.0f);
 
 LogWidget::LogWidget():
-    loggerManager{logger::LoggerManager::getInstance({std::make_shared<logger::GuiSink>(*this)})},
-    logger{logger::LoggerManager::getInstance().getLogger("LogWidget")}
+    presenter{*this}
 {
+    levels = presenter.handleGetLevels();
+    logLevel = presenter.handleGetLevel();
 }
 
 void LogWidget::paint()
 {
     ImGui::SetNextWindowSize(WINDOW_SIZE, ImGuiCond_FirstUseEver);
     if (ImGui::Begin(gettext(LOG_WIDGET_NAME))) {
-        bool clear = ImGui::Button(gettext("Clear"));
-        ImGui::SameLine();
-        bool copy = ImGui::Button(gettext("Copy"));
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(LEVEL_COMBO_WIDTH);
-        if (ImGui::Combo("##Level", &logLevel, LOG_LEVEL, IM_ARRAYSIZE(LOG_LEVEL))) {
-            loggerManager.setLevel(spdlog::level::level_enum{logLevel});
+        if (ImGui::Button(gettext("Clear"))) {
+            presenter.handleClearLogs();
         }
         ImGui::SameLine();
 
+        bool copy = ImGui::Button(gettext("Copy"));
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(LEVEL_COMBO_WIDTH);
+
+        if (ImGui::BeginCombo("##Level", levels[logLevel].c_str())) {
+            for (int i = 0; i < levels.size(); i++) {
+                if (ImGui::Selectable(levels[i].c_str(), i == logLevel)) {
+                    logLevel = i;
+                    presenter.handleSetLevel(logLevel);
+                    ImGui::SetItemDefaultFocus();
+                }
+            }
+
+            ImGui::EndCombo();
+        }
+
+        ImGui::SameLine();
+
+        bool filterEnable = presenter.handleCheckIsFilterSet();
         if (filterEnable) {
             ImGui::BeginDisabled();
         }
@@ -51,7 +63,13 @@ void LogWidget::paint()
         }
 
         ImGui::SameLine();
-        ImGui::Checkbox(gettext("Set"), &filterEnable);
+        if(ImGui::Checkbox(gettext("Set"), &filterEnable)) {
+            if (filterEnable) {
+                presenter.handleSetFilter(filter);
+            } else {
+                presenter.handleUnsetFilter();
+            }
+        }
 
         ImGui::Separator();
 
@@ -61,33 +79,12 @@ void LogWidget::paint()
             } 
 
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ITEM_SPACING);
-
-            if (clear) {
-                start = end = 0;
-            } else {
-                updateLogs();
-                
-                ImGui::PushStyleColor(ImGuiCol_FrameBg, TRANSPARENT);  // Transparent background
-                ImGui::PushItemWidth(-FLT_MIN);
-                for (auto i = start; i != end; i++) {
-                    if (filterEnable) {
-                        try {
-                            if (std::regex_search(logs[i].msg, std::regex{filter})) {
-                                displayLog(i);
-                            }
-                        }
-                        catch (const std::regex_error& e) {
-                            filterEnable = false;
-                            logger.error("{}", gettext("Invalid regex string: ") + std::string(e.what()));
-                        }
-                    } else {
-                        displayLog(i);
-                    }
-                }
-                ImGui::PopItemWidth();
-                ImGui::PopStyleColor(1);
-            }
-
+            ImGui::PushStyleColor(ImGuiCol_FrameBg, TRANSPARENT);  // Transparent background
+            ImGui::PushItemWidth(-FLT_MIN);
+            logId = 0;
+            presenter.handleDisplayLogs();
+            ImGui::PopItemWidth();
+            ImGui::PopStyleColor(1);
             ImGui::PopStyleVar();
 
             if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY()) {
@@ -101,44 +98,14 @@ void LogWidget::paint()
     ImGui::End();
 }
 
-void LogWidget::displayLog(uint16_t idx)
+void LogWidget::displayLog(ImVec4 color, const std::string& msg)
 {
-    ImGui::PushID(idx);
-    if (logs[idx].color) {
-        ImGui::PushStyleColor(ImGuiCol_Text, logs[idx].color.value());
-    }
-    
-    ImGui::InputText("##", &logs[idx].msg, ImGuiInputTextFlags_ReadOnly);
+    ImGui::PushID(logId++);
 
-    if (logs[idx].color) {
-        ImGui::PopStyleColor();
-    }
+    ImGui::PushStyleColor(ImGuiCol_Text, color);
+    ImGui::InputText("##", const_cast<std::string*>(&msg), ImGuiInputTextFlags_ReadOnly);
+    ImGui::PopStyleColor();
+
     ImGui::PopID();
 }
-
-void LogWidget::updateLogs()
-{
-    Log log;
-
-    while (queue.try_dequeue(log)) {
-        logs[end++] = std::move(log);
-
-        if (end == start) {
-            start++;
-        }
-    }
-    
-}
-
-void LogWidget::log(const std::string& log, spdlog::level::level_enum lvl)
-{
-    std::optional<ImVec4> color;
-
-    if (lvl >= spdlog::level::level_enum::err) {
-        color = ERROR_COLLOR;
-    }
-
-    queue.enqueue({log, color});
-}
-
 }

@@ -17,6 +17,7 @@ public:
 
     ModuleLogger getLogger(const std::string& name);
     void setLevel(spdlog::level::level_enum level);
+    spdlog::level::level_enum getLevel() const noexcept { return level; }
 
     LoggerManager(LoggerManager&&) = delete;
     LoggerManager(const LoggerManager&) = delete;

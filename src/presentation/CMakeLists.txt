@@ -23,6 +23,9 @@ SET(PRESENTATION_SRC
     MainViewInterface.h
     MainViewPresenter.h
     MainViewPresenter.cpp
+    LogPresenter.h
+    LogPresenter.cpp
+    LogWidgetInterface.h
 )
 
 add_library(libpresentation STATIC ${PRESENTATION_SRC})

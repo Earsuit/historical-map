@@ -11,6 +11,8 @@ set(MODEL_SRC
     ExportModel.cpp
     ImportModel.h
     ImportModel.cpp
+    LogModel.h
+    LogModel.cpp
 )
 
 add_library(libmodel STATIC ${MODEL_SRC})

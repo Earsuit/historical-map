@@ -87,6 +87,9 @@ msgstr "否！"
 msgid "Start year must less than end year"
 msgstr "起始年代必须小于终止年代"
 
+msgid "Invalid regex string: "
+msgstr "非法正则表达式："
+
 msgid "Cursor at: "
 msgstr "鼠标坐标："
 
@@ -263,9 +266,6 @@ msgstr "过滤器"
 
 msgid "Set"
 msgstr "启用"
-
-msgid "Invalid regex string: "
-msgstr "非法正则表达式："
 
 msgid "Log###Log"
 msgstr "日志###Log"

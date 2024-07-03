@@ -28,6 +28,13 @@ struct Range {
     auto operator<=>(const Range&) const noexcept = default;
 };
 
+struct Color {
+    float r;
+    float g;
+    float b;
+    float a;
+};
+
 float deg2Rad(float degree);
 float rad2Deg(float radius);
 float longitude2X(float longitude, int zoom);

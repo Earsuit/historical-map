@@ -1,9 +1,9 @@
 SET(LOGGER_SRC
-    GuiSink.cpp
-    GuiSink.h
+    ModelSink.cpp
+    ModelSink.h
     LoggerManager.h
     LoggerManager.cpp
-    LogWidgetInterface.h
+    LogModelInterface.h
 )
 
 add_library(liblogger STATIC ${LOGGER_SRC})
