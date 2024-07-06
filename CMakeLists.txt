@@ -11,6 +11,7 @@ set(LOCALE_DIR "${CMAKE_SOURCE_DIR}/locale")
 set(SINGLE_PO_FILE "${CMAKE_BINARY_DIR}/HistoricalInfo.po")
 set(POT_FILE "${LOCALE_DIR}/translation.pot")
 set(PO_FILE "${LOCALE_DIR}/${LOCALE}/translation.po")
+set(ICON_FILE ${CMAKE_SOURCE_DIR}/assets/AppIcon.png)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
@@ -119,18 +120,20 @@ SET(IM_FILE_DIALOG_SRC
 add_compile_definitions(USE_GETTEXT)
 
 if (APPLE)
-    add_executable(HistoricalMap MACOSX_BUNDLE main.cpp)
+    add_executable(HistoricalMap MACOSX_BUNDLE main.cpp ${ICON_FILE})
     # set_target_properties(HistoricalMap PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin")
     # On macos we have to specify glfw GLEW::GLEW when compiling main.cpp because it includes HistoricalMap.h
     # which includes glfw and glew
     target_link_libraries(HistoricalMap PRIVATE glfw GLEW::GLEW libui libpresentation  -Wl,-force_load libpersistence liblogger)
     target_link_libraries(HistoricalMap PRIVATE "-framework CoreFoundation" "-framework CoreGraphics" "-framework ImageIO" "-framework AppKit")
     
+    set_source_files_properties(${ICON_FILE} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
     set_target_properties(HistoricalMap PROPERTIES
         OUTPUT_NAME ${EXECUTABLE_NAME}
         MACOSX_BUNDLE TRUE
         MACOSX_RPATH TRUE
         MACOSX_BUNDLE_BUNDLE_NAME ${EXECUTABLE_NAME}
+        MACOSX_BUNDLE_ICON_FILE AppIcon
         MACOSX_BUNDLE_BUNDLE_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}.${VERSION_TWEAK}
         MACOSX_BUNDLE_SHORT_VERSION_STRING ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
         MACOSX_BUNDLE_GUI_IDENTIFIER Earsuit.${EXECUTABLE_NAME}
