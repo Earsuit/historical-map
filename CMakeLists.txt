@@ -141,6 +141,15 @@ if (APPLE)
         XCODE_ATTRIBUTE_ENABLE_HARDENED_RUNTIME TRUE
         XCODE_ATTRIBUTE_EXECUTABLE_NAME ${EXECUTABLE_NAME}
     )
+
+    # build dmg
+    install(TARGETS HistoricalMap BUNDLE DESTINATION .)
+    set(CPACK_GENERATOR DragNDrop)
+    set(CPACK_PACKAGE_VERSION_MAJOR ${VERSION_MAJOR})
+    set(CPACK_PACKAGE_VERSION_MINOR ${VERSION_MINOR})
+    set(CPACK_PACKAGE_VERSION_PATCH ${VERSION_PATCH})
+    set(CPACK_PACKAGE_FILE_NAME "${EXECUTABLE_NAME}-${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}-macos")
+    include(CPack)
 elseif(LINUX)
     add_executable(HistoricalMap main.cpp)
     target_link_libraries(HistoricalMap PRIVATE libui libpresentation -Wl,--whole-archive libpersistence -Wl,--no-whole-archive liblogger)
