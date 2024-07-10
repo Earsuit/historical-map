@@ -145,11 +145,6 @@ if (APPLE)
     # build dmg
     install(TARGETS HistoricalMap BUNDLE DESTINATION .)
     set(CPACK_GENERATOR DragNDrop)
-    set(CPACK_PACKAGE_VERSION_MAJOR ${VERSION_MAJOR})
-    set(CPACK_PACKAGE_VERSION_MINOR ${VERSION_MINOR})
-    set(CPACK_PACKAGE_VERSION_PATCH ${VERSION_PATCH})
-    set(CPACK_PACKAGE_FILE_NAME "${EXECUTABLE_NAME}-${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}-${CMAKE_SYSTEM_PROCESSOR}")
-    include(CPack)
 elseif(LINUX)
     add_executable(HistoricalMap main.cpp)
     target_link_libraries(HistoricalMap PRIVATE libui libpresentation -Wl,--whole-archive libpersistence -Wl,--no-whole-archive liblogger)
@@ -157,7 +152,22 @@ elseif(MSVC)
     add_executable(HistoricalMap WIN32 main.cpp)
     target_link_libraries(HistoricalMap PRIVATE libui libpresentation liblogger libpersistence)
     set_property(TARGET HistoricalMap APPEND_STRING PROPERTY LINK_FLAGS " /WHOLEARCHIVE:libpersistence")
+
+    install(TARGETS HistoricalMap RUNTIME DESTINATION .)
+    install(DIRECTORY $<TARGET_FILE_DIR:HistoricalMap>/locale DESTINATION .)
+    install(FILES 
+            $<TARGET_FILE_DIR:HistoricalMap>/HistoricalMap.lib 
+            $<TARGET_FILE_DIR:HistoricalMap>/HistoricalMap.exp 
+            $<TARGET_FILE_DIR:HistoricalMap>/LXGWNeoXiHei.ttf 
+            DESTINATION .)
+    set(CPACK_GENERATOR ZIP)
 endif()
+
+set(CPACK_PACKAGE_VERSION_MAJOR ${VERSION_MAJOR})
+set(CPACK_PACKAGE_VERSION_MINOR ${VERSION_MINOR})
+set(CPACK_PACKAGE_VERSION_PATCH ${VERSION_PATCH})
+set(CPACK_PACKAGE_FILE_NAME "${EXECUTABLE_NAME}-${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}-${CMAKE_SYSTEM_PROCESSOR}")
+include(CPack)
 
 add_subdirectory(src)
 add_subdirectory(test)
