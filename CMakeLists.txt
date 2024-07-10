@@ -149,7 +149,7 @@ elseif(LINUX)
     add_executable(HistoricalMap main.cpp)
     target_link_libraries(HistoricalMap PRIVATE libui libpresentation -Wl,--whole-archive libpersistence -Wl,--no-whole-archive liblogger)
 elseif(MSVC)
-    add_executable(HistoricalMap WIN32 main.cpp)
+    add_executable(HistoricalMap WIN32 main.cpp assets/resource.rc)
     target_link_libraries(HistoricalMap PRIVATE libui libpresentation liblogger libpersistence)
     set_property(TARGET HistoricalMap APPEND_STRING PROPERTY LINK_FLAGS " /WHOLEARCHIVE:libpersistence")
 
