@@ -244,7 +244,7 @@ void ExportInfoWidget::displayExportPopup()
             if(ImGui::Selectable(format.c_str())) {
                 if (const auto ret = exportPresenter.handleSetFormat(format); ret) {
                     ImGui::CloseCurrentPopup();
-                    ifd::FileDialog::getInstance().save(SAVE_DIALOG_KEY, gettext("Export historical info"), "*." + format + " {." + format +"}", util::getAppBundlePath().parent_path());
+                    ifd::FileDialog::getInstance().save(SAVE_DIALOG_KEY, gettext("Export historical info"), "*." + format + " {." + format +"}", util::getAppBundlePath().parent_path().string());
                 } else {
                     logger.error("Not supported export format {}", format);
                 }

@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <type_traits>
 #include <climits>
+#include <compare>
 
 namespace util {
 template<typename Y, uint8_t BIT_NUM>

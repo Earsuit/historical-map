@@ -64,7 +64,7 @@ ImportInfoWidget::ImportInfoWidget():
                           this,
                           &ImportInfoWidget::setRefreshAll);
 
-    ifd::FileDialog::getInstance().open(gettext(FILE_SELECT_POPUP_NAME), gettext(FILE_SELECT_POPUP_NAME), fileExtensionFormat(), false, util::getAppBundlePath().parent_path());
+    ifd::FileDialog::getInstance().open(gettext(FILE_SELECT_POPUP_NAME), gettext(FILE_SELECT_POPUP_NAME), fileExtensionFormat(), false, util::getAppBundlePath().parent_path().string());
 }
 
 ImportInfoWidget::~ImportInfoWidget()
