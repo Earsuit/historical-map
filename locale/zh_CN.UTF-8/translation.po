@@ -216,7 +216,7 @@ msgstr "导出失败：%s"
 msgid "Select"
 msgstr "选择"
 
-msgid "Historical Map"
+msgid "HistoricalMap"
 msgstr "历史地图"
 
 msgid "File"

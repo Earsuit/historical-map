@@ -6,3 +6,4 @@ Icon=@INSTALL_DIR@/AppIcon.png
 Terminal=false
 Type=Application
 Categories=Utility;
+StartupWMClass=@EXECUTABLE_NAME@

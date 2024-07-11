@@ -19,6 +19,8 @@
 #include <libintl.h>
 
 namespace ui {
+#define __(x) x     // gettext translation registration for constexpr
+
 constexpr int WINDOW_WIDTH = 1080 * 1.5;
 constexpr int WINDOW_HEIGHT = 1080;
 constexpr float MAIN_DOCKSPACE_HORIZONTAL_RATIO = 3.6f/5.0f;
@@ -36,6 +38,7 @@ constexpr int MAX_MAP_WIDGET_NUM = 2;
 constexpr ImVec2 DOCKSPACE_DEFAULT_ARG = ImVec2{0.0f, 0.0f};
 constexpr float ROUNDING = 3;
 constexpr auto LOGGER_NAME = "HistoricalMap";
+constexpr auto APP_NAME =  __("HistoricalMap");
 constexpr uint16_t BASIC_LATIN_CODE_POINT = 0x0020;
 constexpr uint16_t MAX_U16_CODE_POINT = 0xFFFF;
 constexpr uint16_t CODE_POINT_END = 0;
@@ -84,7 +87,7 @@ HistoricalMap::HistoricalMap():
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 
     // Create window with graphics context
-    window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, gettext("Historical Map"), NULL, NULL);
+    window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, gettext(APP_NAME), NULL, NULL);
     if (window == NULL) {
         throw std::runtime_error("Failed to create window.");
     }
