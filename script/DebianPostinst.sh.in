@@ -1,0 +1,7 @@
+#!/bin/sh
+
+echo "Post install script is running now"
+REAL_USER=${SUDO_USER:-$USER}
+# Create a directory in the user's home for the database
+chown -R $REAL_USER:$USER @INSTALL_DIR@
+exit 0

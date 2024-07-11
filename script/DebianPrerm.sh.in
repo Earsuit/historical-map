@@ -1,0 +1,9 @@
+#!/bin/sh
+
+echo "Pre remove script is running now"
+if pidof @EXECUTABLE_NAME@ > /dev/null
+then
+    killall @EXECUTABLE_NAME@
+fi
+
+rm -rf @INSTALL_DIR@/@EXECUTABLE_NAME@DB @INSTALL_DIR@/imgui.ini

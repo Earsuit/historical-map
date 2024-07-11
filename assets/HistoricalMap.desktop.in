@@ -1,0 +1,8 @@
+[Desktop Entry]
+Version=@VERSION@
+Name=@EXECUTABLE_NAME@
+Exec=@INSTALL_DIR@/@EXECUTABLE_NAME@
+Icon=@INSTALL_DIR@/AppIcon.png
+Terminal=false
+Type=Application
+Categories=Utility;

@@ -47,6 +47,7 @@ find_program(GETTEXT_MSGINIT_EXECUTABLE msginit REQUIRED)
 include(GeneratePoFile)
 include(TagVersion)
 createTagVersion()
+set(VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}.${VERSION_TWEAK})
 
 set(EXECUTABLE_NAME "HistoricalMap")
 
@@ -134,7 +135,7 @@ if (APPLE)
         MACOSX_RPATH TRUE
         MACOSX_BUNDLE_BUNDLE_NAME ${EXECUTABLE_NAME}
         MACOSX_BUNDLE_ICON_FILE AppIcon
-        MACOSX_BUNDLE_BUNDLE_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}.${VERSION_TWEAK}
+        MACOSX_BUNDLE_BUNDLE_VERSION ${VERSION}
         MACOSX_BUNDLE_SHORT_VERSION_STRING ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
         MACOSX_BUNDLE_GUI_IDENTIFIER Earsuit.${EXECUTABLE_NAME}
         MACOSX_FRAMEWORK_IDENTIFIER Earsuit.${EXECUTABLE_NAME}
@@ -148,6 +149,22 @@ if (APPLE)
 elseif(LINUX)
     add_executable(HistoricalMap main.cpp)
     target_link_libraries(HistoricalMap PRIVATE libui libpresentation -Wl,--whole-archive libpersistence -Wl,--no-whole-archive liblogger)
+
+    set(INSTALL_DIR "/opt/${EXECUTABLE_NAME}")
+    configure_file(${CMAKE_SOURCE_DIR}/assets/HistoricalMap.desktop.in HistoricalMap.desktop @ONLY)
+    configure_file(${CMAKE_SOURCE_DIR}/script/DebianPostinst.sh.in postinst @ONLY)
+    configure_file(${CMAKE_SOURCE_DIR}/script/DebianPrerm.sh.in prerm @ONLY)
+    execute_process(COMMAND chmod +x ${CMAKE_BINARY_DIR}/postinst)
+    execute_process(COMMAND chmod +x ${CMAKE_BINARY_DIR}/prerm)
+    install(TARGETS HistoricalMap RUNTIME DESTINATION ${INSTALL_DIR})
+    install(DIRECTORY $<TARGET_FILE_DIR:HistoricalMap>/locale DESTINATION ${INSTALL_DIR})
+    install(FILES $<TARGET_FILE_DIR:HistoricalMap>/LXGWNeoXiHei.ttf DESTINATION ${INSTALL_DIR})
+    install(FILES $<TARGET_FILE_DIR:HistoricalMap>/HistoricalMap.desktop DESTINATION /usr/share/applications)
+    install(FILES ${CMAKE_SOURCE_DIR}/assets/AppIcon.png DESTINATION ${INSTALL_DIR})
+    set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA ${CMAKE_BINARY_DIR}/postinst ${CMAKE_BINARY_DIR}/prerm)
+    set(CPACK_PACKAGE_CONTACT "renyudicn@outlook.com")
+    set(CPACK_DEBIAN_PACKAGE_DEPENDS "libglu1-mesa-dev")
+    set(CPACK_GENERATOR DEB)
 elseif(MSVC)
     add_executable(HistoricalMap WIN32 main.cpp assets/resource.rc)
     target_link_libraries(HistoricalMap PRIVATE libui libpresentation liblogger libpersistence)
@@ -166,7 +183,7 @@ endif()
 set(CPACK_PACKAGE_VERSION_MAJOR ${VERSION_MAJOR})
 set(CPACK_PACKAGE_VERSION_MINOR ${VERSION_MINOR})
 set(CPACK_PACKAGE_VERSION_PATCH ${VERSION_PATCH})
-set(CPACK_PACKAGE_FILE_NAME "${EXECUTABLE_NAME}-${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}-${CMAKE_SYSTEM_PROCESSOR}")
+set(CPACK_PACKAGE_FILE_NAME "${EXECUTABLE_NAME}-${VERSION}-${CMAKE_SYSTEM_PROCESSOR}")
 include(CPack)
 
 add_subdirectory(src)
