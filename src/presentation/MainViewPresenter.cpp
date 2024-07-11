@@ -9,9 +9,9 @@
 
 namespace presentation {
 constexpr auto ENGLISH = "English";
-constexpr auto ENGLISH_LOCALE = "en_US";
+constexpr auto ENGLISH_LOCALE = "en_US.UTF-8";
 constexpr auto CHINESE = "中文";
-constexpr auto CHINESE_LOCALE = "zh_CN";
+constexpr auto CHINESE_LOCALE = "zh_CN.UTF-8";
 constexpr auto DOMAIN_NAME = "HistoricalInfo";
 constexpr auto DOMAIN_PATH = "locale";
 constexpr auto CODE_SET = "UTF-8";
