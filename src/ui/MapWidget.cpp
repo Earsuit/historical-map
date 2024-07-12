@@ -268,8 +268,16 @@ void MapWidget::renderRightClickMenu()
             drawRightClickPoint = true;
         }
 
-        if (ImGui::MenuItem(gettext("Add new country"))) {
-            openAddNewCountryPopup = true;
+        if (ImGui::BeginMenu(gettext("Add new country"))) {
+            ImGui::InputTextWithHint("##", "Country Name", &newCountryName);
+            if (ImGui::Button(gettext("Add")) & !newCountryName.empty()) {
+                if (presenter.handleAddCountry(newCountryName, 
+                                            model::Vec2{static_cast<float>(rightClickMenuPos.x), static_cast<float>(rightClickMenuPos.y)})) {
+                    newCountryName.clear();
+                    ImGui::CloseCurrentPopup();
+                }
+            }
+            ImGui::EndMenu();
         }
         
         if (ImGui::BeginMenu(gettext("Add to exist country"))) {
@@ -278,14 +286,21 @@ void MapWidget::renderRightClickMenu()
                 if (ImGui::MenuItem(country.c_str())) {
                     presenter.handleExtendContour(country, 
                                                   model::Vec2{static_cast<float>(rightClickMenuPos.x), static_cast<float>(rightClickMenuPos.y)});
-                    drawRightClickPoint = false;
                 }
             }
             ImGui::EndMenu();
         }
 
-        if (ImGui::MenuItem(gettext("Add new city"))) {
-            openAddNewCityPopup = true;
+        if (ImGui::BeginMenu(gettext("Add new city"))) {
+            ImGui::InputTextWithHint("##", "City Name", &newCityName);
+            if (ImGui::Button(gettext("Add")) & !newCityName.empty()) {
+                if (presenter.handleAddCity(newCityName, 
+                                            model::Vec2{static_cast<float>(rightClickMenuPos.x), static_cast<float>(rightClickMenuPos.y)})) {
+                    newCountryName.clear();
+                    ImGui::CloseCurrentPopup();
+                }
+            }
+            ImGui::EndMenu();
         }
 
         if (ImGui::BeginMenu(gettext("Add city from database"))) {
@@ -293,7 +308,6 @@ void MapWidget::renderRightClickMenu()
             for (const auto& city : databaseCities) {
                 if (ImGui::MenuItem(city.c_str())) {
                     presenter.handleAddCityFromDatabase(city);
-                    drawRightClickPoint = false;
                     break;
                 }
             }
@@ -303,42 +317,6 @@ void MapWidget::renderRightClickMenu()
         ImGui::EndPopup();
     } else {
         drawRightClickPoint = false;
-    }
-
-    if (openAddNewCountryPopup) {
-        ImGui::OpenPopup(ADD_NEW_COUNTRY_POPUP_NAME);
-    }
-
-    if (openAddNewCityPopup) {
-        ImGui::OpenPopup(ADD_NEW_CITY_POPUP_NAME);
-    }
-
-    if (ImGui::BeginPopup(ADD_NEW_COUNTRY_POPUP_NAME)) {
-        drawRightClickPoint = true;
-        ImGui::InputTextWithHint("##", "Country Name", &newCountryName);
-        if (ImGui::Button(gettext("Add")) & !newCountryName.empty()) {
-            drawRightClickPoint = false;
-            if (presenter.handleAddCountry(newCountryName, 
-                                           model::Vec2{static_cast<float>(rightClickMenuPos.x), static_cast<float>(rightClickMenuPos.y)})) {
-                newCountryName.clear();
-                ImGui::CloseCurrentPopup();
-            }
-        }
-        ImGui::EndPopup();
-    }
-
-    if (ImGui::BeginPopup(ADD_NEW_CITY_POPUP_NAME)) {
-        drawRightClickPoint = true;
-        ImGui::InputTextWithHint("##", "City Name", &newCityName);
-        if (ImGui::Button(gettext("Add")) & !newCityName.empty()) {
-            drawRightClickPoint = false;
-            if (presenter.handleAddCity(newCityName, 
-                                        model::Vec2{static_cast<float>(rightClickMenuPos.x), static_cast<float>(rightClickMenuPos.y)})) {
-                newCountryName.clear();
-                ImGui::CloseCurrentPopup();
-            }
-        }
-        ImGui::EndPopup();
     }
 }
 
