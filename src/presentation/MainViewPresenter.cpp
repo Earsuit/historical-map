@@ -23,7 +23,10 @@ constexpr auto ENV_VAR_LOCALE = "LC_ALL";
 void setLocale(const char* locale)
 {
 #ifdef __linux__
-    setlocale (LC_ALL, locale);
+    // GNU gettext gives preference to LANGUAGE over LC_ALL and LANG
+    // we do not set any priority of the language so we can ba able to switch language
+    setenv("LANGUAGE", "", OVERWRITE);
+    setlocale(LC_ALL, locale);
 #elif defined(__APPLE__)
     setenv(ENV_VAR_LOCALE, locale, OVERWRITE);
 #elif defined(_WIN32)
