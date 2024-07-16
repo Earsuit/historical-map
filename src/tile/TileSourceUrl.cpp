@@ -7,6 +7,13 @@
 #include <optional>
 #include <chrono>
 #include <string_view>
+#include <string>
+
+// proxy
+#ifdef __APPLE__
+#include <SystemConfiguration/SystemConfiguration.h>
+#include <CoreFoundation/CoreFoundation.h>
+#endif
 
 namespace tile {
 
@@ -20,6 +27,67 @@ constexpr auto MATCHER_LEN = 3;
 constexpr auto LOGGER_NAME = "TileSourceUrl";
 
 namespace {
+constexpr int MAX_IP_TEXTUAL_REPRESENTATION = 40;   // ipv6 with a NULL terminator
+
+struct Proxy {
+    std::string httpProxy;
+    std::string httpsProxy;
+    std::string socksProxy;
+};
+
+Proxy getProxySettings(logger::ModuleLogger& logger) {
+    Proxy proxy;
+
+#ifdef __APPLE__
+    static char ip[MAX_IP_TEXTUAL_REPRESENTATION];
+    CFDictionaryRef proxySettings = SCDynamicStoreCopyProxies(NULL);
+
+    if (proxySettings) {
+        auto assembleProxy = [proxySettings, &logger](const std::string& name,
+                                                           const void* enablekey, 
+                                                           const void* ipKey, 
+                                                           const void* portKey){
+            std::string proxy;
+            if (CFNumberRef enabledPtr = reinterpret_cast<CFNumberRef>(CFDictionaryGetValue(proxySettings, enablekey)); enabledPtr) {
+                bool enabled = false;
+                CFNumberGetValue(enabledPtr, kCFNumberIntType, &enabled);
+                if (enabled) {
+                    CFNumberRef portPtr = reinterpret_cast<CFNumberRef>(CFDictionaryGetValue(proxySettings, portKey));
+                    CFStringRef ipPtr = reinterpret_cast<CFStringRef>(CFDictionaryGetValue(proxySettings, ipKey));
+                    if (portPtr && ipPtr) {
+                        bzero(ip, MAX_IP_TEXTUAL_REPRESENTATION);
+                        CFStringGetCString(ipPtr, ip, MAX_IP_TEXTUAL_REPRESENTATION, kCFStringEncodingUTF8);
+                        
+                        int port;
+                        CFNumberGetValue(portPtr, kCFNumberIntType, &port);
+                        proxy = name + std::string{"://"} + 
+                                    std::string{ip} + 
+                                    std::string{":"} +  
+                                    std::to_string(port);
+                        logger.debug("{} proxy enabled: {}", name, proxy);
+                    } 
+                } else {
+                    logger.debug("{} proxy not enabled.", name);
+                }
+            } else {
+                logger.error("Failed to retrieve {} proxy settings.", name);
+            }
+
+            return proxy;
+        };
+
+        proxy.httpProxy = assembleProxy("http", kSCPropNetProxiesHTTPEnable, kSCPropNetProxiesHTTPProxy, kSCPropNetProxiesHTTPPort);
+        proxy.httpProxy = assembleProxy("https", kSCPropNetProxiesHTTPSEnable, kSCPropNetProxiesHTTPSProxy, kSCPropNetProxiesHTTPSPort);
+        proxy.socksProxy = assembleProxy("socks5", kSCPropNetProxiesSOCKSEnable, kSCPropNetProxiesSOCKSProxy, kSCPropNetProxiesSOCKSPort);
+        CFRelease(proxySettings);
+    } else {
+        logger.error("Failed to retrieve proxy settings.");
+    }
+#endif
+
+    return proxy;
+}
+
 size_t curlCallback(char *ptr, size_t size, size_t nmemb, void *userdata)
 {
     const auto bytePtr = reinterpret_cast<std::byte*>(ptr);
@@ -35,6 +103,8 @@ std::vector<std::byte> requestData(const std::string& url, logger::ModuleLogger&
 {
     std::vector<std::byte> data;
 
+    const auto proxy = getProxySettings(logger);
+
     const auto curl = curl_easy_init();
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl, CURLOPT_NOPROGRESS, SHUT_OFF_THE_PROGRESS_METER);
@@ -43,6 +113,19 @@ std::vector<std::byte> requestData(const std::string& url, logger::ModuleLogger&
     curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 1);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, reinterpret_cast<void*>(&data));
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curlCallback);
+
+    if (!proxy.httpProxy.empty()) {
+        curl_easy_setopt(curl, CURLOPT_PROXY, proxy.httpProxy.c_str());
+    }
+
+    if (!proxy.httpsProxy.empty()) {
+        curl_easy_setopt(curl, CURLOPT_PROXY, proxy.httpsProxy.c_str());
+    }
+
+    if (!proxy.socksProxy.empty()) {
+        curl_easy_setopt(curl, CURLOPT_PROXY, proxy.socksProxy.c_str());
+    }
+
     const auto res = curl_easy_perform(curl);
     curl_easy_cleanup(curl);
 
