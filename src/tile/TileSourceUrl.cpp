@@ -36,6 +36,8 @@ namespace {
 constexpr int MAX_IP_TEXTUAL_REPRESENTATION = 40;   // ipv6 with a NULL terminator
 constexpr auto WIN_PROXY_WITH_PROTOCOL_REGEX = "(\\w*)=(.*)";
 constexpr auto NO_PROXY = "";
+constexpr auto ENABLE = 1L;
+constexpr auto CONNECTION_TIMEOUT_SECONDS = 2;
 
 std::vector<std::string> getProxySettings(logger::ModuleLogger& logger) {
     std::vector<std::string> proxys;
@@ -120,7 +122,7 @@ size_t curlCallback(char *ptr, size_t size, size_t nmemb, void *userdata)
 {
     const auto bytePtr = reinterpret_cast<std::byte*>(ptr);
     auto data = reinterpret_cast<std::vector<std::byte>*>(userdata);
-    data->reserve(nmemb);
+    data->reserve(data->size() + nmemb);
 
     data->insert(data->cend(), bytePtr, bytePtr + nmemb);
 
@@ -134,11 +136,11 @@ util::Expected<std::vector<std::byte>> requestData(const std::string& url, const
     const auto curl = curl_easy_init();
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl, CURLOPT_NOPROGRESS, SHUT_OFF_THE_PROGRESS_METER);
-    curl_easy_setopt(curl, CURLOPT_USERAGENT, "curl");
-    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 1);
-    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 1);
+    curl_easy_setopt(curl, CURLOPT_USERAGENT, "curl/8.8.0");
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, reinterpret_cast<void*>(&data));
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curlCallback);
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, ENABLE);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, CONNECTION_TIMEOUT_SECONDS);
 
     if (!proxy.empty()) {
         curl_easy_setopt(curl, CURLOPT_PROXY, proxy.c_str());
@@ -158,6 +160,7 @@ util::Expected<std::vector<std::byte>> requestData(const std::string& url, const
 TileSourceUrl::TileSourceUrl(const std::string& url):
     logger{logger::LoggerManager::getInstance().getLogger(LOGGER_NAME)}
 {
+    curl_global_init(CURL_GLOBAL_DEFAULT);
     setUrl(url);
 }
 
