@@ -148,7 +148,7 @@ std::vector<std::byte> requestData(const std::string& url, logger::ModuleLogger&
         logger.debug("CURL get success for url {}", url);
         return data;
     } else {
-        logger.error("CURL get fail for url {}, error code {}", url, static_cast<int>(res));
+        logger.error("CURL get fail for url {}, error: {}", url, curl_easy_strerror(res));
         return {};
     }
 }
