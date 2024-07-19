@@ -74,12 +74,12 @@ void JsonExporter::insert(Data&& info)
     json[JSON_FIRST_LEVEL_NAME].emplace_back(std::move(info));
 }
 
-tl::expected<void, util::Error> JsonExporter::writeToFile(const std::string& file, bool overwrite)
+util::Expected<void> JsonExporter::writeToFile(const std::string& file, bool overwrite)
 {
     if (auto&& ret = openFile(file, overwrite); ret) {
         toStream(std::move(ret).value(), json);
     } else {
-        return tl::unexpected{ret.error()};;
+        return util::Unexpected{ret.error()};;
     }
 
     return util::SUCCESS;
@@ -90,16 +90,16 @@ void JsonExporter::toStream(std::fstream stream, const nlohmann::json& json)
     stream << std::setw(PRETTIFY_JSON) << json << std::endl;
 }
 
-tl::expected<std::fstream, util::Error> JsonExporter::openFile(const std::string& file, bool overwrite)
+util::Expected<std::fstream> JsonExporter::openFile(const std::string& file, bool overwrite)
 {
     if (!overwrite && std::filesystem::exists(file)) {
-        return tl::unexpected(util::Error{util::ErrorCode::FILE_EXISTS});
+        return util::Unexpected(util::Error{util::ErrorCode::FILE_EXISTS});
     }
 
     return std::fstream{file, std::ios::out | std::ios::trunc};
 }
 
-util::Generator<tl::expected<Data, util::Error>> JsonImporter::loadFromFile(const std::string file)
+util::Generator<util::Expected<Data>> JsonImporter::loadFromFile(const std::string file)
 {
     if (auto&& ret = openFile(file); ret) {
         std::optional<util::Error> error;
@@ -115,17 +115,17 @@ util::Generator<tl::expected<Data, util::Error>> JsonImporter::loadFromFile(cons
         }
 
         if (error) {
-            co_yield tl::unexpected{*error};
+            co_yield util::Unexpected{*error};
         }
     } else {
-        co_yield tl::unexpected{ret.error()};
+        co_yield util::Unexpected{ret.error()};
     }
 }
 
-tl::expected<std::fstream, util::Error> JsonImporter::openFile(const std::string& file)
+util::Expected<std::fstream> JsonImporter::openFile(const std::string& file)
 {
     if (!std::filesystem::exists(file)) {
-        return tl::unexpected(util::Error{util::ErrorCode::FILE_NOT_EXISTS});
+        return util::Unexpected(util::Error{util::ErrorCode::FILE_NOT_EXISTS});
     }
 
     return std::fstream{file, std::ios::in};

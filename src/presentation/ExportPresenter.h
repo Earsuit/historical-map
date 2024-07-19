@@ -16,9 +16,9 @@ public:
     ExportPresenter(const std::string& source);
 
     std::vector<std::string> handleRequestSupportedFormat() const { return exportModel.getSupportedFormat(); }
-    tl::expected<void, util::Error> handleSetFormat(const std::string& format) { return exportModel.setFormat(format); }
+    util::Expected<void> handleSetFormat(const std::string& format) { return exportModel.setFormat(format); }
     void handleDoExport(const std::string& file);
-    tl::expected<bool, util::Error> handleCheckExportComplete();
+    util::Expected<bool> handleCheckExportComplete();
     float handleRequestExportProgress() const noexcept;
 
 private:
@@ -26,7 +26,7 @@ private:
     model::CacheModel& dynamicModel;
     model::ExportModel exportModel;
     std::string source;
-    std::future<tl::expected<void, util::Error>> task;
+    std::future<util::Expected<void>> task;
     std::atomic_int total;
     std::atomic_int progress;
 };

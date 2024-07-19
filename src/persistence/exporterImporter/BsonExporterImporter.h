@@ -9,7 +9,7 @@
 namespace persistence {
 class BsonExporter: public JsonExporter {
 private:
-    virtual tl::expected<std::fstream, util::Error> openFile(const std::string& file, bool overwrite) override;
+    virtual util::Expected<std::fstream> openFile(const std::string& file, bool overwrite) override;
     virtual void toStream(std::fstream stream, const nlohmann::json& json) override;
 
     std::fstream stream;
@@ -18,7 +18,7 @@ private:
 class BsonImporter: public JsonImporter {
 private:
     virtual nlohmann::json parse(std::fstream stream) override;
-    virtual tl::expected<std::fstream, util::Error> openFile(const std::string& file) override;
+    virtual util::Expected<std::fstream> openFile(const std::string& file) override;
 };
 }
 

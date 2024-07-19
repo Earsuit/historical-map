@@ -24,7 +24,7 @@ public:
     Vec2 getTileBoundMin(std::shared_ptr<tile::Tile> tile) const noexcept;
 
     auto getTileEngineTypes() const noexcept { return tile::TileEngineFactory::getTileEngines(); }
-    tl::expected<void, util::Error> setTileEngine(const std::string& name);
+    util::Expected<void> setTileEngine(const std::string& name);
     auto getTileSourceTypes() const noexcept { return supportedSourceType; }
     void setTileSource(std::shared_ptr<tile::TileSource> tileSource);
 

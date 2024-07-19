@@ -127,7 +127,7 @@ size_t curlCallback(char *ptr, size_t size, size_t nmemb, void *userdata)
     return nmemb;
 }
 
-tl::expected<std::vector<std::byte>, util::Error> requestData(const std::string& url, const std::string& proxy)
+util::Expected<std::vector<std::byte>> requestData(const std::string& url, const std::string& proxy)
 {
     std::vector<std::byte> data;
 
@@ -150,7 +150,7 @@ tl::expected<std::vector<std::byte>, util::Error> requestData(const std::string&
     if (res == CURLE_OK) {
         return data;
     } else {
-        return tl::unexpected<util::Error>{util::ErrorCode::NETWORK_ERROR, curl_easy_strerror(res)};
+        return util::Unexpected{util::ErrorCode::NETWORK_ERROR, curl_easy_strerror(res)};
     }
 }
 }

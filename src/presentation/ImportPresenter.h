@@ -20,7 +20,7 @@ public:
     ~ImportPresenter();
 
     void handleDoImport(const std::string& file);
-    tl::expected<bool, util::Error> handleCheckImportComplete();
+    util::Expected<bool> handleCheckImportComplete();
     auto handleGetImportedYears() const { return cacheModel.getYearList(source); }
     std::vector<std::string> handleGetSupportedFormat() const { return importModel.getSupportedFormat(); }
     void handleCancelImport() { stopImport = true; }
@@ -30,7 +30,7 @@ private:
     model::CacheModel& cacheModel;
     model::ImportModel importModel;
     std::string source;
-    std::future<tl::expected<void, util::Error>> task;
+    std::future<util::Expected<void>> task;
     std::atomic_bool stopImport = false;
 };
 }

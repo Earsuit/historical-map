@@ -22,6 +22,10 @@ struct Error {
 };
 
 static const auto SUCCESS = tl::expected<void, Error>{};
+
+template<typename T>
+using Expected = tl::expected<T, Error>;
+using Unexpected = tl::unexpected<Error>;
 }
 
 #endif

@@ -16,8 +16,8 @@ public:
     ImportModel();
 
     std::vector<std::string> getSupportedFormat() const;
-    tl::expected<void, util::Error> setFormat(const std::string& format);
-    util::Generator<tl::expected<persistence::Data, util::Error>> loadFromFile(const std::string& file);
+    util::Expected<void> setFormat(const std::string& format);
+    util::Generator<util::Expected<persistence::Data>> loadFromFile(const std::string& file);
 
     ImportModel(ImportModel&&) = delete;
     ImportModel(const ImportModel&) = delete;

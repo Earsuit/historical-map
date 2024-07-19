@@ -73,14 +73,14 @@ Vec2 TileModel::getTileBoundMin(std::shared_ptr<tile::Tile> tile) const noexcept
             model::computeTileBound(coord.y, zoom)};
 }
 
-tl::expected<void, util::Error> TileModel::setTileEngine(const std::string& name)
+util::Expected<void> TileModel::setTileEngine(const std::string& name)
 {
     if (auto engine = tile::TileEngineFactory::createInstance(name); engine) {
         tileLoader.setTileEngine(engine);
         return util::SUCCESS;
     }
 
-    return tl::unexpected{util::Error{util::ErrorCode::INVALID_PARAM, "Invalid tile engine!"}};
+    return util::Unexpected{util::Error{util::ErrorCode::INVALID_PARAM, "Invalid tile engine!"}};
 }
 
 void TileModel::setTileSource(std::shared_ptr<tile::TileSource> tileSource)

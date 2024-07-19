@@ -15,9 +15,9 @@ public:
     ExportModel();
 
     std::vector<std::string> getSupportedFormat() const;
-    tl::expected<void, util::Error> setFormat(const std::string& format);
+    util::Expected<void> setFormat(const std::string& format);
     void insert(const persistence::Data& info);
-    tl::expected<void, util::Error> writeToFile(const std::string& path, bool overwrite);
+    util::Expected<void> writeToFile(const std::string& path, bool overwrite);
 
     ExportModel(ExportModel&&) = delete;
     ExportModel(const ExportModel&) = delete;

@@ -17,7 +17,7 @@ ExportPresenter::ExportPresenter(const std::string& source):
 
 void ExportPresenter::handleDoExport(const std::string& file)
 {
-    task = std::async(std::launch::async, [this, file]() -> tl::expected<void, util::Error> {
+    task = std::async(std::launch::async, [this, file]() -> util::Expected<void> {
         const auto years = this->dynamicModel.getYearList(this->source);
         this->total = years.size();
 
@@ -32,13 +32,13 @@ void ExportPresenter::handleDoExport(const std::string& file)
     });
 }
 
-tl::expected<bool, util::Error> ExportPresenter::handleCheckExportComplete()
+util::Expected<bool> ExportPresenter::handleCheckExportComplete()
 {
     if (task.valid() && task.wait_for(0s) == std::future_status::ready) {
         if (auto ret = task.get(); ret) {
             return true;
         } else {
-            return tl::unexpected{ret.error()};
+            return util::Unexpected{ret.error()};
         }
     } else {
         return false;

@@ -13,19 +13,19 @@ void BsonExporter::toStream(std::fstream stream, const nlohmann::json& json)
     stream.flush();
 }
 
-tl::expected<std::fstream, util::Error> BsonExporter::openFile(const std::string& file, bool overwrite)
+util::Expected<std::fstream> BsonExporter::openFile(const std::string& file, bool overwrite)
 {
     if (!overwrite && std::filesystem::exists(file)) {
-        return tl::unexpected(util::Error{util::ErrorCode::FILE_EXISTS});
+        return util::Unexpected(util::Error{util::ErrorCode::FILE_EXISTS});
     }
 
     return std::fstream{file, std::ios::out | std::ios::trunc | std::ios::binary};
 }
 
-tl::expected<std::fstream, util::Error> BsonImporter::openFile(const std::string& file)
+util::Expected<std::fstream> BsonImporter::openFile(const std::string& file)
 {
     if (!std::filesystem::exists(file)) {
-        return tl::unexpected(util::Error{util::ErrorCode::FILE_NOT_EXISTS});
+        return util::Unexpected(util::Error{util::ErrorCode::FILE_NOT_EXISTS});
     }
 
     return std::fstream{file, std::ios::in | std::ios::binary};

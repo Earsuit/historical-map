@@ -16,7 +16,7 @@
 namespace persistence {
 class ImportManager {
 public:
-    std::future<tl::expected<void, util::Error>> 
+    std::future<util::Expected<void>> 
     doImport(const std::string& file);
     std::vector<std::string> supportedFormat() const;
     size_t numOfYearsImported() const noexcept;
