@@ -1,5 +1,6 @@
 #include "TileSourceUrl.h"
 #include "src/logger/LoggerManager.h"
+#include "src/util/Error.h"
 
 #include <future>
 #include <vector>
@@ -34,6 +35,7 @@ constexpr auto LOGGER_NAME = "TileSourceUrl";
 namespace {
 constexpr int MAX_IP_TEXTUAL_REPRESENTATION = 40;   // ipv6 with a NULL terminator
 constexpr auto WIN_PROXY_WITH_PROTOCOL_REGEX = "(\\w*)=(.*)";
+constexpr auto NO_PROXY = "";
 
 std::vector<std::string> getProxySettings(logger::ModuleLogger& logger) {
     std::vector<std::string> proxys;
@@ -108,6 +110,9 @@ std::vector<std::string> getProxySettings(logger::ModuleLogger& logger) {
     }
 #endif
 
+    // add no proxy as the default fall back
+    proxys.emplace_back(NO_PROXY);
+
     return proxys;
 }
 
@@ -122,11 +127,9 @@ size_t curlCallback(char *ptr, size_t size, size_t nmemb, void *userdata)
     return nmemb;
 }
 
-std::vector<std::byte> requestData(const std::string& url, logger::ModuleLogger& logger)
+tl::expected<std::vector<std::byte>, util::Error> requestData(const std::string& url, const std::string& proxy)
 {
     std::vector<std::byte> data;
-
-    const auto proxys = getProxySettings(logger);
 
     const auto curl = curl_easy_init();
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
@@ -137,7 +140,7 @@ std::vector<std::byte> requestData(const std::string& url, logger::ModuleLogger&
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, reinterpret_cast<void*>(&data));
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curlCallback);
 
-    for (const auto& proxy : proxys) {
+    if (!proxy.empty()) {
         curl_easy_setopt(curl, CURLOPT_PROXY, proxy.c_str());
     }
 
@@ -145,11 +148,9 @@ std::vector<std::byte> requestData(const std::string& url, logger::ModuleLogger&
     curl_easy_cleanup(curl);
 
     if (res == CURLE_OK) {
-        logger.debug("CURL get success for url {}", url);
         return data;
     } else {
-        logger.error("CURL get fail for url {}, error: {}", url, curl_easy_strerror(res));
-        return {};
+        return tl::unexpected<util::Error>{util::ErrorCode::NETWORK_ERROR, curl_easy_strerror(res)};
     }
 }
 }
@@ -162,7 +163,19 @@ TileSourceUrl::TileSourceUrl(const std::string& url):
 
 std::vector<std::byte> TileSourceUrl::request(const Coordinate& coord)
 {
-    return requestData(makeUrl(coord), logger);
+    const auto proxys = getProxySettings(logger);
+    const auto url = makeUrl(coord);
+    for (const auto& proxy : proxys) {
+        logger.debug("Request {} using proxy: {}", url, proxy.empty()? "no proxy": proxy);
+        if (const auto& ret = requestData(url, proxy); ret) {
+            logger.debug("CURL get success for url {}", url);
+            return ret.value();
+        } else {
+            logger.error("Request {} fail, error: {}", url, ret.error().msg);
+        }
+    }
+
+    return {};
 }
 
 // tile server url format specified by https://www.trailnotes.org/FetchMap/TileServeSource.html

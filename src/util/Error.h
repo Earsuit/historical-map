@@ -13,6 +13,7 @@ enum class ErrorCode {
     FILE_FORMAT_NOT_SUPPORT,
     FILE_EMPTY,
     INVALID_PARAM,
+    NETWORK_ERROR,
 };
 
 struct Error {
