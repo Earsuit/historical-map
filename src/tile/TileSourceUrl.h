@@ -8,6 +8,7 @@
 #include <list>
 #include <future>
 #include <cstddef>
+#include <atomic>
 
 namespace tile {
 
@@ -17,11 +18,13 @@ public:
     ~TileSourceUrl() override = default;
 
     std::vector<std::byte> request(const Coordinate& coord) override;
+    void stopAllRequests() override;
 
     bool setUrl(const std::string& url);
 
 private:
     std::string url;
+    std::atomic_bool stop = false;
 
     logger::ModuleLogger logger;
     const std::string makeUrl(const Coordinate& coord);

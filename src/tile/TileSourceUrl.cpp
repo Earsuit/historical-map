@@ -37,7 +37,8 @@ constexpr int MAX_IP_TEXTUAL_REPRESENTATION = 40;   // ipv6 with a NULL terminat
 constexpr auto WIN_PROXY_WITH_PROTOCOL_REGEX = "(\\w*)=(.*)";
 constexpr auto NO_PROXY = "";
 constexpr auto ENABLE = 1L;
-constexpr auto CONNECTION_TIMEOUT_SECONDS = 2;
+constexpr auto DISABLE = 0L;
+constexpr auto STOP = 1;
 
 std::vector<std::string> getProxySettings(logger::ModuleLogger& logger) {
     std::vector<std::string> proxys;
@@ -129,7 +130,23 @@ size_t curlCallback(char *ptr, size_t size, size_t nmemb, void *userdata)
     return nmemb;
 }
 
-util::Expected<std::vector<std::byte>> requestData(const std::string& url, const std::string& proxy)
+size_t progressCallback(void *clientp,
+                        curl_off_t dltotal,
+                        curl_off_t dlnow,
+                        curl_off_t ultotal,
+                        curl_off_t ulnow)
+{
+    auto stop = reinterpret_cast<std::atomic_bool*>(clientp);
+    if (*stop) { 
+        return STOP;
+    }
+
+    return CURL_PROGRESSFUNC_CONTINUE; /* all is good */
+}
+
+util::Expected<std::vector<std::byte>> requestData(const std::string& url, 
+                                                   const std::string& proxy, 
+                                                   std::atomic_bool& stop)
 {
     std::vector<std::byte> data;
 
@@ -140,7 +157,9 @@ util::Expected<std::vector<std::byte>> requestData(const std::string& url, const
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, reinterpret_cast<void*>(&data));
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curlCallback);
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, ENABLE);
-    curl_easy_setopt(curl, CURLOPT_TIMEOUT, CONNECTION_TIMEOUT_SECONDS);
+    curl_easy_setopt(curl, CURLOPT_NOPROGRESS, DISABLE); // enable progress callback getting called
+    curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &stop);
+    curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, progressCallback);
 
     if (!proxy.empty()) {
         curl_easy_setopt(curl, CURLOPT_PROXY, proxy.c_str());
@@ -152,6 +171,10 @@ util::Expected<std::vector<std::byte>> requestData(const std::string& url, const
     if (res == CURLE_OK) {
         return data;
     } else {
+        if (res == CURLE_ABORTED_BY_CALLBACK) {
+            return util::Unexpected{util::ErrorCode::OPERATION_CANCELED, curl_easy_strerror(res)};
+        }
+
         return util::Unexpected{util::ErrorCode::NETWORK_ERROR, curl_easy_strerror(res)};
     }
 }
@@ -168,13 +191,23 @@ std::vector<std::byte> TileSourceUrl::request(const Coordinate& coord)
 {
     const auto proxys = getProxySettings(logger);
     const auto url = makeUrl(coord);
+
     for (const auto& proxy : proxys) {
+        if (stop) {
+            logger.debug("Current TileSourceUrl object should be destroyed, stop request.");
+            return {};
+        }
+
         logger.debug("Request {} using proxy: {}", url, proxy.empty()? "no proxy": proxy);
-        if (const auto& ret = requestData(url, proxy); ret) {
+        if (const auto& ret = requestData(url, proxy, stop); ret) {
             logger.debug("CURL get success for url {}", url);
             return ret.value();
         } else {
-            logger.error("Request {} fail, error: {}", url, ret.error().msg);
+            if (ret.error().code == util::ErrorCode::OPERATION_CANCELED) {
+                logger.debug("Request {} canceled", url);
+            } else {
+                logger.error("Request {} fail, error: {}", url, ret.error().msg);
+            }
         }
     }
 
@@ -228,4 +261,8 @@ const std::string TileSourceUrl::makeUrl(const Coordinate& coord)
     return realUrl;
 }
 
+void TileSourceUrl::stopAllRequests()
+{
+    stop = true;
+}
 }

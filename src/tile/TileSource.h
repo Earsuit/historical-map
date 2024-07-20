@@ -14,6 +14,7 @@ public:
     virtual ~TileSource() = default;
 
     virtual std::vector<std::byte> request(const Coordinate& coord) = 0;
+    virtual void stopAllRequests() = 0;
 };
 
 }
