@@ -227,7 +227,6 @@ bool TileSourceUrl::setUrl(const std::string& url)
         return true;
     } else {
         logger.error("Set url {} fail", url);
-        this->url = "";
         return false;
     }
 }

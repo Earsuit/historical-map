@@ -1,27 +1,19 @@
 #include "src/ui/TileSourceWidget.h"
+#include "src/ui/TileSourceUrlWidget.h"
 #include "src/presentation/TileSourceUrlPresenter.h"
 #include "src/logger/LoggerManager.h"
 
 #include "external/imgui/imgui.h"
-#include "external/imgui/misc/cpp/imgui_stdlib.h"
 
 #include <libintl.h>
 
-#ifdef _WIN32
-    #undef  TRANSPARENT // there is a marco defined somewhere
-#endif
-
 namespace ui {
-constexpr auto TRANSPARENT = IM_COL32(0, 0, 0, 0);
-const auto TILE_SERVER_LOOKUP = __("For different tile server url, please check https://www.trailnotes.org/FetchMap/TileServeSource.html");
 constexpr auto LOGGER_NAME = "TileSourceWidget";
 
 TileSourceWidget::TileSourceWidget():
     logger{logger::LoggerManager::getInstance().getLogger(LOGGER_NAME)},
-    showConfigWidget{[this](){this->showTileSourceUrlConfig();}}
+    getDetailWidget{[](){ return std::make_unique<TileSourceUrlWidget>(); }}
 {
-    widgetPresenter.handleSetTileEngine(widgetPresenter.handleGetTileEngineList().front());
-
     for (const auto& source : widgetPresenter.handleGetTileSourceList()) {
         sourceList += source + "\0";
     }
@@ -30,13 +22,18 @@ TileSourceWidget::TileSourceWidget():
     for (const auto& engine : engineList) {
         engineListString += engine + "\0";
     }
+
+    widgetPresenter.handleSetTileEngine(engineList.front());
+    detail = getDetailWidget.front()();
 }
 
 void TileSourceWidget::paint()
 {
     ImGui::Begin(gettext(TILE_SOURCE_WIDGET_NAME));
 
-    ImGui::Combo(gettext("Source"), &sourceIdx, sourceList.c_str());
+    if (ImGui::Combo(gettext("Source"), &sourceIdx, sourceList.c_str())) {
+        detail = getDetailWidget[sourceIdx]();
+    }
     
     if (ImGui::Combo(gettext("Tile Data Processor"), &tileEngineIdx, engineListString.c_str())) {
         if (auto ret = widgetPresenter.handleSetTileEngine(engineList[tileEngineIdx]); !ret) {
@@ -46,24 +43,8 @@ void TileSourceWidget::paint()
 
     ImGui::SeparatorText(gettext("Configuration"));
 
-    showConfigWidget[sourceIdx]();
+    detail->paint();
 
     ImGui::End();
-}
-
-void TileSourceWidget::showTileSourceUrlConfig()
-{
-    static presentation::TileSourceUrlPresenter presenter{};
-    auto url = presenter.handleGetUrl();
-    if (ImGui::InputText("##url", &url)) {
-        presenter.handleSetUrl(url);
-    }
-    ImGui::SameLine();
-    if (ImGui::Button(gettext("Set"))) {
-        presenter.handleSetTileSource();
-    }
-    ImGui::PushStyleColor(ImGuiCol_FrameBg, TRANSPARENT);  // Transparent background
-    ImGui::InputText("##text", gettext(TILE_SERVER_LOOKUP), strlen(gettext(TILE_SERVER_LOOKUP)) + 1, ImGuiInputTextFlags_ReadOnly);
-    ImGui::PopStyleColor(1);
 }
 }

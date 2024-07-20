@@ -13,12 +13,12 @@ public:
     TileSourceUrlPresenter();
 
     std::string handleGetUrl() const noexcept { return url; }
-    void handleSetUrl(const std::string& url);
-    void handleSetTileSource();
+    bool handleSetUrl(const std::string& url);
 
 private:
     model::TileModel& model;
     std::string url = "https://a.tile.openstreetmap.org/{Z}/{X}/{Y}.png";
+    std::shared_ptr<tile::TileSourceUrl> source;
 };
 }
 

@@ -2,19 +2,19 @@
 
 namespace presentation {
 TileSourceUrlPresenter::TileSourceUrlPresenter():
-    model{model::TileModel::getInstance()}
+    model{model::TileModel::getInstance()},
+    source{std::make_shared<tile::TileSourceUrl>(url)}
 {
-    handleSetTileSource();
+    model.setTileSource(source); 
 }
 
-void TileSourceUrlPresenter::handleSetUrl(const std::string& url)
+bool TileSourceUrlPresenter::handleSetUrl(const std::string& url)
 {
-    this->url = url;
+    if (source->setUrl(url)) {
+        this->url = url;
+        return true;
+    }
+    
+    return false;
 }
-
-void TileSourceUrlPresenter::handleSetTileSource() 
-{ 
-    model.setTileSource(std::make_shared<tile::TileSourceUrl>(url)); 
-}
-
 }
