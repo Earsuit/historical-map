@@ -136,8 +136,8 @@ size_t progressCallback(void *clientp,
                         curl_off_t ultotal,
                         curl_off_t ulnow)
 {
-    auto stop = reinterpret_cast<std::atomic_bool*>(clientp);
-    if (*stop) { 
+    auto run = reinterpret_cast<std::atomic_bool*>(clientp);
+    if (!run->load()) { 
         return STOP;
     }
 
@@ -193,13 +193,13 @@ std::vector<std::byte> TileSourceUrl::request(const Coordinate& coord)
     const auto url = makeUrl(coord);
 
     for (const auto& proxy : proxys) {
-        if (stop) {
-            logger.debug("Current TileSourceUrl object should be destroyed, stop request.");
+        if (!run) {
+            logger.debug("Current TileSourceUrl object is stopped, stop request.");
             return {};
         }
 
         logger.debug("Request {} using proxy: {}", url, proxy.empty()? "no proxy": proxy);
-        if (const auto& ret = requestData(url, proxy, stop); ret) {
+        if (const auto& ret = requestData(url, proxy, run); ret) {
             logger.debug("CURL get success for url {}", url);
             return ret.value();
         } else {
@@ -265,8 +265,13 @@ const std::string TileSourceUrl::makeUrl(const Coordinate& coord)
     return realUrl;
 }
 
-void TileSourceUrl::stopAllRequests()
+void TileSourceUrl::stop()
 {
-    stop = true;
+    run = false;
+}
+
+void TileSourceUrl::restart()
+{
+    run = true;
 }
 }

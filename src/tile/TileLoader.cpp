@@ -95,11 +95,15 @@ void TileLoader::setTileEngine(std::shared_ptr<TileEngine> tileEngine)
 void TileLoader::clearCache()
 {
     if (this->tileSource) {
-        this->tileSource->stopAllRequests();
+        this->tileSource->stop();
     }
     
     cache.reset();
     futureData.clear();
+
+    if (this->tileSource) {
+        this->tileSource->restart();
+    }
 }
 
 }

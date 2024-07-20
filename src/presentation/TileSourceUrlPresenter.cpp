@@ -11,6 +11,7 @@ TileSourceUrlPresenter::TileSourceUrlPresenter():
 bool TileSourceUrlPresenter::handleSetUrl(const std::string& url)
 {
     if (source->setUrl(url)) {
+        model.clearCache();
         this->url = url;
         return true;
     }

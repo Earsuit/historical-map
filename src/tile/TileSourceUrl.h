@@ -5,7 +5,6 @@
 #include "src/logger/ModuleLogger.h"
 
 #include <string>
-#include <list>
 #include <future>
 #include <cstddef>
 #include <atomic>
@@ -18,13 +17,14 @@ public:
     ~TileSourceUrl() override = default;
 
     std::vector<std::byte> request(const Coordinate& coord) override;
-    void stopAllRequests() override;
+    void stop() override;
+    void restart() override;
 
     bool setUrl(const std::string& url);
 
 private:
     std::string url;
-    std::atomic_bool stop = false;
+    std::atomic_bool run = true;
 
     logger::ModuleLogger logger;
     const std::string makeUrl(const Coordinate& coord);

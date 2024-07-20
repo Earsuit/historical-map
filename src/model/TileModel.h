@@ -27,6 +27,7 @@ public:
     util::Expected<void> setTileEngine(const std::string& name);
     auto getTileSourceTypes() const noexcept { return supportedSourceType; }
     void setTileSource(std::shared_ptr<tile::TileSource> tileSource);
+    void clearCache();
 
 private:
     TileModel();

@@ -88,4 +88,9 @@ void TileModel::setTileSource(std::shared_ptr<tile::TileSource> tileSource)
     tileLoader.setTileSource(tileSource);
 }
 
+void TileModel::clearCache()
+{
+    tileLoader.clearCache();
+}
+
 }

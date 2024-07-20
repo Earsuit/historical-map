@@ -26,6 +26,7 @@ public:
     void setTileEngine(std::shared_ptr<TileEngine> tileDataProcessor);
 
     std::optional<std::shared_ptr<Tile>> loadTile(const Coordinate& coord);
+    void clearCache();
 
 private:
     TileLoader();
@@ -38,7 +39,6 @@ private:
 
     void request(const Coordinate& coord);
     void load(const Coordinate& coord);
-    void clearCache();
 };
 }
 
