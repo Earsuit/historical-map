@@ -8,16 +8,18 @@
 #include <memory>
 
 namespace presentation {
+constexpr auto DEFAULT_URL = "https://a.tile.openstreetmap.org/{Z}/{X}/{Y}.png";
+
 class TileSourceUrlPresenter {
 public:
     TileSourceUrlPresenter();
 
-    std::string handleGetUrl() const noexcept { return url; }
+    std::string handleGetDefaultUrl() const noexcept { return DEFAULT_URL; }
     bool handleSetUrl(const std::string& url);
 
 private:
     model::TileModel& model;
-    std::string url = "https://a.tile.openstreetmap.org/{Z}/{X}/{Y}.png";
+    std::string url = DEFAULT_URL;
     std::shared_ptr<tile::TileSourceUrl> source;
 };
 }

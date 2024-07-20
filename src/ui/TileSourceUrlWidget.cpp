@@ -17,7 +17,7 @@ const auto TILE_SERVER_LOOKUP = __("For different tile server url, please check 
 
 TileSourceUrlWidget::TileSourceUrlWidget()
 {
-    url = presenter.handleGetUrl();
+    url = presenter.handleGetDefaultUrl();
 }
 
 void TileSourceUrlWidget::paint()
@@ -25,6 +25,11 @@ void TileSourceUrlWidget::paint()
     ImGui::InputText("##url", &url);
     ImGui::SameLine();
     if (ImGui::Button(gettext("Set"))) {
+        presenter.handleSetUrl(url);
+    }
+    ImGui::SameLine();
+    if (ImGui::Button(gettext("reset"))) {
+        url = presenter.handleGetDefaultUrl();
         presenter.handleSetUrl(url);
     }
     ImGui::PushStyleColor(ImGuiCol_FrameBg, TRANSPARENT);  // Transparent background
