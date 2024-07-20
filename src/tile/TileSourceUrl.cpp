@@ -26,9 +26,9 @@ namespace tile {
 using namespace std::chrono_literals;
 
 constexpr long SHUT_OFF_THE_PROGRESS_METER = 1;
-constexpr std::string_view Z_MATCHER = "{Z}";
-constexpr std::string_view X_MATCHER = "{X}";
-constexpr std::string_view Y_MATCHER = "{Y}";
+constexpr std::string_view Z_MATCHER = "{z}";
+constexpr std::string_view X_MATCHER = "{x}";
+constexpr std::string_view Y_MATCHER = "{y}";
 constexpr auto MATCHER_LEN = 3;
 constexpr auto LOGGER_NAME = "TileSourceUrl";
 
@@ -217,9 +217,11 @@ std::vector<std::byte> TileSourceUrl::request(const Coordinate& coord)
 // tile server url format specified by https://www.trailnotes.org/FetchMap/TileServeSource.html
 bool TileSourceUrl::setUrl(const std::string& url)
 {
-    if (url.find(Z_MATCHER) != std::string::npos &&
-        url.find(X_MATCHER) != std::string::npos &&
-        url.find(Y_MATCHER) != std::string::npos) {
+    std::string lowerCase = url;
+    std::transform(lowerCase.cbegin(), lowerCase.cend(), lowerCase.begin(), ::tolower);
+    if (lowerCase.find(Z_MATCHER) != std::string::npos &&
+        lowerCase.find(X_MATCHER) != std::string::npos &&
+        lowerCase.find(Y_MATCHER) != std::string::npos) {
         logger.info("Set url {} success", url);
 
         this->url = url;
@@ -242,12 +244,15 @@ const std::string TileSourceUrl::makeUrl(const Coordinate& coord)
     for (auto it = realUrl.cbegin(); it != realUrl.cend(); it++) {
         if (*it == '{') {
             switch(*(it+1)) {
+                case 'x':
                 case 'X':
                     realUrl.replace(it, it + MATCHER_LEN, x);
                     break;
+                case 'y':
                 case 'Y':
                     realUrl.replace(it, it + MATCHER_LEN, y);
                     break;
+                case 'z':
                 case 'Z':
                     realUrl.replace(it, it + MATCHER_LEN, z);
                     break;
