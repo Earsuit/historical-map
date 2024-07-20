@@ -1,6 +1,7 @@
 #include "TileSourceUrl.h"
 #include "src/logger/LoggerManager.h"
 #include "src/util/Error.h"
+#include "src/util/ExecuteablePath.h"
 
 #include <future>
 #include <vector>
@@ -39,6 +40,7 @@ constexpr auto NO_PROXY = "";
 constexpr auto ENABLE = 1L;
 constexpr auto DISABLE = 0L;
 constexpr auto STOP = 1;
+constexpr auto CERTIFICATE_NAME = "ca-bundle.crt";
 
 std::vector<std::string> getProxySettings(logger::ModuleLogger& logger) {
     std::vector<std::string> proxys;
@@ -150,6 +152,8 @@ util::Expected<std::vector<std::byte>> requestData(const std::string& url,
 {
     std::vector<std::byte> data;
 
+    std::string certificatePath = util::getExecutablePath().remove_filename().string() + CERTIFICATE_NAME;
+
     const auto curl = curl_easy_init();
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl, CURLOPT_NOPROGRESS, SHUT_OFF_THE_PROGRESS_METER);
@@ -160,6 +164,9 @@ util::Expected<std::vector<std::byte>> requestData(const std::string& url,
     curl_easy_setopt(curl, CURLOPT_NOPROGRESS, DISABLE); // enable progress callback getting called
     curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &stop);
     curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, progressCallback);
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYSTATUS, ENABLE);            
+    curl_easy_setopt(curl, CURLOPT_CAINFO, certificatePath.c_str());
+    curl_easy_setopt(curl, CURLOPT_CAPATH, certificatePath.c_str());
 
     if (!proxy.empty()) {
         curl_easy_setopt(curl, CURLOPT_PROXY, proxy.c_str());

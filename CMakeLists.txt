@@ -170,12 +170,21 @@ elseif(MSVC)
     target_link_libraries(HistoricalMap PRIVATE libui libpresentation liblogger libpersistence)
     set_property(TARGET HistoricalMap APPEND_STRING PROPERTY LINK_FLAGS " /WHOLEARCHIVE:libpersistence")
 
+    add_custom_command(TARGET HistoricalMap POST_BUILD
+        COMMAND 
+        ${CMAKE_COMMAND} 
+        -E copy_if_different 
+        ${CMAKE_SOURCE_DIR}/assets/ca-bundle.crt
+        $<TARGET_FILE_DIR:HistoricalMap>    # use TARGET_FILE_DIR to ensure the font is copied to the directory with the executable, such as build/Debug
+    )
+
     install(TARGETS HistoricalMap RUNTIME DESTINATION .)
     install(DIRECTORY $<TARGET_FILE_DIR:HistoricalMap>/locale DESTINATION .)
     install(FILES 
             $<TARGET_FILE_DIR:HistoricalMap>/HistoricalMap.lib 
             $<TARGET_FILE_DIR:HistoricalMap>/HistoricalMap.exp 
             $<TARGET_FILE_DIR:HistoricalMap>/LXGWNeoXiHei.ttf 
+            $<TARGET_FILE_DIR:HistoricalMap>/ca-bundle.crt
             DESTINATION .)
     set(CPACK_GENERATOR ZIP)
 endif()
