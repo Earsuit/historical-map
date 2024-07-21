@@ -151,7 +151,7 @@ elseif(LINUX)
     target_link_libraries(HistoricalMap PRIVATE libui libpresentation -Wl,--whole-archive libpersistence -Wl,--no-whole-archive liblogger)
 
     set(INSTALL_DIR "/opt/${EXECUTABLE_NAME}")
-    configure_file(${CMAKE_SOURCE_DIR}/assets/HistoricalMap.desktop.in HistoricalMap.desktop @ONLY)
+    configure_file(${CMAKE_SOURCE_DIR}/Linux/HistoricalMap.desktop.in HistoricalMap.desktop @ONLY)
     configure_file(${CMAKE_SOURCE_DIR}/script/DebianPostinst.sh.in postinst @ONLY)
     configure_file(${CMAKE_SOURCE_DIR}/script/DebianPrerm.sh.in prerm @ONLY)
     execute_process(COMMAND chmod +x ${CMAKE_BINARY_DIR}/postinst)
@@ -166,7 +166,7 @@ elseif(LINUX)
     set(CPACK_DEBIAN_PACKAGE_DEPENDS "libglu1-mesa-dev")
     set(CPACK_GENERATOR DEB)
 elseif(MSVC)
-    add_executable(HistoricalMap WIN32 main.cpp assets/resource.rc)
+    add_executable(HistoricalMap WIN32 main.cpp ${CMAKE_SOURCE_DIR}/Windows/resource.rc)
     target_link_libraries(HistoricalMap PRIVATE libui libpresentation liblogger libpersistence)
     set_property(TARGET HistoricalMap APPEND_STRING PROPERTY LINK_FLAGS " /WHOLEARCHIVE:libpersistence")
 
@@ -174,7 +174,7 @@ elseif(MSVC)
         COMMAND 
         ${CMAKE_COMMAND} 
         -E copy_if_different 
-        ${CMAKE_SOURCE_DIR}/assets/ca-bundle.crt
+        ${CMAKE_SOURCE_DIR}/Windows/ca-bundle.crt
         $<TARGET_FILE_DIR:HistoricalMap>    # use TARGET_FILE_DIR to ensure the font is copied to the directory with the executable, such as build/Debug
     )
 
