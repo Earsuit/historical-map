@@ -14,6 +14,10 @@
 #include "external/implot/implot.h"
 #include "ImFileDialog.h"
 
+#ifdef _WIN32
+#include <Windows.h>
+#endif
+
 #include <stdexcept>
 #include <string>
 #include <libintl.h>
@@ -68,6 +72,23 @@ void HistoricalMap::clearMapWidgets()
     mapWidgets.clear();
 }
 
+static float X_SCALE = 0;
+static float Y_SCALE = 0;
+
+void onDpiChange(GLFWwindow* window, float xscale, float yscale)
+{
+    auto historicalMap = reinterpret_cast<HistoricalMap*>(glfwGetWindowUserPointer(window));
+
+    historicalMap->setDpiScale(xscale);
+}
+
+void HistoricalMap::setDpiScale(float scale)
+{
+    isDpiChanged = true;
+    this->scale = scale;
+    logger.debug("DPI scale cahnged to {}", scale);
+}
+
 HistoricalMap::HistoricalMap():
     logger{logger::LoggerManager::getInstance().getLogger(LOGGER_NAME)},
     infoWidget{std::make_unique<DefaultInfoWidget>()},
@@ -91,6 +112,9 @@ HistoricalMap::HistoricalMap():
     if (window == NULL) {
         throw std::runtime_error("Failed to create window.");
     }
+
+    glfwSetWindowUserPointer(window, this);
+    glfwSetWindowContentScaleCallback(window, onDpiChange);
 
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1); // Enable vsync

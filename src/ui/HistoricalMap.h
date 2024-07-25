@@ -15,6 +15,7 @@
 #include <filesystem>
 #include <memory>
 #include <vector>
+#include <atomic>
 
 namespace ui {
 
@@ -29,6 +30,8 @@ public:
     virtual void addNoninteractiveMapWidget(const std::string& source) override;
     virtual void clearMapWidgets() override;
 
+    void setDpiScale(float scale);
+
 private:
     GLFWwindow* window;
     LogWidget logWidget;
@@ -41,6 +44,8 @@ private:
     ImGuiID down, left;
     std::string iniFilePath;
     std::filesystem::path executableLocation;
+    std::atomic<float> scale;
+    std::atomic_bool isDpiChanged = false;
 
     void buildDockSpace();
     void buildMapDockSpace();
