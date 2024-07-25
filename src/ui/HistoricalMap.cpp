@@ -14,10 +14,6 @@
 #include "external/implot/implot.h"
 #include "ImFileDialog.h"
 
-#ifdef _WIN32
-#include <Windows.h>
-#endif
-
 #include <stdexcept>
 #include <string>
 #include <libintl.h>
@@ -48,6 +44,7 @@ constexpr uint16_t MAX_U16_CODE_POINT = 0xFFFF;
 constexpr uint16_t CODE_POINT_END = 0;
 constexpr auto FONT_NAME = "LXGWNeoXiHei.ttf";
 constexpr auto INI_FILE_NAME = "imgui.ini";
+constexpr auto DEFAULT_FONT_SIZE = 13.0f;
 
 namespace {
 static void glfwErrorCallback(int error, const char* description)
@@ -127,12 +124,11 @@ HistoricalMap::HistoricalMap():
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImPlot::CreateContext();
-    setStyle();
 
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glslVersion);
 
-    loadDefaultFonts();
+    initializeUi();
 
     ifd::FileDialog::getInstance().createTexture = [](const uint8_t* data, int w, int h, ifd::Format fmt) -> void* {
 		GLuint tex;
@@ -190,6 +186,8 @@ void HistoricalMap::start()
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
+
+        handleDpiScaleChange();
 
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -334,7 +332,7 @@ void HistoricalMap::buildDockSpace()
     buildMapDockSpace();
 }
 
-void HistoricalMap::setStyle()
+ImGuiStyle HistoricalMap::setStyle()
 {
     ImGuiStyle& style = ImGui::GetStyle();
     ImVec4* colors = style.Colors;
@@ -377,18 +375,58 @@ void HistoricalMap::setStyle()
     colors[ImGuiCol_TableHeaderBg] = ImVec4(0.78f, 0.87f, 0.98f, 1.00f);
     colors[ImGuiCol_TableBorderStrong] = ImVec4(0.57f, 0.57f, 0.64f, 1.00f);   // Prefer using Alpha=1.0 here
     colors[ImGuiCol_TableBorderLight] = ImVec4(0.68f, 0.68f, 0.74f, 1.00f);   // Prefer using Alpha=1.0 here
+
+    return style;
 }
 
-void HistoricalMap::loadDefaultFonts()
+void HistoricalMap::loadDefaultFonts(float scaleFactor)
 {
     const auto font = executableLocation / FONT_NAME;
     ImGuiIO& io = ImGui::GetIO();
+    io.Fonts->Clear();
     ImVector<ImWchar> ranges;
     ImFontGlyphRangesBuilder builder;
     const ImWchar range[] = {BASIC_LATIN_CODE_POINT, MAX_U16_CODE_POINT, CODE_POINT_END};
     builder.AddRanges(range);
     builder.BuildRanges(&ranges);
-    io.Fonts->AddFontFromFileTTF(font.string().c_str(), 13.0f, nullptr, ranges.Data);
+    io.Fonts->AddFontFromFileTTF(font.string().c_str(), DEFAULT_FONT_SIZE * scaleFactor, nullptr, ranges.Data);
     io.Fonts->Build();
+    // thanks to https://github.com/ocornut/imgui/issues/2311#issuecomment-849089301
+    ImGui_ImplOpenGL3_CreateFontsTexture();
+}
+
+void HistoricalMap::handleDpiScaleChange()
+{
+    if (isDpiChanged) {
+        isDpiChanged = false;
+        float scaleFactor = scale;
+
+        scaleUiElement(scaleFactor);
+        loadDefaultFonts(scaleFactor);
+
+        logger.debug("Scale all size up {}", scaleFactor);
+    }
+}
+
+void HistoricalMap::scaleUiElement(float scaleFactor)
+{
+    // We need to call ScaleAllSizes over a freshly initialized ImGuiStyle structure rather than scaling multiple times.
+    ImGuiStyle style = backupStyle;
+    style.ScaleAllSizes(scaleFactor);
+    ImGui::GetStyle() = style;
+}
+
+void HistoricalMap::initializeUi()
+{
+    float xscale = 0;
+    float yscale = 0;
+
+    backupStyle = setStyle();
+
+    glfwGetWindowContentScale(window, &xscale, &yscale);
+    scaleUiElement(xscale);
+    loadDefaultFonts(xscale);
+
+    logger.info("Initial scale factor is {}", xscale);
 }
 }

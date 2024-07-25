@@ -46,11 +46,15 @@ private:
     std::filesystem::path executableLocation;
     std::atomic<float> scale;
     std::atomic_bool isDpiChanged = false;
+    ImGuiStyle backupStyle;
 
     void buildDockSpace();
     void buildMapDockSpace();
-    void setStyle();
-    void loadDefaultFonts();
+    ImGuiStyle setStyle();
+    void loadDefaultFonts(float scaleFactor);
+    void handleDpiScaleChange();
+    void scaleUiElement(float scaleFactor);
+    void initializeUi();
 };
 
 }
