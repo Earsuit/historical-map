@@ -164,9 +164,12 @@ util::Expected<std::vector<std::byte>> requestData(const std::string& url,
     curl_easy_setopt(curl, CURLOPT_NOPROGRESS, DISABLE); // enable progress callback getting called
     curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &stop);
     curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, progressCallback);
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYSTATUS, ENABLE);            
+
+#ifdef _WIN32
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYSTATUS, ENABLE);
     curl_easy_setopt(curl, CURLOPT_CAINFO, certificatePath.c_str());
     curl_easy_setopt(curl, CURLOPT_CAPATH, certificatePath.c_str());
+#endif
 
     if (!proxy.empty()) {
         curl_easy_setopt(curl, CURLOPT_PROXY, proxy.c_str());
