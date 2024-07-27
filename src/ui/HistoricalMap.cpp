@@ -45,6 +45,7 @@ constexpr uint16_t CODE_POINT_END = 0;
 constexpr auto FONT_NAME = "LXGWNeoXiHei.ttf";
 constexpr auto INI_FILE_NAME = "imgui.ini";
 constexpr auto DEFAULT_FONT_SIZE = 13.0f;
+constexpr auto MACOS_KEEP_SCALE_FACTOR_1 = 1.0f; // the system will handle it
 
 namespace {
 static void glfwErrorCallback(int error, const char* description)
@@ -424,6 +425,12 @@ void HistoricalMap::initializeUi()
     backupStyle = setStyle();
 
     glfwGetWindowContentScale(window, &xscale, &yscale);
+
+#ifdef __APPLE__
+    // do not scale 
+    xscale = MACOS_KEEP_SCALE_FACTOR_1;
+#endif
+
     scaleUiElement(xscale);
     loadDefaultFonts(xscale);
 
