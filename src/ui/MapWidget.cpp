@@ -390,8 +390,10 @@ void MapWidget::updatCountries()
                 polygon.back().emplace_back(coord.x, coord.y);
             }
 
-            const auto visualCenter = mapbox::polylabel<double>(polygon, VISUAL_CENTER_PERCISION);
-            country.labelCoordinate = ImVec2{static_cast<float>(visualCenter.x), static_cast<float>(visualCenter.y)};
+            if (country.contour.size() >= MINIMAL_POINTS_OF_POLYGON) {
+                const auto visualCenter = mapbox::polylabel<double>(polygon, VISUAL_CENTER_PERCISION);
+                country.labelCoordinate = ImVec2{static_cast<float>(visualCenter.x), static_cast<float>(visualCenter.y)};
+            }
 
             countries.emplace(std::make_pair(name, country));
         }
