@@ -153,7 +153,7 @@ void DefaultInfoWidget::displayCountryInfos()
     }
 
     ImGui::PushItemWidth(NAME_INPUT_WIDTH);
-    ImGui::InputTextWithHint("##Country name", gettext("Country name"), &countryName);
+    ImGui::InputTextWithHint("##Country name", gettext("Name"), &countryName);
     ImGui::PopItemWidth();
     ImGui::SameLine();
     if (ImGui::Button(gettext("Add country")) && !countryName.empty()) {
@@ -251,7 +251,7 @@ void DefaultInfoWidget::displayCityInfos()
     }
 
     ImGui::PushItemWidth(NAME_INPUT_WIDTH);
-    ImGui::InputTextWithHint("##City name", gettext("City name"), &newCityName);
+    ImGui::InputTextWithHint("##City name", gettext("Name"), &newCityName);
     ImGui::PopItemWidth();
 
     ImGui::SameLine();
