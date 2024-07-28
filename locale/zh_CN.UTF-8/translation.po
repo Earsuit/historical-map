@@ -149,10 +149,10 @@ msgstr "添加国家"
 msgid "Delete##"
 msgstr "删除##"
 
-msgid "latitude"
+msgid "lat"
 msgstr "纬度"
 
-msgid "longitude"
+msgid "lon"
 msgstr "经度"
 
 msgid "Add"
@@ -161,10 +161,10 @@ msgstr "添加"
 msgid "Delete country"
 msgstr "删除国家"
 
-msgid "lat"
+msgid "latitude"
 msgstr "纬度"
 
-msgid "lon"
+msgid "longitude"
 msgstr "经度"
 
 msgid "Add city"

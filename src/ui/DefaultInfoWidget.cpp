@@ -189,9 +189,9 @@ void DefaultInfoWidget::displayCountry(const std::string& name, const std::vecto
 
         ImGui::PushItemWidth(COORDINATE_INPUT_WIDTH);
         // input filed for new coordinate
-        ImGui::InputText(gettext("latitude"), &latitude);
+        ImGui::InputTextWithHint("##CountryLatitude", gettext("lat"), &latitude);
         ImGui::SameLine();
-        ImGui::InputText(gettext("longitude"), &longitude);
+        ImGui::InputTextWithHint("##CountryLongitude", gettext("lon"), &longitude);
         ImGui::PopItemWidth();
         ImGui::SameLine();
 
