@@ -52,7 +52,7 @@ jobs:
         path: build/
 
   build-macos:
-    runs-on: macos-13-xlarge # macos 14 conan install fail
+    runs-on: macos-13-xlarge 
 
     steps:
     - uses: actions/checkout@v4
@@ -66,6 +66,10 @@ jobs:
       run: |
         echo "CC=$(brew --prefix llvm@17)/bin/clang" >> "$GITHUB_ENV"
         echo "CXX=$(brew --prefix llvm@17)/bin/clang++" >> "$GITHUB_ENV"
+    - name: Fix conan install fail # https://github.com/turtlebrowser/get-conan/issues/9#issuecomment-2267391072
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.9' 
     - name: install Conan
       id: conan
       uses: turtlebrowser/get-conan@main
