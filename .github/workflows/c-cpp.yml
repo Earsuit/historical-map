@@ -1,5 +1,8 @@
 name: C/C++ CI
 
+permissions:
+  contents: write
+
 on:
   push:
     branches: [ "main" ]
@@ -40,6 +43,8 @@ jobs:
       run: cmake --build . -j --target translation
       working-directory:
         build/Release
+    - name: Pack
+      run: cpack
     - name: "Upload artifact"
       uses: actions/upload-artifact@v4
       with:
@@ -47,7 +52,7 @@ jobs:
         path: build/
 
   build-macos:
-    runs-on: macos-13 # macos 14 conan install fail
+    runs-on: macos-13-arm64 # macos 14 conan install fail
 
     steps:
     - uses: actions/checkout@v4
@@ -89,6 +94,8 @@ jobs:
       run: cmake --build . -j --target translation
       working-directory:
         build/Release
+    - name: Pack
+      run: cpack
     - name: "Upload artifact"
       uses: actions/upload-artifact@v4
       with:
@@ -131,6 +138,8 @@ jobs:
       run: cmake --build . -j --config Release --target translation
       working-directory:
         build/
+    - name: Pack
+      run: cpack
     - name: "Upload artifact"
       uses: actions/upload-artifact@v4
       with:
@@ -159,7 +168,7 @@ jobs:
   test-macos:
     needs: build-macos
 
-    runs-on: macos-latest
+    runs-on: macos-13-arm64
 
     steps:
     - uses: actions/checkout@v4
@@ -193,3 +202,88 @@ jobs:
         ctest --output-on-failure
       working-directory:
         build/  
+
+  publish-linux:
+    needs: test-linux
+    
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Download artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: linux-build-artifact
+        path: build
+    - name: Get tag name
+      id: get_tag
+      uses: actions/github-script@v4
+      with:
+        script: |
+          const ref = github.context.ref;
+          const tag = ref.replace('refs/tags/', '');
+          core.setOutput('tag_name', tag);
+    - name: Release
+      uses: softprops/action-gh-release@v2
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+          body_path: ${{ github.workspace }}/ChangeLog.txt
+          files: |
+            ${{ github.workspace }}/build/Release/HistoricalMap-${{ steps.get_tag.outputs.tag_name }}-x64.deb
+
+  publish-macos:
+    needs: test-macos
+
+    runs-on: macos-13-arm64
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Download artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: macos-build-artifact
+        path: build
+    - name: Get tag name
+      id: get_tag
+      uses: actions/github-script@v4
+      with:
+        script: |
+          const ref = github.context.ref;
+          const tag = ref.replace('refs/tags/', '');
+          core.setOutput('tag_name', tag);
+    - name: Release
+      uses: softprops/action-gh-release@v2
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+          body_path: ${{ github.workspace }}/ChangeLog.txt
+          files: |
+            ${{ github.workspace }}/build/Release/HistoricalMap-${{ steps.get_tag.outputs.tag_name }}-arm64.dmg
+
+  publish-win:
+    needs: test-win
+
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: "Download artifact"
+      uses: actions/download-artifact@v4
+      with:
+        name: win-build-artifact
+        path: build
+    - name: Get tag name
+      id: get_tag
+      uses: actions/github-script@v4
+      with:
+        script: |
+          const ref = github.context.ref;
+          const tag = ref.replace('refs/tags/', '');
+          core.setOutput('tag_name', tag);
+    - name: Release
+      uses: softprops/action-gh-release@v2
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+          body_path: ${{ github.workspace }}/ChangeLog.txt
+          files: |
+            ${{ github.workspace }}/build/Release/HistoricalMap-${{ steps.get_tag.outputs.tag_name }}-x64.zip
+ 
