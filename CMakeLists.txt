@@ -46,8 +46,11 @@ find_program(GETTEXT_MSGINIT_EXECUTABLE msginit REQUIRED)
 
 include(GeneratePoFile)
 include(TagVersion)
+include(GetArchitecture)
 createTagVersion()
 set(VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}.${VERSION_TWEAK})
+getArchitecture(ARCHITECTURE)
+message("Host architecture is ${ARCHITECTURE}")
 
 set(EXECUTABLE_NAME "HistoricalMap")
 
@@ -193,7 +196,7 @@ endif()
 set(CPACK_PACKAGE_VERSION_MAJOR ${VERSION_MAJOR})
 set(CPACK_PACKAGE_VERSION_MINOR ${VERSION_MINOR})
 set(CPACK_PACKAGE_VERSION_PATCH ${VERSION_PATCH})
-set(CPACK_PACKAGE_FILE_NAME "${EXECUTABLE_NAME}-${VERSION}-${CMAKE_SYSTEM_PROCESSOR}")
+set(CPACK_PACKAGE_FILE_NAME "${EXECUTABLE_NAME}-${VERSION}-${ARCHITECTURE}")
 include(CPack)
 
 add_subdirectory(src)
