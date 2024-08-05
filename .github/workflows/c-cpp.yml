@@ -230,7 +230,7 @@ jobs:
       uses: actions/github-script@v4
       with:
         script: |
-          const ref = github.context.ref;
+          const ref = github.ref;
           const tag = ref.replace('refs/tags/', '');
           core.setOutput('tag_name', tag);
     - name: Release
@@ -258,7 +258,7 @@ jobs:
       uses: actions/github-script@v4
       with:
         script: |
-          const ref = github.context.ref;
+          const ref = github.ref;
           const tag = ref.replace('refs/tags/', '');
           core.setOutput('tag_name', tag);
     - name: Release
@@ -286,7 +286,7 @@ jobs:
       uses: actions/github-script@v4
       with:
         script: |
-          const ref = github.context.ref;
+          const ref = github.ref;
           const tag = ref.replace('refs/tags/', '');
           core.setOutput('tag_name', tag);
     - name: Release
