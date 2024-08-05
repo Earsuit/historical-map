@@ -272,5 +272,5 @@ jobs:
       with:
           body_path: ${{ github.workspace }}/ChangeLog.txt
           files: |
-            ${{ github.workspace }}/build/Release/HistoricalMap-${{ github.ref_name }}-x64.zip
+            ${{ github.workspace }}/build/HistoricalMap-${{ github.ref_name }}-x64.zip
  
