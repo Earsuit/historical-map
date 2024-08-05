@@ -1,6 +1,6 @@
 add_executable(DatabaseTest DatabaseTest.cpp)
 target_link_libraries(DatabaseTest PRIVATE libpersistence GTest::gtest_main)
-gtest_discover_tests(DatabaseTest)
+gtest_add_tests(TARGET DatabaseTest)
 
 configure_file(incorrectJson.json ${CMAKE_CURRENT_BINARY_DIR}/incorrectJson.json COPYONLY)
 
@@ -14,7 +14,7 @@ elseif(MSVC)
 target_link_libraries(JsonExporterImporterTest PRIVATE liblogger GTest::gtest_main libpersistence)
 set_property(TARGET JsonExporterImporterTest APPEND_STRING PROPERTY LINK_FLAGS " /WHOLEARCHIVE:libpersistence")
 endif()
-gtest_discover_tests(JsonExporterImporterTest)
+gtest_add_tests(TARGET JsonExporterImporterTest)
 
 add_executable(BsonExporterImporterTest BsonExporterImporterTest.cpp)
 # need to export the symbol so that the auto registration can work
@@ -26,4 +26,4 @@ elseif(MSVC)
 target_link_libraries(BsonExporterImporterTest PRIVATE liblogger GTest::gtest_main libpersistence)
 set_property(TARGET BsonExporterImporterTest APPEND_STRING PROPERTY LINK_FLAGS " /WHOLEARCHIVE:libpersistence")
 endif()
-gtest_discover_tests(BsonExporterImporterTest)
+gtest_add_tests(TARGET BsonExporterImporterTest)
