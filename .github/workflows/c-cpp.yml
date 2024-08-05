@@ -226,17 +226,13 @@ jobs:
       with:
         name: linux-build-artifact
         path: build
-    - name: Get tag name
-      run: |
-        echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-        echo "GITHUB_REF: ${{ env.RELEASE_VERSION }}"
     - name: Release
       uses: softprops/action-gh-release@v2
       if: startsWith(github.ref, 'refs/tags/')
       with:
           body_path: ${{ github.workspace }}/ChangeLog.txt
           files: |
-            ${{ github.workspace }}/build/Release/HistoricalMap-${{ env.RELEASE_VERSION }}-x64.deb
+            ${{ github.workspace }}/build/Release/HistoricalMap-${{ github.ref_name }}-x64.deb
 
   publish-macos:
     needs: test-macos
@@ -250,17 +246,13 @@ jobs:
       with:
         name: macos-build-artifact
         path: build
-    - name: Get tag name
-      run: |
-        echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-        echo "GITHUB_REF: ${{ env.RELEASE_VERSION }}"
     - name: Release
       uses: softprops/action-gh-release@v2
       if: startsWith(github.ref, 'refs/tags/')
       with:
           body_path: ${{ github.workspace }}/ChangeLog.txt
           files: |
-            ${{ github.workspace }}/build/Release/HistoricalMap-${{ env.RELEASE_VERSION }}-arm64.dmg
+            ${{ github.workspace }}/build/Release/HistoricalMap-${{ github.ref_name }}-arm64.dmg
 
   publish-win:
     needs: test-win
@@ -274,15 +266,11 @@ jobs:
       with:
         name: win-build-artifact
         path: build
-    - name: Get tag name
-      run: |
-        echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-        echo "GITHUB_REF: ${{ env.RELEASE_VERSION }}"
     - name: Release
       uses: softprops/action-gh-release@v2
       if: startsWith(github.ref, 'refs/tags/')
       with:
           body_path: ${{ github.workspace }}/ChangeLog.txt
           files: |
-            ${{ github.workspace }}/build/Release/HistoricalMap-${{ env.RELEASE_VERSION }}-x64.zip
+            ${{ github.workspace }}/build/Release/HistoricalMap-${{ github.ref_name }}-x64.zip
  
