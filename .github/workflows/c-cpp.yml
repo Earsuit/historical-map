@@ -45,6 +45,8 @@ jobs:
         build/Release
     - name: Pack
       run: cpack
+      working-directory:
+        build/Release
     - name: "Upload artifact"
       uses: actions/upload-artifact@v4
       with:
@@ -100,6 +102,8 @@ jobs:
         build/Release
     - name: Pack
       run: cpack
+      working-directory:
+        build/Release
     - name: "Upload artifact"
       uses: actions/upload-artifact@v4
       with:
@@ -144,6 +148,8 @@ jobs:
         build/
     - name: Pack
       run: cpack
+      working-directory:
+        build/
     - name: "Upload artifact"
       uses: actions/upload-artifact@v4
       with:
