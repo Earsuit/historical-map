@@ -49,6 +49,7 @@ include(TagVersion)
 include(GetArchitecture)
 createTagVersion()
 set(VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
+message("VERSION_MAJOR ${VERSION_MAJOR} VERSION_MINOR ${VERSION_MINOR} VERSION_PATCH ${VERSION_PATCH}")
 getArchitecture(ARCHITECTURE)
 message("Host architecture is ${ARCHITECTURE}")
 
