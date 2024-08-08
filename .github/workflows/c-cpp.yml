@@ -101,6 +101,21 @@ jobs:
       run: cmake --build . -j --target translation
       working-directory:
         build/Release
+    - name: Decode and import the self-signed certificate
+      run: |
+        echo "${{ secrets.EARSUIT_APPLE_CERTIFICATE }}" | base64 --decode > certificate.p12
+        security create-keychain -p 1234asdf build.keychain
+        security default-keychain -s build.keychain
+        security unlock-keychain -p 1234asdf build.keychain
+        security import certificate.p12 -k build.keychain -P ${{ secrets.EARSUIT_APPLE_CERTIFICATE_PASSWORD }} -T /usr/bin/codesign
+        security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k 1234asdf build.keychain
+    - name: Sign the app with the self-signed certificate
+      run: |
+        security find-certificate -c "Earsuit" -p | openssl x509 -text -noout
+        codesign --deep --force --verify --verbose --sign "Earsuit" HistoricalMap.app
+        codesign --verify --verbose --deep HistoricalMap.app
+      working-directory:
+        build/Release
     - name: Pack
       run: cpack
       working-directory:

@@ -143,10 +143,11 @@ if (APPLE)
         MACOSX_BUNDLE_SHORT_VERSION_STRING ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
         MACOSX_BUNDLE_GUI_IDENTIFIER Earsuit.${EXECUTABLE_NAME}
         MACOSX_FRAMEWORK_IDENTIFIER Earsuit.${EXECUTABLE_NAME}
-        XCODE_ATTRIBUTE_ENABLE_HARDENED_RUNTIME TRUE
-        XCODE_ATTRIBUTE_EXECUTABLE_NAME ${EXECUTABLE_NAME}
     )
 
+    # a workarong to avoid cpack call install_name_tool to modify the rpath 
+    # so keep the signature valid
+    set(CMAKE_SKIP_RPATH TRUE)
     # build dmg
     install(TARGETS HistoricalMap BUNDLE DESTINATION .)
     set(CPACK_GENERATOR DragNDrop)
