@@ -236,7 +236,7 @@ jobs:
       with:
           body_path: ${{ github.workspace }}/ChangeLog.txt
           files: |
-            ${{ github.workspace }}/build/Release/HistoricalMap-${{ github.ref_name }}-x64.deb
+            ${{ github.workspace }}/build/Release/*.deb
 
   publish-macos:
     needs: test-macos
@@ -258,7 +258,7 @@ jobs:
       with:
           body_path: ${{ github.workspace }}/ChangeLog.txt
           files: |
-            ${{ github.workspace }}/build/Release/HistoricalMap-${{ github.ref_name }}-arm64.dmg
+            ${{ github.workspace }}/build/Release/*.dmg
 
   publish-win:
     needs: test-win
@@ -278,5 +278,5 @@ jobs:
       with:
           body_path: ${{ github.workspace }}/ChangeLog.txt
           files: |
-            ${{ github.workspace }}/build/HistoricalMap-${{ github.ref_name }}-x64.zip
+            ${{ github.workspace }}/build/*.zip
  
