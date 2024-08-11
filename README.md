@@ -33,15 +33,31 @@ Thank you for your understanding.
 
 ![Main view 主窗口](./assets/main_view.png)
 
-## General tool chian requirements 
+## Download 下载
+
+[Release](https://github.com/Earsuit/historical-map/releases).
+
+### 我该下载哪个版本？ Which one should I download?
+
+当前支持Windows x86, Linux x86 和 Macos(arm). 
+
+Currently support Windows x86, Linux x86 and Macos(arm)
+
+- Windows: .zip
+- Linux: .dep
+- MacOS: .dmg
+
+## How to build
+
+### General tool chian requirements 
 
 1. [Conan 2](https://conan.io/) 
 2. cmake >= 3.23
 3. Parenthesized initialization of aggregates feature is required, GCC > 10 on Linux, clang = 17.0.6 on MacOS, MSVC >= 19.28 on Windows.
 
-## Compile on Linux
+### Compile on Linux
 
-### Setup envirnment
+#### Setup envirnment
 
 Config the profile if you don't have:
 
@@ -49,7 +65,7 @@ Config the profile if you don't have:
 
 and set the C++ standard to 20 by modifying `settings.compiler.cppstd=gnu20`.
 
-### Compile
+#### Compile
 
 1. `conan install . --build=missing -s build_type=Release -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=True`
 2. `cmake --preset conan-release`
@@ -58,15 +74,15 @@ and set the C++ standard to 20 by modifying `settings.compiler.cppstd=gnu20`.
 5. Compile translation: `cmake --build . -j --target translation`
 6. `ctest` if you want to run test
 
-## Compile on MacOS
+### Compile on MacOS
 
-### Setup envirnment
+#### Setup envirnment
 1. Download clang from Homebrew: `brew install llvm` 
 2. Add Homebrew clang to your path: `export PATH="/opt/homebrew/opt/llvm/bin:$PATH"`
 3. Set `CC` and `CXX` to the Homebrew clang: `export CC=/opt/homebrew/opt/llvm/bin/clang && export CXX=/opt/homebrew/opt/llvm/bin/clang++`
 4. Config the profile if you don't have: `conan profile detect --force`  and set the C++ standard to 20 by modifying `settings.compiler.cppstd=gnu20`.
 
-### Compile
+#### Compile
 
 1. `conan install . --build=missing -s build_type=Release`
 2. `cmake --preset conan-release`
@@ -75,13 +91,13 @@ and set the C++ standard to 20 by modifying `settings.compiler.cppstd=gnu20`.
 5. Compile translation: `cmake --build . -j --target translation`
 6. `ctest` if you want to run test
 
-## Compile on Windows
+### Compile on Windows
 
-### Setup envirnment
+#### Setup envirnment
 
 Config the profile if you don't have: `conan profile detect --force`  and set the C++ standard to 20 by modifying `settings.compiler.cppstd=20`.
 
-### Compile
+#### Compile
 
 1. `conan install . --build=missing -s build_type=Release`
 2. `cmake --preset conan-default`
